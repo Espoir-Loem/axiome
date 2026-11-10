@@ -1,0 +1,32 @@
+# Contribuer à Axiome
+
+## Flux de travail
+1. **Une issue d'abord.** Tout changement non trivial part d'une issue. Un module majeur part d'une **RFC** (`docs/rfc/`) et une décision structurante d'un **ADR** (`docs/adr/`).
+2. **Une branche par changement** : `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. On ne pousse jamais directement sur `main`.
+3. **Petites PR** : moins de 400 lignes modifiées, hors données et tests, et un seul sujet par PR.
+4. **Revue obligatoire** et CI verte avant toute fusion. On fusionne en *squash merge*.
+
+## Commits
+[Conventional Commits](https://www.conventionalcommits.org/fr/), message en français :
+```
+feat(reasoning): ajoute la négation stratifiée
+fix(store): rend l'ajout de preuves idempotent
+```
+
+## Porte de qualité (identique à la CI)
+```bash
+make check   # ruff + format + mypy --strict + pytest --cov (≥ 90 %)
+```
+
+## Exigences pour toute PR
+- [ ] Tests ajoutés : unitaires, plus tests de propriétés si le changement touche un invariant.
+- [ ] Déterminisme préservé : pas d'aléa, pas d'itération sur un `set` non trié, pas d'horloge directe.
+- [ ] Aucune nouvelle dépendance d'exécution sans ADR (voir ADR-0003).
+- [ ] `docs/epistemologie.md` mis à jour si `verification/` change.
+- [ ] `CHANGELOG.md` mis à jour (section « Non publié »).
+
+## Style
+- Identifiants en anglais, textes et documentation en français (ADR-0004).
+- Typage complet, `mypy --strict`.
+- Fonctions pures dès que possible ; les E/S restent aux bords (`knowledge`, `cli`).
+- Toute affirmation ajoutée à la graine cite sa source (voir `src/axiome/data/seed/LISEZMOI.md`).

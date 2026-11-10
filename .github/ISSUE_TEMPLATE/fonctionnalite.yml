@@ -1,0 +1,28 @@
+name: Fonctionnalité
+description: Proposer une capacité nouvelle
+labels: ["type: fonctionnalité", "triage"]
+body:
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Problème à résoudre
+      description: Le besoin, pas la solution.
+    validations: { required: true }
+  - type: textarea
+    id: proposition
+    attributes:
+      label: Proposition
+  - type: textarea
+    id: criteres
+    attributes:
+      label: Critères d'acceptation (vérifiables)
+    validations: { required: true }
+  - type: checkboxes
+    id: principes
+    attributes:
+      label: Principes
+      options:
+        - label: Reste déterministe
+          required: true
+        - label: N'introduit pas de modèle pré-entraîné
+          required: true

@@ -1,0 +1,29 @@
+name: Bogue
+description: Un comportement incorrect ou une réponse fausse
+labels: ["type: bogue", "triage"]
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Commandes exactes (idéalement `axiome --memoire -c "…"`).
+      render: text
+    validations: { required: true }
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Résultat attendu et résultat obtenu
+    validations: { required: true }
+  - type: dropdown
+    id: gravite
+    attributes:
+      label: Gravité
+      options:
+        - "Critique : affirmation fausse présentée comme vraie"
+        - "Majeure : fonctionnalité inutilisable"
+        - "Mineure"
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: Version (`axiome --version`) et OS
