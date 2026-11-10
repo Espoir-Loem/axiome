@@ -1,0 +1,19 @@
+% Programme de référence d'Axiome (règles axiomatiques).
+% Toute règle ajoutée ici doit être justifiée dans docs/rfc/0001-moteur-logique.md.
+
+% --- Taxonomie -----------------------------------------------------------
+[transitivite_est_un]  est_un(X, Z)      :- est_un(X, Y), est_un(Y, Z).
+[transitivite_partie]  partie_de(X, Z)   :- partie_de(X, Y), partie_de(Y, Z).
+[heritage_propriete]   a_propriete(X, P) :- est_un(X, Y), a_propriete(Y, P).
+[symetrie_disjoint]    disjoint(B, A)    :- disjoint(A, B).
+
+% --- Ingénierie logicielle ------------------------------------------------
+% Un algorithme dont le prérequis n'est pas garanti par l'entrée est inapplicable.
+[applicable] applicable(A, E) :- est_un(A, algorithme), entree(E), non prerequis_manquant(A, E).
+[prerequis_manquant] prerequis_manquant(A, E) :- prerequis(A, P), entree(E), non garantit(E, P).
+
+% --- Contraintes d'intégrité (ne doivent JAMAIS être satisfaites) ----------
+! classes_disjointes :- est_un(X, A), disjoint(A, B), est_un(X, B).
+! cycle_taxonomique  :- est_un(X, X).
+! cycle_composition  :- partie_de(X, X).
+% (Les contraintes dimensionnelles arrivent avec le module physique, jalon M4.)

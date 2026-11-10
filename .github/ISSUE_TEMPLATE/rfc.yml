@@ -1,0 +1,18 @@
+name: RFC
+description: Ouvrir la discussion d'un document de conception
+labels: ["type: rfc"]
+body:
+  - type: input
+    id: titre
+    attributes:
+      label: Titre de la RFC
+    validations: { required: true }
+  - type: textarea
+    id: resume
+    attributes:
+      label: Résumé, motivations et alternatives
+    validations: { required: true }
+  - type: input
+    id: lien
+    attributes:
+      label: Lien vers le fichier docs/rfc/NNNN-*.md (PR)

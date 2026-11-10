@@ -1,0 +1,81 @@
+{
+  "sources": [
+    {"id": "axiome:ontologie", "name": "Ontologie de référence Axiome", "kind": "axiome",
+     "reliability": "HIGH", "organization": "axiome"},
+    {"id": "axiome:si", "name": "Système international d'unités (BIPM, 9e éd.)", "kind": "axiome",
+     "reliability": "HIGH", "organization": "bipm", "url": "https://www.bipm.org/fr/publications/si-brochure"},
+    {"id": "utilisateur", "name": "Utilisateur", "kind": "utilisateur",
+     "reliability": "LOW", "organization": "utilisateur"}
+  ],
+  "facts": [
+    {"source": "axiome:ontologie", "theme": "vivant (démonstration de la taxonomie)", "facts": [
+      "est_un(chat, mammifère)", "est_un(chien, mammifère)", "est_un(baleine, mammifère)",
+      "est_un(mammifère, vertébré)", "est_un(oiseau, vertébré)", "est_un(manchot, oiseau)",
+      "est_un(vertébré, animal)", "disjoint(mammifère, oiseau)",
+      "a_propriete(vertébré, colonne_vertébrale)", "a_propriete(mammifère, allaite_ses_petits)"
+    ]},
+    {"source": "axiome:ontologie", "theme": "structures de données", "facts": [
+      "est_un(structure_de_données, concept_informatique)",
+      "est_un(pile, structure_de_données)", "est_un(file, structure_de_données)",
+      "est_un(liste_chaînée, structure_de_données)", "est_un(tableau, structure_de_données)",
+      "est_un(table_de_hachage, structure_de_données)", "est_un(graphe, structure_de_données)",
+      "est_un(arbre, graphe)", "est_un(arbre_binaire_de_recherche, arbre)", "est_un(tas, arbre)",
+      "a_propriete(pile, lifo)", "a_propriete(file, fifo)", "a_propriete(arbre, acyclique)",
+      "a_propriete(arbre, connexe)"
+    ]},
+    {"source": "axiome:ontologie", "theme": "algorithmes", "facts": [
+      "est_un(algorithme, concept_informatique)",
+      "est_un(algorithme_de_tri, algorithme)", "est_un(algorithme_de_recherche, algorithme)",
+      "est_un(tri_fusion, algorithme_de_tri)", "est_un(tri_rapide, algorithme_de_tri)",
+      "est_un(tri_par_tas, algorithme_de_tri)", "est_un(tri_par_insertion, algorithme_de_tri)",
+      "est_un(recherche_binaire, algorithme_de_recherche)",
+      "est_un(recherche_linéaire, algorithme_de_recherche)",
+      "disjoint(algorithme, structure_de_données)",
+      "complexité_temps_pire(tri_fusion, \"O(n log n)\")",
+      "complexité_temps_pire(tri_par_tas, \"O(n log n)\")",
+      "complexité_temps_pire(tri_rapide, \"O(n²)\")",
+      "complexité_temps_moyen(tri_rapide, \"O(n log n)\")",
+      "complexité_temps_pire(tri_par_insertion, \"O(n²)\")",
+      "complexité_temps_pire(recherche_binaire, \"O(log n)\")",
+      "complexité_temps_pire(recherche_linéaire, \"O(n)\")",
+      "a_propriete(tri_fusion, stable)", "a_propriete(tri_par_insertion, stable)",
+      "prerequis(recherche_binaire, entrée_triée)",
+      "prerequis(recherche_binaire, accès_aléatoire)"
+    ]},
+    {"source": "axiome:ontologie", "theme": "conception logicielle", "facts": [
+      "est_un(patron_de_création, patron_de_conception)",
+      "est_un(patron_structurel, patron_de_conception)",
+      "est_un(patron_comportemental, patron_de_conception)",
+      "est_un(singleton, patron_de_création)", "est_un(fabrique, patron_de_création)",
+      "est_un(monteur, patron_de_création)", "est_un(adaptateur, patron_structurel)",
+      "est_un(décorateur, patron_structurel)", "est_un(façade, patron_structurel)",
+      "est_un(observateur, patron_comportemental)", "est_un(stratégie, patron_comportemental)",
+      "est_un(commande, patron_comportemental)",
+      "disjoint(patron_de_création, patron_structurel)",
+      "disjoint(patron_de_création, patron_comportemental)",
+      "disjoint(patron_structurel, patron_comportemental)",
+      "est_un(principe_solid, principe_de_conception)",
+      "est_un(responsabilité_unique, principe_solid)", "est_un(ouvert_fermé, principe_solid)",
+      "est_un(substitution_de_liskov, principe_solid)",
+      "est_un(ségrégation_des_interfaces, principe_solid)",
+      "est_un(inversion_des_dépendances, principe_solid)"
+    ]},
+    {"source": "axiome:si", "theme": "grandeurs physiques (SI)", "facts": [
+      "est_un(grandeur_de_base_si, grandeur_physique)",
+      "est_un(grandeur_dérivée_si, grandeur_physique)",
+      "est_un(longueur, grandeur_de_base_si)", "est_un(masse, grandeur_de_base_si)",
+      "est_un(temps, grandeur_de_base_si)", "est_un(courant_électrique, grandeur_de_base_si)",
+      "est_un(température_thermodynamique, grandeur_de_base_si)",
+      "est_un(quantité_de_matière, grandeur_de_base_si)",
+      "est_un(intensité_lumineuse, grandeur_de_base_si)",
+      "est_un(vitesse, grandeur_dérivée_si)", "est_un(force, grandeur_dérivée_si)",
+      "est_un(énergie, grandeur_dérivée_si)",
+      "unité_si(longueur, mètre)", "unité_si(masse, kilogramme)", "unité_si(temps, seconde)",
+      "unité_si(courant_électrique, ampère)", "unité_si(température_thermodynamique, kelvin)",
+      "unité_si(quantité_de_matière, mole)", "unité_si(intensité_lumineuse, candela)",
+      "unité_si(force, newton)", "unité_si(énergie, joule)",
+      "dimension(vitesse, \"L·T⁻¹\")", "dimension(force, \"M·L·T⁻²\")",
+      "dimension(énergie, \"M·L²·T⁻²\")"
+    ]}
+  ]
+}
