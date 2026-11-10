@@ -9,5 +9,6 @@ Une décision structurante = un ADR, numéroté, **immuable** une fois accepté 
 | [0003](0003-dependances-minimales.md) | Dépendances minimales (stdlib, puis NumPy seul) | Accepté |
 | [0004](0004-langue-du-code.md) | Code en anglais, produit et docs en français | Supplanté par 0005 |
 | [0005](0005-code-source-en-anglais.md) | Tout le code source en anglais, textes via catalogues i18n | Accepté |
+| [0006](0006-zero-modele-preentraine.md) | 100 % de zéro, pas de parité avec les grands modèles | Accepté |
 
 Modèle : [0000-modele.md](0000-modele.md).
