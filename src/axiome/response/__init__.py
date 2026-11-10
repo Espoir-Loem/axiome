@@ -1,1 +1,1 @@
-"""Rendu des réponses."""
+"""Answer rendering."""

@@ -1,4 +1,4 @@
-"""Interface texte d'Axiome (REPL et commande unique)."""
+"""Axiome text interface (REPL and single-command mode)."""
 
 from __future__ import annotations
 
@@ -11,41 +11,32 @@ from axiome import __version__
 from axiome.core.clock import FixedClock
 from axiome.core.config import IN_MEMORY, Config
 from axiome.core.errors import AxiomeError
+from axiome.i18n import SUPPORTED, get_locale, set_locale, t
 from axiome.kernel import Kernel
 from axiome.response import render
 
-HELP = """\
-Commandes :
-  fait(a, b).                 ajouter un fait (statut initial : NON VÉRIFIÉ)
-  tete(X) :- corps(X).        ajouter une règle (hypothèse)
-  ?- requete(X, b).           interroger (conjonctions et « non » permis)
-  :preuve fait(a, b)          expliquer pourquoi (arbre de preuve + statuts)
-  :conflits                   contradictions détectées et leur résolution
-  :sources                    sources connues
-  :regles                     programme logique actif
-  :aide                       cette aide
-  :quitter                    sortir
-"""
+QUIT = (":quit", ":q")
 
 
 def _rules(k: Kernel) -> str:
     program = k.program()
-    lines = [str(r) + ("" if r.axiomatic else "   % hypothèse") for r in program.rules]
+    suffix = f"   % {t('cli.hypothesis')}"
+    lines = [str(r) + ("" if r.axiomatic else suffix) for r in program.rules]
     lines += [str(c) for c in program.constraints]
     return "\n".join(lines)
 
 
 COMMANDS: dict[str, Callable[[Kernel, str], str]] = {
-    ":aide": lambda k, a: HELP,
-    ":preuve": lambda k, a: render.render_explanation(k.explain(a)),
-    ":conflits": lambda k, a: render.render_conflicts(k.state),
+    ":help": lambda k, a: t("cli.help"),
+    ":proof": lambda k, a: render.render_explanation(k.explain(a)),
+    ":conflicts": lambda k, a: render.render_conflicts(k.state),
     ":sources": lambda k, a: render.render_sources(k.store.sources()),
-    ":regles": lambda k, a: _rules(k),
+    ":rules": lambda k, a: _rules(k),
 }
 
 
 def execute(kernel: Kernel, line: str) -> str:
-    """Exécute une ligne et renvoie la réponse (fonction pure vis-à-vis de l'E/S)."""
+    """Run one line and return the output (pure with respect to I/O)."""
     line = line.strip()
     if not line:
         return ""
@@ -53,38 +44,33 @@ def execute(kernel: Kernel, line: str) -> str:
         name, _, arg = line.partition(" ")
         handler = COMMANDS.get(name)
         if handler is None:
-            return f"Commande inconnue : {name} (tapez :aide)"
+            return t("cli.unknown_command", name=name)
         return handler(kernel, arg.strip())
     if line.startswith("?-"):
         return render.render_query(kernel.ask(line))
-    return kernel.tell(line)
+    return str(kernel.tell(line))
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="axiome", description="IA neuro-symbolique déterministe.")
+    p = argparse.ArgumentParser(prog="axiome", description=t("cli.description"))
     p.add_argument("--version", action="version", version=f"axiome {__version__}")
-    p.add_argument("--db", help="chemin de la base (défaut : $AXIOME_DB ou XDG)")
-    p.add_argument("--memoire", action="store_true", help="base éphémère en mémoire")
-    p.add_argument(
-        "-c",
-        "--commande",
-        action="append",
-        default=[],
-        help="exécute une ligne puis quitte (répétable)",
-    )
+    p.add_argument("--db", help=t("cli.opt_db"))
+    p.add_argument("--memory", action="store_true", help=t("cli.opt_memory"))
+    p.add_argument("--lang", choices=SUPPORTED, default=None, help=t("cli.opt_lang"))
+    p.add_argument("-c", "--command", action="append", default=[], help=t("cli.opt_command"))
     return p
 
 
 def _safe_execute(kernel: Kernel, line: str) -> tuple[str, bool]:
-    """Exécute une ligne ; renvoie (sortie, succès). Les bogues ne sont pas masqués."""
+    """Run a line; return (output, success). Bugs are not swallowed."""
     try:
         return execute(kernel, line), True
     except AxiomeError as exc:
-        return f"Erreur : {exc}", False
+        return t("cli.error", message=exc), False
 
 
 def _config(args: argparse.Namespace) -> Config:
-    if args.memoire:
+    if args.memory:
         return Config(IN_MEMORY)
     if args.db:
         return Config(args.db)
@@ -102,14 +88,14 @@ def _run_commands(kernel: Kernel, lines: Sequence[str]) -> int:
 
 
 def _repl(kernel: Kernel) -> int:
-    print(f"Axiome {__version__} — tapez :aide")
+    print(t("cli.banner", version=__version__))
     while True:
         try:
             line = input("axiome> ")
         except (EOFError, KeyboardInterrupt):
             print()
             return 0
-        if line.strip() in (":quitter", ":q"):
+        if line.strip() in QUIT:
             return 0
         out, _ = _safe_execute(kernel, line)
         if out:
@@ -118,11 +104,17 @@ def _repl(kernel: Kernel) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if isinstance(sys.stdout, io.TextIOWrapper):  # consoles Windows (cp1252) : forcer UTF-8
+    previous = get_locale()
+    if args.lang:
+        set_locale(args.lang)
+    if isinstance(sys.stdout, io.TextIOWrapper):  # Windows consoles (cp1252): force UTF-8
         sys.stdout.reconfigure(encoding="utf-8")
-    # En mode commande, l'horloge est figée : la sortie est reproductible à l'octet près.
-    kernel = Kernel.open(_config(args), FixedClock() if args.commande else None)
-    return _run_commands(kernel, args.commande) if args.commande else _repl(kernel)
+    try:
+        # In command mode the clock is frozen, so output is byte-for-byte reproducible.
+        kernel = Kernel.open(_config(args), FixedClock() if args.command else None)
+        return _run_commands(kernel, args.command) if args.command else _repl(kernel)
+    finally:
+        set_locale(previous)
 
 
 if __name__ == "__main__":

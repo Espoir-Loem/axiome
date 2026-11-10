@@ -1,7 +1,7 @@
-"""Chargement idempotent de la connaissance initiale (``axiome/data/seed``).
+"""Idempotent loading of the initial knowledge (``axiome/data/seed``).
 
-La graine est versionnée par son empreinte SHA-256 : si le contenu change, il
-est rechargé ; s'il est identique, rien n'est réécrit.
+The seed is versioned by its SHA-256 digest: if the content changes it is
+reloaded; if it is unchanged nothing is rewritten.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from axiome.reasoning.syntax import parse_atom
 from axiome.verification.epistemic import Reliability, Source, SourceKind, Stance
 
 SEED_PACKAGE = "axiome.data.seed"
-RULES_FILE = "regles.axl"
-FACTS_FILE = "faits.json"
+RULES_FILE = "rules.axl"
+FACTS_FILE = "facts.json"
 
 
 def _read(name: str) -> str:
@@ -34,7 +34,7 @@ def seed_digest() -> str:
 
 
 def load_seed(store: KnowledgeStore, clock: Clock) -> bool:
-    """Charge la graine si nécessaire. Renvoie True si un chargement a eu lieu."""
+    """Load the seed if needed. Return True if anything was loaded."""
     digest = seed_digest()
     if store.get_meta("seed_sha256") == digest:
         return False

@@ -1,7 +1,7 @@
-"""Garantie centrale : même entrée → même sortie, octet pour octet, entre processus.
+"""Core guarantee: same input, same output, byte for byte, across processes.
 
-Chaque processus Python a une graine de hachage différente (PYTHONHASHSEED) ;
-si un ordre dépendait d'un set/dict non trié, les sorties divergeraient.
+Each Python process gets a different hash seed (PYTHONHASHSEED); if any order
+depended on an unsorted set or dict, the outputs would diverge.
 """
 
 from __future__ import annotations
@@ -11,20 +11,20 @@ import subprocess
 import sys
 
 SCRIPT = [
-    "?- est_un(X, animal).",
-    ":preuve est_un(chat, animal)",
-    "est_un(chat, oiseau).",
-    "est_un(x, mammifère).",
-    "est_un(x, oiseau).",
-    ":conflits",
-    "?- est_un(X, algorithme_de_tri), non a_propriete(X, stable).",
-    "?- est_un(X, patron_de_conception), a_propriete(X, P).",
-    "?- a_propriete(X, Y).",
+    "?- is_a(X, animal).",
+    ":proof is_a(cat, animal)",
+    "is_a(cat, bird).",
+    "is_a(x, mammal).",
+    "is_a(x, bird).",
+    ":conflicts",
+    "?- is_a(X, sorting_algorithm), not has_property(X, stable).",
+    "?- is_a(X, design_pattern), has_property(X, P).",
+    "?- has_property(X, Y).",
 ]
 
 
 def run(hash_seed: str) -> bytes:
-    args = [sys.executable, "-m", "axiome", "--memoire"]
+    args = [sys.executable, "-m", "axiome", "--memory", "--lang", "en"]
     for line in SCRIPT:
         args += ["-c", line]
     env = {**os.environ, "PYTHONHASHSEED": hash_seed}
@@ -34,4 +34,4 @@ def run(hash_seed: str) -> bytes:
 def test_output_identical_across_processes_and_hash_seeds() -> None:
     outputs = {run(seed) for seed in ("0", "1", "12345", "random")}
     assert len(outputs) == 1
-    assert b"PROUV" in outputs.pop()
+    assert b"PROVED" in outputs.pop()

@@ -1,33 +1,46 @@
-"""Hiérarchie d'erreurs d'Axiome.
+"""Axiome error hierarchy.
 
-Toutes les erreurs prévues héritent de :class:`AxiomeError` afin que l'interface
-puisse les afficher proprement sans masquer les vrais bogues (qui, eux, ne sont
-pas des ``AxiomeError``).
+Every expected error derives from :class:`AxiomeError` so that interfaces can
+display it cleanly without hiding genuine bugs (which are not ``AxiomeError``).
+Errors carry a translation key and parameters; the text is rendered lazily in
+the active locale (see :mod:`axiome.i18n`).
 """
 
 from __future__ import annotations
 
+from axiome.i18n import Msg, msg, t
+
 
 class AxiomeError(Exception):
-    """Racine de toutes les erreurs attendues."""
+    """Root of all expected errors."""
+
+    def __init__(self, key: str, **params: object) -> None:
+        super().__init__(key)
+        self.message: Msg = msg(key, **params)
+
+    def __str__(self) -> str:
+        return str(self.message)
 
 
 class ParseError(AxiomeError):
-    """Texte logique mal formé."""
+    """Malformed logic text, with its location."""
 
-    def __init__(self, message: str, line: int, column: int) -> None:
-        super().__init__(f"ligne {line}, colonne {column} : {message}")
+    def __init__(self, key: str, line: int, column: int, **params: object) -> None:
+        super().__init__(key, **params)
         self.line = line
         self.column = column
 
+    def __str__(self) -> str:
+        return t("error.location", line=self.line, column=self.column, message=self.message)
+
 
 class ProgramError(AxiomeError):
-    """Programme logique invalide (règle non sûre, négation non stratifiable…)."""
+    """Invalid logic program (unsafe rule, non-stratifiable negation, ...)."""
 
 
 class StorageError(AxiomeError):
-    """Problème de persistance de la base de connaissances."""
+    """Knowledge base persistence failure."""
 
 
 class KnowledgeError(AxiomeError):
-    """Opération incohérente sur la connaissance (source inconnue, fait non clos…)."""
+    """Inconsistent knowledge operation (unknown source, non-ground fact, ...)."""

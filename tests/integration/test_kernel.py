@@ -13,65 +13,62 @@ from axiome.verification.epistemic import Status
 
 
 def test_deduction_from_seed(kernel: Kernel) -> None:
-    result = kernel.ask("est_un(chat, animal)")
+    result = kernel.ask("is_a(cat, animal)")
     assert len(result.answers) == 1
     assert result.answers[0].overall.status is Status.PROVED
-    ex = kernel.explain("est_un(chat, animal)")
+    ex = kernel.explain("is_a(cat, animal)")
     assert ex.proof is not None and ex.proof.rule is not None
     text = render.render_explanation(ex)
-    assert "transitivite_est_un" in text and "PROUVÉ" in text
+    assert "is_a_transitivity" in text and "PROVED" in text
 
 
 def test_user_contradiction_is_refuted(kernel: Kernel) -> None:
-    assert kernel.tell("est_un(chat, oiseau).").startswith("Noté")
-    assert kernel.tell("est_un(chat, oiseau).").startswith("Déjà connu")
-    result = kernel.ask("est_un(chat, oiseau)")
+    assert str(kernel.tell("is_a(cat, bird).")).startswith("Noted")
+    assert str(kernel.tell("is_a(cat, bird).")).startswith("Already known")
+    result = kernel.ask("is_a(cat, bird)")
     assert not result.answers
     assert result.refuted[0][1].status is Status.REFUTED
     out = render.render_query(result)
-    assert out.startswith("Non.") and "classes_disjointes" in out
-    ex = kernel.explain("est_un(chat, oiseau)")
-    assert ex.proof is None and "RÉFUTÉ" in render.render_explanation(ex)
-    assert "résolu" in render.render_conflicts(kernel.state)
+    assert out.startswith("No.") and "disjoint_classes" in out
+    ex = kernel.explain("is_a(cat, bird)")
+    assert ex.proof is None and "REFUTED" in render.render_explanation(ex)
+    assert "resolved" in render.render_conflicts(kernel.state)
 
 
 def test_unknown_is_not_false(kernel: Kernel) -> None:
-    out = render.render_query(kernel.ask("est_un(licorne, animal)"))
-    assert "Je ne sais pas" in out
-    with pytest.raises(KnowledgeError, match="pas établi"):
-        kernel.explain("est_un(licorne, animal)")
+    assert "I don't know" in render.render_query(kernel.ask("is_a(unicorn, animal)"))
+    with pytest.raises(KnowledgeError, match="not established"):
+        kernel.explain("is_a(unicorn, animal)")
 
 
 def test_user_fact_is_unverified_and_rule_is_hypothesis(kernel: Kernel) -> None:
-    kernel.tell("est_un(félix, chat).")
-    a = kernel.ask("est_un(félix, vertébré)").answers[0]
-    assert a.overall.status is Status.UNVERIFIED
-    assert kernel.tell("domestique(X) :- est_un(X, chat).").startswith("Règle ajoutée")
-    assert kernel.tell("domestique(X) :- est_un(X, chat).") == "Règle déjà connue."
-    assert kernel.ask("domestique(félix)").answers
+    kernel.tell("is_a(felix, cat).")
+    assert kernel.ask("is_a(felix, vertebrate)").answers[0].overall.status is Status.UNVERIFIED
+    assert str(kernel.tell("pet(X) :- is_a(X, cat).")).startswith("Rule added")
+    assert str(kernel.tell("pet(X) :- is_a(X, cat).")) == "Rule already known."
+    assert kernel.ask("pet(felix)").answers
 
 
 def test_closed_world_answers_are_capped(kernel: Kernel) -> None:
-    result = kernel.ask("est_un(X, algorithme_de_tri), non a_propriete(X, stable)")
+    result = kernel.ask("is_a(X, sorting_algorithm), not has_property(X, stable)")
     assert result.answers and all(v.closed_world for v in result.answers)
     assert all(v.overall.status is Status.PLAUSIBLE for v in result.answers)
-    assert "(monde clos)" in render.render_query(result)
+    assert "(closed world)" in render.render_query(result)
 
 
 def test_software_engineering_rule(kernel: Kernel) -> None:
-    kernel.tell("entree(t).")
-    kernel.tell("garantit(t, accès_aléatoire).")
-    assert not kernel.ask("applicable(recherche_binaire, t)").answers
-    kernel.tell("garantit(t, entrée_triée).")
-    assert kernel.ask("applicable(recherche_binaire, t)").answers
+    kernel.tell("input(t).")
+    kernel.tell("guarantees(t, random_access).")
+    assert not kernel.ask("applicable(binary_search, t)").answers
+    kernel.tell("guarantees(t, sorted_input).")
+    assert kernel.ask("applicable(binary_search, t)").answers
 
 
 def test_contested_conflict_rendering(kernel: Kernel) -> None:
-    kernel.tell("est_un(x, mammifère).")
-    kernel.tell("est_un(x, oiseau).")
-    text = render.render_conflicts(kernel.state)
-    assert "non résolu" in text
-    assert kernel.ask("est_un(x, oiseau)").answers[0].overall.status is Status.CONTESTED
+    kernel.tell("is_a(x, mammal).")
+    kernel.tell("is_a(x, bird).")
+    assert "unresolved" in render.render_conflicts(kernel.state)
+    assert kernel.ask("is_a(x, bird)").answers[0].overall.status is Status.CONTESTED
 
 
 def test_invalid_inputs(kernel: Kernel) -> None:
@@ -85,18 +82,15 @@ def test_invalid_inputs(kernel: Kernel) -> None:
         kernel.ask("p(")
     with pytest.raises(KnowledgeError):
         kernel.explain("p(X) :- q(X)")
-    assert kernel.body_of("p(a), non q(a)")[1].negated
 
 
 def test_persistence_across_sessions(tmp_path: Path) -> None:
     cfg = Config(str(tmp_path / "a.db"))
-    k1 = Kernel.open(cfg, FixedClock())
-    k1.tell("est_un(félix, chat).")
-    k2 = Kernel.open(cfg, FixedClock())
-    assert k2.ask("est_un(félix, animal)").answers
+    Kernel.open(cfg, FixedClock()).tell("is_a(felix, cat).")
+    assert Kernel.open(cfg, FixedClock()).ask("is_a(felix, animal)").answers
 
 
 def test_contradicting_evidence(kernel: Kernel) -> None:
-    kernel.tell("est_un(pingu, manchot).")
-    kernel.tell("est_un(pingu, manchot).", contradicts=True)
-    assert kernel.ask("est_un(pingu, manchot)").answers[0].overall.status is Status.CONTESTED
+    kernel.tell("is_a(pingu, penguin).")
+    kernel.tell("is_a(pingu, penguin).", contradicts=True)
+    assert kernel.ask("is_a(pingu, penguin)").answers[0].overall.status is Status.CONTESTED

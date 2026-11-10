@@ -16,7 +16,7 @@
 
 ## 2. Statut d'un fait de base : règles E1 à E8, appliquées dans l'ordre
 
-Les preuves sont typées par la nature de leur source (`axiome`, `preuve`, `calcul`, `reference`, `publication`, `utilisateur`, `autre`), par sa fiabilité (`HIGH`, `MEDIUM`, `LOW`) et par leur position (`soutient` ou `contredit`). Les sources *décisives* sont `axiome`, `preuve` et `calcul`.
+Les preuves sont typées par la nature de leur source (`axiom`, `proof`, `computation`, `reference`, `publication`, `user`, `other`), par sa fiabilité (`HIGH`, `MEDIUM`, `LOW`) et par leur position (`supports` ou `contradicts`). Les sources *décisives* sont `axiom`, `proof` et `computation`.
 
 - **E1.** Si au moins une source décisive contredit le fait, il est `RÉFUTÉ`.
 - **E2.** Si un axiome ou une preuve le soutient, il est `PROUVÉ`.
@@ -33,7 +33,7 @@ L'indépendance se mesure par **organisation** : deux pages d'un même site ne c
 
 1. **Maillon le plus faible.** Un fait déduit prend le statut le plus faible parmi ses prémisses (preuve canonique).
 2. **Plafond « hypothèse ».** Une règle ajoutée par l'utilisateur plafonne ses conclusions à `NON VÉRIFIÉ`.
-3. **Plafond « monde clos ».** Une conclusion qui utilise `non` (l'absence d'un fait) plafonne à `PLAUSIBLE`. Ne pas trouver un fait ne prouve pas qu'il est faux.
+3. **Plafond « monde clos ».** Une conclusion qui utilise `not` (l'absence d'un fait) plafonne à `PLAUSIBLE`. Ne pas trouver un fait ne prouve pas qu'il est faux.
 4. **Contradictions.** Pour chaque violation d'une contrainte d'intégrité, on remonte aux faits de base qui la supportent.
    - S'il existe un **unique** fait le plus faible et que **tous les autres** sont au moins `CONFIRMÉ`s, ce fait est `RÉFUTÉ` : il est retiré et l'on recommence.
    - Sinon, les faits les plus faibles deviennent `CONTESTÉ`s et le conflit est signalé comme non résolu. On ne tranche pas arbitrairement.

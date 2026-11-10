@@ -35,7 +35,7 @@ La grammaire EBNF figure dans `reasoning/syntax.py`.
 Voir `docs/epistemologie.md` §3.
 
 ## Questions ouvertes
-1. **Distinguer `instance_de` et `sous_classe_de`.** Aujourd'hui, tout passe par `est_un`.
+1. **Distinguer `instance_of` et `subclass_of`.** Aujourd'hui, tout passe par `is_a`.
 2. **Chaînage arrière tabulé** pour les grandes bases, afin d'éviter de tout matérialiser.
 3. **Statut d'un fait dérivé** calculé sur la meilleure preuve plutôt que sur la preuve canonique (point fixe max-min).
 4. **Prédicats intégrés** (comparaisons, arithmétique exacte) pour M4.

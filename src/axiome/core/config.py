@@ -1,4 +1,4 @@
-"""Configuration, résolue une seule fois au démarrage."""
+"""Configuration, resolved once at startup."""
 
 from __future__ import annotations
 

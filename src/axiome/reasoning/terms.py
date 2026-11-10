@@ -1,14 +1,14 @@
-"""Termes et atomes du langage logique d'Axiome (sous-ensemble de Datalog).
+"""Terms and atoms of the Axiome logic language (a Datalog subset).
 
-Choix de conception (voir RFC-0001) :
+Design choices (see RFC-0001):
 
-* pas de symboles de fonction → l'univers de Herbrand est fini, donc toute
-  saturation termine ;
-* constantes = chaînes ou entiers (pas de flottants : leur arithmétique dépend de
-  la plateforme et casserait le déterminisme) ;
-* un ordre total canonique (:func:`term_key`, :meth:`Atom.sort_key`) est défini
-  sur tous les objets : chaque parcours du moteur est trié, jamais dépendant de
-  l'ordre d'insertion ou du hachage.
+* no function symbols, so the Herbrand universe is finite and every saturation
+  terminates;
+* constants are strings or integers (no floats: their arithmetic is
+  platform-dependent and would break determinism);
+* a canonical total order (:func:`term_key`, :meth:`Atom.sort_key`) is defined
+  on every object: each traversal in the engine is sorted, never dependent on
+  insertion or hashing order.
 """
 
 from __future__ import annotations
@@ -18,11 +18,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 _IDENT = re.compile(r"[^\W\d_]\w*", re.UNICODE)
+NEGATION = "not"  # reserved keyword of the language
 
 
 @dataclass(frozen=True, slots=True)
 class Var:
-    """Variable logique (commence par une majuscule ou ``_`` dans la syntaxe)."""
+    """Logic variable (starts with an uppercase letter or ``_`` in the syntax)."""
 
     name: str
 
@@ -38,15 +39,15 @@ AtomKey = tuple[str, tuple[TermKey, ...]]
 
 
 def is_bare_identifier(value: str) -> bool:
-    """Vrai si la constante peut s'écrire sans guillemets."""
-    return bool(_IDENT.fullmatch(value)) and value[0].islower() and value != "non"
+    """True if the constant can be written without quotes."""
+    return bool(_IDENT.fullmatch(value)) and value[0].islower() and value != NEGATION
 
 
 def format_term(term: Term) -> str:
     if isinstance(term, Var):
         return term.name
-    if isinstance(term, bool):  # bool est un int en Python : on le refuse explicitement
-        raise TypeError("les booléens ne sont pas des constantes Axiome")
+    if isinstance(term, bool):  # bool is an int in Python: reject it explicitly
+        raise TypeError("booleans are not Axiome constants")
     if isinstance(term, int):
         return str(term)
     if is_bare_identifier(term):
@@ -56,7 +57,7 @@ def format_term(term: Term) -> str:
 
 
 def term_key(term: Term) -> TermKey:
-    """Clé de tri totale : entiers < chaînes < variables."""
+    """Total sort key: integers < strings < variables."""
     if isinstance(term, Var):
         return (2, term.name)
     if isinstance(term, int):
@@ -66,7 +67,7 @@ def term_key(term: Term) -> TermKey:
 
 @dataclass(frozen=True, slots=True)
 class Atom:
-    """Prédicat appliqué à des termes, ex. ``est_un(chat, mammifère)``."""
+    """A predicate applied to terms, e.g. ``is_a(cat, mammal)``."""
 
     predicate: str
     args: tuple[Term, ...] = ()
@@ -79,7 +80,7 @@ class Atom:
         return not any(isinstance(a, Var) for a in self.args)
 
     def variables(self) -> tuple[Var, ...]:
-        """Variables dans l'ordre de première apparition (sans doublon)."""
+        """Variables in order of first occurrence (without duplicates)."""
         seen: dict[Var, None] = {}
         for a in self.args:
             if isinstance(a, Var):
@@ -97,13 +98,13 @@ class Atom:
 
 @dataclass(frozen=True, slots=True)
 class Literal:
-    """Atome éventuellement nié (négation par l'échec, stratifiée)."""
+    """A possibly negated atom (stratified negation as failure)."""
 
     atom: Atom
     negated: bool = False
 
     def __str__(self) -> str:
-        return f"non {self.atom}" if self.negated else str(self.atom)
+        return f"{NEGATION} {self.atom}" if self.negated else str(self.atom)
 
 
 def walk(term: Term, subst: Substitution) -> Term:
@@ -113,7 +114,7 @@ def walk(term: Term, subst: Substitution) -> Term:
 
 
 def unify(pattern: Atom, fact: Atom, subst: Substitution) -> dict[Var, Term] | None:
-    """Unifie deux atomes sous une substitution ; renvoie la nouvelle substitution ou None."""
+    """Unify two atoms under a substitution; return the extended substitution or None."""
     if pattern.signature != fact.signature:
         return None
     out = dict(subst)

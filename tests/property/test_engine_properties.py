@@ -1,7 +1,7 @@
-"""Propriétés mathématiques du moteur, vérifiées sur des entrées aléatoires.
+"""Mathematical properties of the engine, checked on generated inputs.
 
-Hypothesis génère des graphes ; le résultat doit coïncider avec un calcul de
-référence indépendant (Floyd-Warshall) et être invariant par permutation.
+Hypothesis generates graphs; the result must match an independent reference
+computation (Floyd-Warshall) and be invariant under permutation.
 """
 
 from __future__ import annotations

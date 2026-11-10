@@ -8,11 +8,11 @@ X, Y = Var("X"), Var("Y")
 
 
 def test_format_term_quotes_only_when_needed() -> None:
-    assert format_term("chat") == "chat"
-    assert format_term("Chat") == '"Chat"'
+    assert format_term("cat") == "cat"
+    assert format_term("Cat") == '"Cat"'
     assert format_term("O(n log n)") == '"O(n log n)"'
     assert format_term('a"b\\c\n') == '"a\\"b\\\\c\\n"'
-    assert format_term("non") == '"non"'
+    assert format_term("not") == '"not"'
     assert format_term(-3) == "-3"
     assert format_term(X) == "X"
 
@@ -31,15 +31,14 @@ def test_atom_properties() -> None:
     assert not a.is_ground()
     assert a.variables() == (X, Y)
     assert str(a) == "p(X, a, X, Y)"
-    assert str(Atom("vrai")) == "vrai"
-    assert str(Literal(a, negated=True)).startswith("non ")
+    assert str(Atom("true")) == "true"
+    assert str(Literal(a, negated=True)).startswith("not ")
 
 
 def test_unify_and_substitute() -> None:
-    s = unify(Atom("p", (X, X)), Atom("p", ("a", "a")), {})
-    assert s == {X: "a"}
+    assert unify(Atom("p", (X, X)), Atom("p", ("a", "a")), {}) == {X: "a"}
     assert unify(Atom("p", (X, X)), Atom("p", ("a", "b")), {}) is None
     assert unify(Atom("p", (X,)), Atom("q", ("a",)), {}) is None
-    assert unify(Atom("p", (1,)), Atom("p", ("1",)), {}) is None  # types distincts
+    assert unify(Atom("p", (1,)), Atom("p", ("1",)), {}) is None  # distinct types
     assert unify(Atom("p", (X, Y)), Atom("p", (Y, "a")), {}) == {X: Y, Y: "a"}
     assert substitute(Atom("p", (X, Y)), {X: Y, Y: "a"}) == Atom("p", ("a", "a"))

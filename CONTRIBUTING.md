@@ -7,10 +7,10 @@
 4. **Revue obligatoire** et CI verte avant toute fusion. On fusionne en *squash merge*.
 
 ## Commits
-[Conventional Commits](https://www.conventionalcommits.org/fr/), message en français :
+[Conventional Commits](https://www.conventionalcommits.org/), in English:
 ```
-feat(reasoning): ajoute la négation stratifiée
-fix(store): rend l'ajout de preuves idempotent
+feat(reasoning): add stratified negation
+fix(store): make evidence insertion idempotent
 ```
 
 ## Porte de qualité (identique à la CI)
@@ -26,7 +26,9 @@ make check   # ruff + format + mypy --strict + pytest --cov (≥ 90 %)
 - [ ] `CHANGELOG.md` mis à jour (section « Non publié »).
 
 ## Style
-- Identifiants en anglais, textes et documentation en français (ADR-0004).
+- **Tout le code source est en anglais** : identifiants, commentaires, docstrings, messages d'erreur et vocabulaire de la base (ADR-0005).
+- Aucun texte affiché dans le code : passer par `axiome.i18n` (`t()` / `msg()`) et ajouter la clé dans **les deux** catalogues `src/axiome/locales/{en,fr}.json` (un test le vérifie).
+- Commits et PR en anglais. **Aucun agent IA comme co-auteur** : pas de ligne `Co-Authored-By` d'outil IA.
 - Typage complet, `mypy --strict`.
 - Fonctions pures dès que possible ; les E/S restent aux bords (`knowledge`, `cli`).
-- Toute affirmation ajoutée à la graine cite sa source (voir `src/axiome/data/seed/LISEZMOI.md`).
+- Toute affirmation ajoutée à la graine cite sa source (voir `src/axiome/data/seed/README.md`).

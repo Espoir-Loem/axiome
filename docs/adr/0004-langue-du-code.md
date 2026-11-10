@@ -1,6 +1,6 @@
 # ADR-0004 : Code en anglais, produit et docs en français
 
-- **Statut** : Accepté
+- **Statut** : Supplanté par ADR-0005
 - **Date** : 2026-11-10
 
 ## Décision

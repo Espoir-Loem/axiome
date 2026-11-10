@@ -1,7 +1,7 @@
-"""Façade d'Axiome : relie stockage, raisonnement et vérification.
+"""Axiome facade: wires storage, reasoning and verification together.
 
-C'est le seul point d'entrée que l'interface (CLI, plus tard d'autres) doit
-utiliser. L'état des croyances est recalculé paresseusement après chaque ajout.
+This is the only entry point interfaces (CLI, later others) should use. The
+belief state is recomputed lazily after every write.
 """
 
 from __future__ import annotations
@@ -12,38 +12,39 @@ from dataclasses import dataclass
 from axiome.core.clock import Clock, SystemClock
 from axiome.core.config import IN_MEMORY, Config
 from axiome.core.errors import KnowledgeError, ProgramError
+from axiome.i18n import Msg, msg
 from axiome.knowledge.seed import load_seed
 from axiome.knowledge.store import KnowledgeStore
 from axiome.reasoning.engine import Answer, Proof
 from axiome.reasoning.program import Constraint, Program, Rule
 from axiome.reasoning.syntax import Query, parse_program, parse_statement
-from axiome.reasoning.terms import Atom, Literal
+from axiome.reasoning.terms import Atom
 from axiome.verification.epistemic import Assessment, Stance, Status, assess
 from axiome.verification.revision import CLOSED_WORLD_CAP, BeliefState, revise
 
-USER_SOURCE = "utilisateur"
+USER_SOURCE = "user"
 
 
 @dataclass(frozen=True, slots=True)
 class AnswerView:
     answer: Answer
-    facts: tuple[tuple[Atom, Assessment], ...]  # chaque prémisse avec son statut
-    overall: Assessment  # maillon le plus faible, plafonné si la requête utilise « non »
-    closed_world: bool  # la réponse dépend d'une absence d'information
+    facts: tuple[tuple[Atom, Assessment], ...]  # every premise with its status
+    overall: Assessment  # weakest link, capped when the query uses negation
+    closed_world: bool  # the answer depends on an absence of information
 
 
 @dataclass(frozen=True, slots=True)
 class QueryResult:
     query: Query
     answers: tuple[AnswerView, ...]
-    refuted: tuple[tuple[Atom, Assessment], ...]  # si la requête close vise un fait réfuté
+    refuted: tuple[tuple[Atom, Assessment], ...]  # ground query atoms that were refuted
 
 
 @dataclass(frozen=True, slots=True)
 class Explanation:
     fact: Atom
     assessment: Assessment
-    proof: Proof | None  # None si le fait a été écarté (réfuté)
+    proof: Proof | None  # None when the fact was discarded (refuted)
     statuses: dict[Atom, Assessment]
 
 
@@ -63,7 +64,7 @@ class Kernel:
     def in_memory(cls, clock: Clock | None = None) -> Kernel:
         return cls(KnowledgeStore(IN_MEMORY), clock)
 
-    # -- programme -----------------------------------------------------------
+    # -- program -------------------------------------------------------------
     def program(self, extra: Sequence[Rule] = ()) -> Program:
         rules: list[Rule] = []
         constraints: list[Constraint] = []
@@ -73,7 +74,7 @@ class Kernel:
                     rules.append(stmt)
                 elif isinstance(stmt, Constraint):
                     constraints.append(stmt)
-        return Program(tuple(rules) + tuple(extra), tuple(constraints))
+        return Program((*rules, *extra), tuple(constraints))
 
     @property
     def state(self) -> BeliefState:
@@ -82,32 +83,32 @@ class Kernel:
             self._state = revise(self.program(), base)
         return self._state
 
-    # -- écriture ------------------------------------------------------------
-    def tell(self, text: str, source_id: str = USER_SOURCE, *, contradicts: bool = False) -> str:
-        """Ajoute un fait ou une règle (hypothèse). Renvoie un accusé lisible."""
+    # -- writes --------------------------------------------------------------
+    def tell(self, text: str, source_id: str = USER_SOURCE, *, contradicts: bool = False) -> Msg:
+        """Add a fact or a (hypothetical) rule. Return a translatable acknowledgement."""
         stmt = parse_statement(text, axiomatic=False)
         if isinstance(stmt, Atom):
             stance = Stance.CONTRADICTS if contradicts else Stance.SUPPORTS
             added = self.store.add_evidence(stmt, source_id, stance, self.clock.now())
             self._state = None
-            return f"Noté : {stmt}" if added else f"Déjà connu : {stmt}"
+            return msg("tell.noted" if added else "tell.known", atom=stmt)
         if isinstance(stmt, Rule):
-            self.program(extra=(stmt,))  # valide AVANT d'écrire (sûreté, stratification)
+            self.program(extra=(stmt,))  # validate BEFORE writing (safety, stratification)
             added = self.store.add_rule(str(stmt), axiomatic=False)
             self._state = None
-            return f"Règle ajoutée (hypothèse) : {stmt}" if added else "Règle déjà connue."
+            return msg("tell.rule_added", rule=stmt) if added else msg("tell.rule_known")
         if isinstance(stmt, Constraint):
-            raise ProgramError("les contraintes d'intégrité ne sont modifiables que dans la graine")
-        raise KnowledgeError("utilisez ask() pour une requête")
+            raise ProgramError("knowledge.constraint_seed_only")
+        raise KnowledgeError("knowledge.use_ask")
 
-    # -- lecture -------------------------------------------------------------
+    # -- reads ---------------------------------------------------------------
     def ask(self, text: str) -> QueryResult:
         stmt = parse_statement(text if text.lstrip().startswith("?-") else f"?- {text}")
-        if not isinstance(stmt, Query):  # pragma: no cover - garanti par le préfixe
-            raise KnowledgeError("requête attendue")
+        if not isinstance(stmt, Query):  # pragma: no cover - guaranteed by the prefix
+            raise KnowledgeError("knowledge.use_ask")
         state = self.state
         uses_absence = any(lit.negated for lit in stmt.body)
-        views = tuple(self._view(a, state, uses_absence) for a in state.model.query(stmt.body))
+        views = tuple(_view(a, state, uses_absence) for a in state.model.query(stmt.body))
         refuted = tuple(
             (lit.atom, state.refuted[lit.atom])
             for lit in stmt.body
@@ -115,27 +116,15 @@ class Kernel:
         )
         return QueryResult(stmt, views, refuted)
 
-    @staticmethod
-    def _view(answer: Answer, state: BeliefState, uses_absence: bool) -> AnswerView:
-        facts = tuple((p, state.assessments[p]) for p in answer.premises)
-        weakest = min((a.status for _, a in facts), default=Status.PROVED)
-        reasons: tuple[str, ...] = ("maillon le plus faible des prémisses",)
-        if uses_absence:
-            reasons += ("repose sur une absence d'information (hypothèse du monde clos)",)
-            weakest = min(weakest, CLOSED_WORLD_CAP)
-        return AnswerView(answer, facts, Assessment(weakest, reasons), uses_absence)
-
     def explain(self, text: str) -> Explanation:
         stmt = parse_statement(text)
         if not isinstance(stmt, Atom):
-            raise KnowledgeError("un fait clos est attendu, ex. est_un(chat, animal)")
+            raise KnowledgeError("knowledge.ground_fact_expected")
         state = self.state
         if stmt in state.refuted:
             return Explanation(stmt, state.refuted[stmt], None, {})
         if stmt not in state.model:
-            raise KnowledgeError(
-                f"« {stmt} » n'est pas établi (ce qui ne veut pas dire qu'il est faux)"
-            )
+            raise KnowledgeError("knowledge.not_established", atom=stmt)
         proof = state.model.proof(stmt)
         statuses: dict[Atom, Assessment] = {}
         stack = [proof]
@@ -145,7 +134,12 @@ class Kernel:
             stack.extend(node.children)
         return Explanation(stmt, state.assessments[stmt], proof, statuses)
 
-    def body_of(self, text: str) -> tuple[Literal, ...]:
-        stmt = parse_statement(f"?- {text}")
-        assert isinstance(stmt, Query)
-        return stmt.body
+
+def _view(answer: Answer, state: BeliefState, uses_absence: bool) -> AnswerView:
+    facts = tuple((p, state.assessments[p]) for p in answer.premises)
+    weakest = min((a.status for _, a in facts), default=Status.PROVED)
+    reasons: tuple[Msg, ...] = (msg("reason.weakest_premise"),)
+    if uses_absence:
+        reasons += (msg("reason.closed_world_answer"),)
+        weakest = min(weakest, CLOSED_WORLD_CAP)
+    return AnswerView(answer, facts, Assessment(weakest, reasons), uses_absence)

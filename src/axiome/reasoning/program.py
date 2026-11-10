@@ -1,9 +1,9 @@
-"""Règles, contraintes d'intégrité et validation d'un programme logique.
+"""Rules, integrity constraints and logic program validation.
 
-Un :class:`Program` n'est construit que s'il est **sûr** (toute variable de la tête
-ou d'un littéral nié apparaît dans un littéral positif du corps) et
-**stratifiable** (aucune récursion à travers une négation). Ces deux propriétés
-garantissent un modèle unique et calculable : c'est le socle du déterminisme.
+A :class:`Program` can only be built if it is **safe** (every variable of the
+head or of a negated literal occurs in a positive body literal) and
+**stratifiable** (no recursion through negation). Together these guarantee a
+unique, computable model: the foundation of determinism.
 """
 
 from __future__ import annotations
@@ -12,12 +12,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from axiome.core.errors import ProgramError
+from axiome.i18n import Msg, msg
 from axiome.reasoning.terms import Atom, Literal, Var
 
 
 @dataclass(frozen=True, slots=True)
 class Rule:
-    """``tête :- corps``. ``axiomatic`` = règle de la base de référence (vs hypothèse)."""
+    """``head :- body``. ``axiomatic`` = reference rule (as opposed to a hypothesis)."""
 
     head: Atom
     body: tuple[Literal, ...]
@@ -31,7 +32,7 @@ class Rule:
 
 @dataclass(frozen=True, slots=True)
 class Constraint:
-    """Contrainte d'intégrité : le corps ne doit JAMAIS être satisfait."""
+    """Integrity constraint: its body must NEVER be satisfied."""
 
     name: str
     body: tuple[Literal, ...]
@@ -40,24 +41,24 @@ class Constraint:
         return f"! {self.name} :- {', '.join(map(str, self.body))}."
 
 
-def check_body_safety(body: Sequence[Literal], required: Sequence[Var], where: str) -> None:
-    """Vérifie que ``required`` et les variables niées sont liées par un littéral positif."""
+def check_body_safety(body: Sequence[Literal], required: Sequence[Var], where: Msg) -> None:
+    """Check that ``required`` and negated variables are bound by a positive literal."""
     positives = [lit for lit in body if not lit.negated]
     if not positives:
-        raise ProgramError(f"{where} : le corps doit contenir au moins un littéral positif")
+        raise ProgramError("program.no_positive_literal", where=where)
     bound = {v for lit in positives for v in lit.atom.variables()}
     for v in required:
         if v not in bound:
-            raise ProgramError(f"{where} : la variable {v} n'est liée par aucun littéral positif")
+            raise ProgramError("program.unbound_variable", where=where, var=v)
     for lit in body:
         if lit.negated:
             for v in lit.atom.variables():
                 if v not in bound:
-                    raise ProgramError(f"{where} : la variable {v} n'apparaît que sous négation")
+                    raise ProgramError("program.negated_only", where=where, var=v)
 
 
 def _stratify(rules: Sequence[Rule]) -> dict[str, int]:
-    """Attribue une strate à chaque prédicat (algorithme de point fixe classique)."""
+    """Assign a stratum to each predicate (classic fixpoint algorithm)."""
     preds = sorted(
         {r.head.predicate for r in rules} | {lit.atom.predicate for r in rules for lit in r.body}
     )
@@ -73,8 +74,7 @@ def _stratify(rules: Sequence[Rule]) -> dict[str, int]:
                 if stratum[h] < need:
                     if need > limit:
                         raise ProgramError(
-                            f"programme non stratifiable : « {h} » dépend récursivement "
-                            f"de la négation de « {lit.atom.predicate} »"
+                            "program.not_stratifiable", head=h, dependency=lit.atom.predicate
                         )
                     stratum[h] = need
                     changed = True
@@ -90,10 +90,10 @@ class Program:
     def __post_init__(self) -> None:
         for i, r in enumerate(self.rules):
             if any(lit.atom.predicate == r.head.predicate and lit.negated for lit in r.body):
-                raise ProgramError(f"règle {i + 1} : un prédicat ne peut pas nier sa propre tête")
-            check_body_safety(r.body, r.head.variables(), f"règle « {r} »")
+                raise ProgramError("program.negates_own_head", index=i + 1)
+            check_body_safety(r.body, r.head.variables(), msg("where.rule", rule=r))
         for c in self.constraints:
-            check_body_safety(c.body, (), f"contrainte « {c.name} »")
+            check_body_safety(c.body, (), msg("where.constraint", name=c.name))
         levels = _stratify(self.rules)
         groups: dict[int, list[int]] = {}
         for i, r in enumerate(self.rules):

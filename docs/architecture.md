@@ -29,7 +29,7 @@ core  ◄──  reasoning  ◄──  verification  ◄──  knowledge  ◄�
 
 ## Flux d'une requête (M1)
 
-1. La `cli` reçoit `?- est_un(chat, X).`
+1. La `cli` reçoit `?- is_a(cat, X).`
 2. `kernel.ask` analyse la requête (`reasoning.syntax`).
 3. Calcul de `kernel.state`, mis en cache et invalidé à chaque écriture :
    1. `knowledge.store.evidence()` fournit les faits et leurs preuves ;

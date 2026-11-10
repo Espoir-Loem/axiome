@@ -32,7 +32,7 @@ def test_evidence_round_trip_and_idempotence() -> None:
 def test_errors() -> None:
     st = KnowledgeStore()
     with pytest.raises(KnowledgeError):
-        st.add_evidence(parse_atom("p(a)"), "inconnue", Stance.SUPPORTS, "t")
+        st.add_evidence(parse_atom("p(a)"), "unknown", Stance.SUPPORTS, "t")
     st.add_source(SRC)
     with pytest.raises(KnowledgeError):
         st.add_evidence(Atom("p", (Var("X"),)), "s", Stance.SUPPORTS, "t")
@@ -50,9 +50,9 @@ def test_rules_and_meta(tmp_path: Path) -> None:
     st.replace_axiomatic_rules("s(X) :- q(X).")
     assert [r.text for r in st.rules()] == ["s(X) :- q(X).", "p(X) :- q(X)."]
     st.set_meta("k", "v")
-    assert st.get_meta("k") == "v" and st.get_meta("absent") is None
+    assert st.get_meta("k") == "v" and st.get_meta("missing") is None
     st.close()
-    assert KnowledgeStore(path).get_meta("k") == "v"  # persistance
+    assert KnowledgeStore(path).get_meta("k") == "v"  # persistence
 
 
 def test_schema_version_guard(tmp_path: Path) -> None:

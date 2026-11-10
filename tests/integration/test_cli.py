@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import builtins
-from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -11,45 +11,46 @@ from axiome.kernel import Kernel
 
 def test_execute_commands(kernel: Kernel) -> None:
     assert execute(kernel, "") == ""
-    assert "Commandes" in execute(kernel, ":aide")
-    assert "inconnue" in execute(kernel, ":nimporte")
-    assert "axiome:ontologie" in execute(kernel, ":sources")
-    assert "transitivite_est_un" in execute(kernel, ":regles")
-    assert "Aucune contradiction" in execute(kernel, ":conflits")
-    assert "PROUVÉ" in execute(kernel, ":preuve est_un(chat, animal)")
-    assert execute(kernel, "est_un(félix, chat).").startswith("Noté")
-    execute(kernel, "r(X) :- est_un(X, chat).")
-    assert "% hypothèse" in execute(kernel, ":regles")
-    assert "X = félix" in execute(kernel, "?- est_un(X, chat).")
+    assert "Commands" in execute(kernel, ":help")
+    assert "Unknown command" in execute(kernel, ":nope")
+    assert "axiome:ontology" in execute(kernel, ":sources")
+    assert "is_a_transitivity" in execute(kernel, ":rules")
+    assert "No contradiction" in execute(kernel, ":conflicts")
+    assert "PROVED" in execute(kernel, ":proof is_a(cat, animal)")
+    assert execute(kernel, "is_a(felix, cat).").startswith("Noted")
+    execute(kernel, "r(X) :- is_a(X, cat).")
+    assert "% hypothesis" in execute(kernel, ":rules")
+    assert "X = felix" in execute(kernel, "?- is_a(X, cat).")
 
 
 def test_main_command_mode(capsys: pytest.CaptureFixture[str]) -> None:
-    code = main(["--memoire", "-c", "?- est_un(chat, animal).", "-c", "p(X) :- q(Y)."])
+    code = main(["--memory", "-c", "?- is_a(cat, animal).", "-c", "p(X) :- q(Y)."])
     out = capsys.readouterr().out
     assert code == 1
-    assert "Oui  [PROUVÉ]" in out and "Erreur" in out
+    assert "Yes  [PROVED]" in out and "Error" in out
 
 
-def test_main_db_option(tmp_path, capsys: pytest.CaptureFixture[str]) -> None:  # type: ignore[no-untyped-def]
+def test_main_lang_option(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["--memory", "--lang", "fr", "-c", "?- is_a(cat, animal)."]) == 0
+    assert "Oui  [PROUVÉ]" in capsys.readouterr().out
+
+
+def test_main_db_option(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     db = str(tmp_path / "x.db")
-    assert main(["--db", db, "-c", "est_un(félix, chat)."]) == 0
-    assert main(["--db", db, "-c", "?- est_un(félix, animal)."]) == 0
-    assert "Oui" in capsys.readouterr().out
-
-
-def _feed(lines: list[str]) -> Iterator[str]:
-    yield from lines
+    assert main(["--db", db, "-c", "is_a(felix, cat)."]) == 0
+    assert main(["--db", db, "-c", "?- is_a(felix, animal)."]) == 0
+    assert "Yes" in capsys.readouterr().out
 
 
 def test_repl(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    feed = _feed(["?- est_un(chat, animal).", "p(", ":quitter"])
+    feed = iter(["?- is_a(cat, animal).", "p(", ":quit"])
     monkeypatch.setattr(builtins, "input", lambda _prompt: next(feed))
-    assert main(["--memoire"]) == 0
+    assert main(["--memory"]) == 0
     out = capsys.readouterr().out
-    assert "PROUVÉ" in out and "Erreur" in out
+    assert "PROVED" in out and "Error" in out
 
 
-def test_repl_eof(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_repl_eof(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     def raise_eof(_prompt: str) -> str:
         raise EOFError
 

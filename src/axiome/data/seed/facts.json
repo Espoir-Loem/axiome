@@ -1,0 +1,79 @@
+{
+  "sources": [
+    {"id": "axiome:ontology", "name": "Axiome reference ontology", "kind": "axiom",
+     "reliability": "HIGH", "organization": "axiome"},
+    {"id": "axiome:si", "name": "International System of Units (BIPM, 9th edition)", "kind": "axiom",
+     "reliability": "HIGH", "organization": "bipm", "url": "https://www.bipm.org/en/publications/si-brochure"},
+    {"id": "user", "name": "User", "kind": "user", "reliability": "LOW", "organization": "user"}
+  ],
+  "facts": [
+    {"source": "axiome:ontology", "topic": "living beings (taxonomy demo)", "facts": [
+      "is_a(cat, mammal)", "is_a(dog, mammal)", "is_a(whale, mammal)",
+      "is_a(mammal, vertebrate)", "is_a(bird, vertebrate)", "is_a(penguin, bird)",
+      "is_a(vertebrate, animal)", "disjoint(mammal, bird)",
+      "has_property(vertebrate, backbone)", "has_property(mammal, nurses_young)"
+    ]},
+    {"source": "axiome:ontology", "topic": "data structures", "facts": [
+      "is_a(data_structure, computing_concept)",
+      "is_a(stack, data_structure)", "is_a(queue, data_structure)",
+      "is_a(linked_list, data_structure)", "is_a(array, data_structure)",
+      "is_a(hash_table, data_structure)", "is_a(graph, data_structure)",
+      "is_a(tree, graph)", "is_a(binary_search_tree, tree)", "is_a(heap, tree)",
+      "has_property(stack, lifo)", "has_property(queue, fifo)", "has_property(tree, acyclic)",
+      "has_property(tree, connected)"
+    ]},
+    {"source": "axiome:ontology", "topic": "algorithms", "facts": [
+      "is_a(algorithm, computing_concept)",
+      "is_a(sorting_algorithm, algorithm)", "is_a(search_algorithm, algorithm)",
+      "is_a(merge_sort, sorting_algorithm)", "is_a(quicksort, sorting_algorithm)",
+      "is_a(heapsort, sorting_algorithm)", "is_a(insertion_sort, sorting_algorithm)",
+      "is_a(binary_search, search_algorithm)", "is_a(linear_search, search_algorithm)",
+      "disjoint(algorithm, data_structure)",
+      "worst_time_complexity(merge_sort, \"O(n log n)\")",
+      "worst_time_complexity(heapsort, \"O(n log n)\")",
+      "worst_time_complexity(quicksort, \"O(n^2)\")",
+      "average_time_complexity(quicksort, \"O(n log n)\")",
+      "worst_time_complexity(insertion_sort, \"O(n^2)\")",
+      "worst_time_complexity(binary_search, \"O(log n)\")",
+      "worst_time_complexity(linear_search, \"O(n)\")",
+      "has_property(merge_sort, stable)", "has_property(insertion_sort, stable)",
+      "prerequisite(binary_search, sorted_input)",
+      "prerequisite(binary_search, random_access)"
+    ]},
+    {"source": "axiome:ontology", "topic": "software design", "facts": [
+      "is_a(creational_pattern, design_pattern)",
+      "is_a(structural_pattern, design_pattern)",
+      "is_a(behavioral_pattern, design_pattern)",
+      "is_a(singleton, creational_pattern)", "is_a(factory_method, creational_pattern)",
+      "is_a(builder, creational_pattern)", "is_a(adapter, structural_pattern)",
+      "is_a(decorator, structural_pattern)", "is_a(facade, structural_pattern)",
+      "is_a(observer, behavioral_pattern)", "is_a(strategy, behavioral_pattern)",
+      "is_a(command, behavioral_pattern)",
+      "disjoint(creational_pattern, structural_pattern)",
+      "disjoint(creational_pattern, behavioral_pattern)",
+      "disjoint(structural_pattern, behavioral_pattern)",
+      "is_a(solid_principle, design_principle)",
+      "is_a(single_responsibility, solid_principle)", "is_a(open_closed, solid_principle)",
+      "is_a(liskov_substitution, solid_principle)",
+      "is_a(interface_segregation, solid_principle)",
+      "is_a(dependency_inversion, solid_principle)"
+    ]},
+    {"source": "axiome:si", "topic": "physical quantities (SI)", "facts": [
+      "is_a(si_base_quantity, physical_quantity)",
+      "is_a(si_derived_quantity, physical_quantity)",
+      "is_a(length, si_base_quantity)", "is_a(mass, si_base_quantity)",
+      "is_a(time, si_base_quantity)", "is_a(electric_current, si_base_quantity)",
+      "is_a(thermodynamic_temperature, si_base_quantity)",
+      "is_a(amount_of_substance, si_base_quantity)",
+      "is_a(luminous_intensity, si_base_quantity)",
+      "is_a(velocity, si_derived_quantity)", "is_a(force, si_derived_quantity)",
+      "is_a(energy, si_derived_quantity)",
+      "si_unit(length, metre)", "si_unit(mass, kilogram)", "si_unit(time, second)",
+      "si_unit(electric_current, ampere)", "si_unit(thermodynamic_temperature, kelvin)",
+      "si_unit(amount_of_substance, mole)", "si_unit(luminous_intensity, candela)",
+      "si_unit(force, newton)", "si_unit(energy, joule)",
+      "dimension(velocity, \"L T^-1\")", "dimension(force, \"M L T^-2\")",
+      "dimension(energy, \"M L^2 T^-2\")"
+    ]}
+  ]
+}

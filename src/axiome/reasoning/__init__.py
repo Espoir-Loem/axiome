@@ -1,1 +1,1 @@
-"""Raisonnement symbolique : logique (M1), puis algèbre, physique, information."""
+"""Symbolic reasoning: logic (M1), then algebra, physics and information theory."""

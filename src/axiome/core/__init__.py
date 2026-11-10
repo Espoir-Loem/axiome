@@ -1,1 +1,1 @@
-"""Briques transverses : erreurs, configuration, horloge."""
+"""Cross-cutting building blocks: errors, configuration, clock."""

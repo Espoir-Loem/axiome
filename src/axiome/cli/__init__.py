@@ -1,1 +1,1 @@
-"""Interfaces utilisateur."""
+"""User interfaces."""

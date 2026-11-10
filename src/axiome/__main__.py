@@ -1,4 +1,4 @@
-"""Point d'entrée ``python -m axiome``."""
+"""Entry point for ``python -m axiome``."""
 
 from axiome.cli.main import main
 

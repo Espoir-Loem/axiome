@@ -1,7 +1,7 @@
-"""Persistance SQLite de la connaissance : faits, preuves, sources, règles.
+"""SQLite persistence for knowledge: facts, evidence, sources, rules.
 
-Le stockage est volontairement « bête » : il ne raisonne pas. Toute lecture est
-triée explicitement (jamais d'ordre implicite SQLite) pour rester déterministe.
+Storage is deliberately "dumb": it never reasons. Every read is explicitly
+sorted (never relying on SQLite's implicit order) to stay deterministic.
 """
 
 from __future__ import annotations
@@ -59,12 +59,12 @@ class KnowledgeStore:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         try:
             self._db = sqlite3.connect(path)
-        except sqlite3.Error as exc:  # pragma: no cover - dépend de l'OS
-            raise StorageError(f"impossible d'ouvrir la base {path} : {exc}") from exc
+        except sqlite3.Error as exc:  # pragma: no cover - OS dependent
+            raise StorageError("storage.open_failed", path=path, detail=exc) from exc
         self._db.execute("PRAGMA foreign_keys = ON")
         version = self._db.execute("PRAGMA user_version").fetchone()[0]
         if version not in (0, SCHEMA_VERSION):
-            raise StorageError(f"schéma v{version} non pris en charge (attendu v{SCHEMA_VERSION})")
+            raise StorageError("storage.unsupported_schema", found=version, expected=SCHEMA_VERSION)
         with self._tx() as db:
             db.executescript(_SCHEMA)
             db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
@@ -78,9 +78,9 @@ class KnowledgeStore:
             with self._db:
                 yield self._db
         except sqlite3.Error as exc:
-            raise StorageError(str(exc)) from exc
+            raise StorageError("storage.sqlite", detail=exc) from exc
 
-    # -- méta ----------------------------------------------------------------
+    # -- meta ----------------------------------------------------------------
     def get_meta(self, key: str) -> str | None:
         row = self._db.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
         return None if row is None else str(row[0])
@@ -103,7 +103,7 @@ class KnowledgeStore:
             (source_id,),
         ).fetchone()
         if row is None:
-            raise KnowledgeError(f"source inconnue : {source_id}")
+            raise KnowledgeError("knowledge.unknown_source", source=source_id)
         return _row_to_source(row)
 
     def sources(self) -> list[Source]:
@@ -116,10 +116,10 @@ class KnowledgeStore:
     def add_evidence(
         self, atom: Atom, source_id: str, stance: Stance, recorded_at: str, excerpt: str = ""
     ) -> bool:
-        """Enregistre une preuve. Renvoie False si elle existait déjà (idempotent)."""
+        """Record evidence. Return False if it already existed (idempotent)."""
         if not atom.is_ground():
-            raise KnowledgeError(f"un fait doit être clos : {atom}")
-        self.source(source_id)  # valide l'existence
+            raise KnowledgeError("knowledge.non_ground_fact", atom=atom)
+        self.source(source_id)  # validates existence
         text = str(atom)
         with self._tx() as db:
             db.execute("INSERT OR IGNORE INTO facts (text) VALUES (?)", (text,))
@@ -143,7 +143,7 @@ class KnowledgeStore:
             )
         return out
 
-    # -- règles --------------------------------------------------------------
+    # -- rules ---------------------------------------------------------------
     def add_rule(self, text: str, axiomatic: bool) -> bool:
         with self._tx() as db:
             cur = db.execute(
@@ -153,7 +153,7 @@ class KnowledgeStore:
             return cur.rowcount == 1
 
     def replace_axiomatic_rules(self, text: str) -> None:
-        """Remplace le programme de référence (les règles hypothétiques sont conservées)."""
+        """Replace the reference program (hypothetical rules are kept)."""
         with self._tx() as db:
             db.execute("DELETE FROM rules WHERE axiomatic = 1")
             db.execute("INSERT INTO rules (text, axiomatic) VALUES (?, 1)", (text,))

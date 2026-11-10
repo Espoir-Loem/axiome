@@ -1,1 +1,1 @@
-"""Base de connaissances : stockage, provenance, graine."""
+"""Knowledge base: storage, provenance, seed."""

@@ -1,0 +1,19 @@
+% Axiome reference program (axiomatic rules).
+% Every rule added here must be justified in docs/rfc/0001-moteur-logique.md.
+
+% --- Taxonomy -------------------------------------------------------------
+[is_a_transitivity]     is_a(X, Z)         :- is_a(X, Y), is_a(Y, Z).
+[part_of_transitivity]  part_of(X, Z)      :- part_of(X, Y), part_of(Y, Z).
+[property_inheritance]  has_property(X, P) :- is_a(X, Y), has_property(Y, P).
+[disjoint_symmetry]     disjoint(B, A)     :- disjoint(A, B).
+
+% --- Software engineering -------------------------------------------------
+% An algorithm whose prerequisite is not guaranteed by the input is inapplicable.
+[applicable] applicable(A, I) :- is_a(A, algorithm), input(I), not missing_prerequisite(A, I).
+[missing_prerequisite] missing_prerequisite(A, I) :- prerequisite(A, P), input(I), not guarantees(I, P).
+
+% --- Integrity constraints (must NEVER be satisfied) ----------------------
+! disjoint_classes   :- is_a(X, A), disjoint(A, B), is_a(X, B).
+! taxonomy_cycle     :- is_a(X, X).
+! composition_cycle  :- part_of(X, X).
+% (Dimensional constraints arrive with the physics module, milestone M4.)

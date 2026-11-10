@@ -10,20 +10,20 @@ Axiome raisonne au lieu de deviner. Chaque réponse est accompagnée :
 Quand Axiome ne sait pas, il le dit. Il ne confond jamais « absence de preuve » et « preuve d'absence ».
 
 ```text
-axiome> ?- est_un(chat, animal).
+axiome> ?- is_a(cat, animal).
 Oui  [PROUVÉ]
 
-axiome> est_un(chat, oiseau).
-Noté : est_un(chat, oiseau)
+axiome> is_a(cat, bird).
+Noté : is_a(cat, bird)
 
-axiome> ?- est_un(chat, oiseau).
-Non. est_un(chat, oiseau) est RÉFUTÉ :
-  - viole la contrainte « classes_disjointes »
-  - incompatible avec : disjoint(mammifère, oiseau), est_un(chat, mammifère)
+axiome> ?- is_a(cat, bird).
+Non. is_a(cat, bird) est RÉFUTÉ :
+  - viole la contrainte « disjoint_classes »
+  - incompatible avec : disjoint(mammal, bird), is_a(cat, mammal)
 
-axiome> ?- est_un(X, algorithme_de_tri), non a_propriete(X, stable).
-X = tri_par_tas  [PLAUSIBLE]  (monde clos)
-X = tri_rapide  [PLAUSIBLE]  (monde clos)
+axiome> ?- is_a(X, sorting_algorithm), not has_property(X, stable).
+X = heapsort  [PLAUSIBLE]  (monde clos)
+X = quicksort  [PLAUSIBLE]  (monde clos)
 ```
 
 ## Installation
@@ -33,7 +33,8 @@ Il faut Python ≥ 3.10. Le noyau n'a **aucune dépendance** et tourne sur n'imp
 ```bash
 pip install -e .
 axiome            # REPL
-axiome --memoire -c "?- est_un(X, patron_de_création)."
+axiome --memory -c "?- is_a(X, creational_pattern)."
+axiome --lang en      # interface en anglais (défaut : français, ou $AXIOME_LANG)
 ```
 
 ## État du projet

@@ -1,1 +1,1 @@
-"""Vérification : statuts épistémiques et révision des croyances."""
+"""Verification: epistemic statuses and belief revision."""

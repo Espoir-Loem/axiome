@@ -1,1 +1,1 @@
-"""Données packagées."""
+"""Packaged data."""

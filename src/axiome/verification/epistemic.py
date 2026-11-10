@@ -1,11 +1,11 @@
-"""Statuts épistémiques : *pourquoi* croire une affirmation.
+"""Epistemic statuses: *why* a claim deserves belief.
 
-Spécification normative : ``docs/epistemologie.md``. Toute modification de ce
-fichier doit être reflétée dans ce document (et inversement).
+Normative specification: ``docs/epistemologie.md``. Any change to this file must
+be reflected there (and vice versa).
 
-Le statut n'est PAS une probabilité : c'est le résultat de règles explicites,
-ordonnées, appliquées sur des preuves typées. Deux exécutions sur les mêmes
-preuves donnent toujours le même statut et les mêmes raisons.
+A status is NOT a probability: it is the outcome of explicit, ordered rules
+applied to typed evidence. Two runs on the same evidence always produce the same
+status and the same reasons.
 """
 
 from __future__ import annotations
@@ -14,9 +14,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 
+from axiome.i18n import Msg, msg, t
+
 
 class Status(Enum):
-    """Du plus faible au plus fort. La valeur sert à comparer."""
+    """From weakest to strongest; the value is used for comparisons."""
 
     REFUTED = 0
     CONTESTED = 1
@@ -28,7 +30,7 @@ class Status(Enum):
 
     @property
     def label(self) -> str:
-        return _LABELS[self]
+        return t(f"status.{self.name}")
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Status):
@@ -41,28 +43,16 @@ class Status(Enum):
         return self.value <= other.value
 
 
-_LABELS = {
-    Status.REFUTED: "RÉFUTÉ",
-    Status.CONTESTED: "CONTESTÉ",
-    Status.UNVERIFIED: "NON VÉRIFIÉ",
-    Status.PLAUSIBLE: "PLAUSIBLE",
-    Status.CONFIRMED: "CONFIRMÉ",
-    Status.VERIFIED: "VÉRIFIÉ",
-    Status.PROVED: "PROUVÉ",
-}
-
-
 class SourceKind(Enum):
-    AXIOM = "axiome"  # définition ou connaissance de référence curée par le projet
-    PROOF = "preuve"  # démonstration logique/mathématique
-    COMPUTATION = "calcul"  # calcul ou exécution reproductible
-    REFERENCE = "reference"  # encyclopédie, base de données de référence
-    PUBLICATION = "publication"  # article scientifique
-    USER = "utilisateur"
-    OTHER = "autre"
+    AXIOM = "axiom"  # definition or reference knowledge curated by the project
+    PROOF = "proof"  # logical or mathematical demonstration
+    COMPUTATION = "computation"  # reproducible computation or execution
+    REFERENCE = "reference"  # encyclopedia, reference database
+    PUBLICATION = "publication"  # scientific paper
+    USER = "user"
+    OTHER = "other"
 
 
-DECISIVE_SUPPORT = {SourceKind.AXIOM: Status.PROVED, SourceKind.PROOF: Status.PROVED}
 DECISIVE = frozenset({SourceKind.AXIOM, SourceKind.PROOF, SourceKind.COMPUTATION})
 
 
@@ -73,8 +63,8 @@ class Reliability(Enum):
 
 
 class Stance(Enum):
-    SUPPORTS = "soutient"
-    CONTRADICTS = "contredit"
+    SUPPORTS = "supports"
+    CONTRADICTS = "contradicts"
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,7 +73,7 @@ class Source:
     name: str
     kind: SourceKind
     reliability: Reliability
-    organization: str  # deux sources de la même organisation ne sont pas indépendantes
+    organization: str  # two sources from the same organization are not independent
     url: str = ""
 
 
@@ -97,64 +87,74 @@ class Evidence:
 @dataclass(frozen=True, slots=True)
 class Assessment:
     status: Status
-    reasons: tuple[str, ...]
+    reasons: tuple[Msg, ...]
 
 
-def _orgs(evidence: Sequence[Evidence], minimum: Reliability) -> list[str]:
-    return sorted(
+def _orgs(evidence: Sequence[Evidence], minimum: Reliability) -> str:
+    """Comma-separated, sorted, de-duplicated organizations at or above ``minimum``."""
+    return ", ".join(
+        sorted(
+            {e.source.organization for e in evidence if e.source.reliability.value >= minimum.value}
+        )
+    )
+
+
+def _count(evidence: Sequence[Evidence], minimum: Reliability) -> int:
+    return len(
         {e.source.organization for e in evidence if e.source.reliability.value >= minimum.value}
     )
 
 
+def _names(evidence: Sequence[Evidence]) -> str:
+    return ", ".join(e.source.name for e in evidence)
+
+
 def assess(evidence: Sequence[Evidence]) -> Assessment:
-    """Applique les règles E1…E8 de ``docs/epistemologie.md`` dans l'ordre."""
+    """Apply rules E1-E8 of ``docs/epistemologie.md`` in order."""
     ordered = sorted(evidence, key=lambda e: (e.stance.value, e.source.id))
     pro = [e for e in ordered if e.stance is Stance.SUPPORTS]
     con = [e for e in ordered if e.stance is Stance.CONTRADICTS]
+    high = Reliability.HIGH
 
     decisive_con = [e for e in con if e.source.kind in DECISIVE]
     if decisive_con:  # E1
         return Assessment(
-            Status.REFUTED, tuple(f"contredit par {e.source.name}" for e in decisive_con)
+            Status.REFUTED, (msg("reason.contradicted_by", sources=_names(decisive_con)),)
         )
-    for kind, status in DECISIVE_SUPPORT.items():  # E2
-        hits = [e for e in pro if e.source.kind is kind]
-        if hits:
-            return Assessment(status, tuple(f"établi par {e.source.name}" for e in hits))
+    proved = [e for e in pro if e.source.kind in (SourceKind.AXIOM, SourceKind.PROOF)]
+    if proved:  # E2
+        return Assessment(Status.PROVED, (msg("reason.established_by", sources=_names(proved)),))
     computed = [e for e in pro if e.source.kind is SourceKind.COMPUTATION]
     if computed:  # E3
-        return Assessment(Status.VERIFIED, tuple(f"vérifié par {e.source.name}" for e in computed))
+        return Assessment(Status.VERIFIED, (msg("reason.verified_by", sources=_names(computed)),))
 
-    pro_high, con_high = _orgs(pro, Reliability.HIGH), _orgs(con, Reliability.HIGH)
-    if con_high and pro:  # E4
+    if _count(con, high) and pro:  # E4
         return Assessment(
             Status.CONTESTED,
             (
-                f"soutenu par {', '.join(_orgs(pro, Reliability.LOW))}",
-                f"contredit par {', '.join(con_high)}",
+                msg("reason.supported_by", sources=_orgs(pro, Reliability.LOW)),
+                msg("reason.contradicted_by", sources=_orgs(con, high)),
             ),
         )
-    if len(con_high) >= 2:  # E5
+    if _count(con, high) >= 2:  # E5
         return Assessment(
-            Status.REFUTED,
-            (f"contredit par des sources fiables indépendantes : {', '.join(con_high)}",),
+            Status.REFUTED, (msg("reason.refuted_independent", sources=_orgs(con, high)),)
         )
-    if len(pro_high) >= 2:  # E6
+    if _count(pro, high) >= 2:  # E6
         return Assessment(
-            Status.CONFIRMED,
-            (f"confirmé par des sources fiables indépendantes : {', '.join(pro_high)}",),
+            Status.CONFIRMED, (msg("reason.confirmed_independent", sources=_orgs(pro, high)),)
         )
-    if pro_high or len(_orgs(pro, Reliability.MEDIUM)) >= 2:  # E7
-        names = ", ".join(_orgs(pro, Reliability.MEDIUM))
+    if _count(pro, high) or _count(pro, Reliability.MEDIUM) >= 2:  # E7
         return Assessment(
-            Status.PLAUSIBLE, (f"une seule source fiable ou plusieurs moyennes : {names}",)
+            Status.PLAUSIBLE,
+            (msg("reason.single_reliable", sources=_orgs(pro, Reliability.MEDIUM)),),
         )
     if con:  # E8
-        reason = "contredit par " + ", ".join(_orgs(con, Reliability.LOW))
-        status = Status.CONTESTED if pro else Status.UNVERIFIED
-        return Assessment(status, (reason,))
+        reason = msg("reason.contradicted_by", sources=_orgs(con, Reliability.LOW))
+        return Assessment(Status.CONTESTED if pro else Status.UNVERIFIED, (reason,))
     if pro:
         return Assessment(
-            Status.UNVERIFIED, (f"seulement affirmé par {', '.join(_orgs(pro, Reliability.LOW))}",)
+            Status.UNVERIFIED,
+            (msg("reason.only_asserted_by", sources=_orgs(pro, Reliability.LOW)),),
         )
-    return Assessment(Status.UNVERIFIED, ("aucune preuve enregistrée",))
+    return Assessment(Status.UNVERIFIED, (msg("reason.no_evidence"),))

@@ -3,6 +3,12 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Modifié
+- Tout le code source est désormais en anglais (ADR-0005) : identifiants, commentaires, docstrings, messages d'erreur, vocabulaire de la base (`is_a`, `part_of`, `has_property`…) et mot-clé de négation `not`.
+- Commandes CLI en anglais : `:proof`, `:conflicts`, `:rules`, `:help`, `:quit`, options `--memory` et `--command`.
+### Ajouté
+- Internationalisation : catalogues `locales/en.json` et `locales/fr.json`, option `--lang` et variable `AXIOME_LANG` (français par défaut).
+- Test garantissant que les deux catalogues ont les mêmes clés et paramètres, et que chaque clé utilisée dans le code existe.
 
 ## [0.1.0] - 2026-11-10
 ### Ajouté

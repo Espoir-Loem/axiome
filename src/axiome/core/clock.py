@@ -1,8 +1,8 @@
-"""Horloge injectable.
+"""Injectable clock.
 
-Le temps est la principale source de non-déterminisme : il n'est donc jamais lu
-directement par le code métier, toujours via une :class:`Clock`. Les horodatages
-sont stockés comme métadonnées et n'influencent jamais un raisonnement.
+Time is the main source of non-determinism, so business code never reads it
+directly, only through a :class:`Clock`. Timestamps are stored as metadata and
+never influence reasoning.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import Protocol
 
 class Clock(Protocol):
     def now(self) -> str:
-        """Horodatage ISO 8601 en UTC."""
+        """ISO 8601 timestamp in UTC."""
         ...
 
 

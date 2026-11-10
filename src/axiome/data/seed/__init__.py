@@ -1,1 +1,1 @@
-"""Connaissance initiale curée (voir data/seed/LISEZMOI.md)."""
+"""Curated initial knowledge (see data/seed/README.md)."""

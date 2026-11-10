@@ -1,13 +1,13 @@
-"""Moteur de saturation (chaînage avant semi-naïf, stratifié) avec preuves.
+"""Saturation engine (stratified, semi-naive forward chaining) with proofs.
 
-Propriétés garanties (testées dans ``tests/property``) :
+Guaranteed properties (tested in ``tests/property``):
 
-* **terminaison** : Datalog sans fonctions → modèle fini ;
-* **correction** : le modèle est le plus petit modèle stratifié du programme ;
-* **déterminisme** : le modèle ET les justifications ne dépendent pas de l'ordre
-  d'insertion des faits. Pour chaque fait dérivé on garde la justification
-  minimale selon (tour, indice de règle, clés canoniques des prémisses) ;
-* **traçabilité** : tout fait dérivé possède un arbre de preuve vérifiable.
+* **termination**: Datalog without function symbols yields a finite model;
+* **correctness**: the model is the least stratified model of the program;
+* **determinism**: neither the model NOR the justifications depend on fact
+  insertion order. For each derived fact we keep the minimal justification by
+  (round, rule index, canonical premise keys);
+* **traceability**: every derived fact has a checkable proof tree.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
 from axiome.core.errors import KnowledgeError, ProgramError
+from axiome.i18n import msg
 from axiome.reasoning.program import Constraint, Program, Rule, check_body_safety
 from axiome.reasoning.terms import (
     Atom,
@@ -34,11 +35,11 @@ Index = Mapping[str, Sequence[Atom]]
 
 @dataclass(frozen=True, slots=True)
 class Justification:
-    """Pourquoi un fait est vrai. ``rule_index is None`` ⇔ fait de base."""
+    """Why a fact holds. ``rule_index is None`` iff it is a base fact."""
 
     rule_index: int | None
     premises: tuple[Atom, ...] = ()
-    absent: tuple[Atom, ...] = ()  # atomes dont l'absence a été utilisée (négation)
+    absent: tuple[Atom, ...] = ()  # atoms whose absence was used (negation)
 
 
 BASE = Justification(rule_index=None)
@@ -82,7 +83,7 @@ def _solve(
     *,
     acc: tuple[Atom, ...] = (),
 ) -> Iterator[tuple[Substitution, tuple[Atom, ...], tuple[Atom, ...]]]:
-    """Énumère, dans un ordre canonique, les solutions d'un corps de règle."""
+    """Enumerate, in canonical order, the solutions of a rule body."""
     depth = len(acc)
     if depth == len(positives):
         absent = tuple(substitute(n, subst) for n in negatives)
@@ -108,7 +109,7 @@ def _candidate_key(rule_index: int, premises: Sequence[Atom]) -> tuple[int, tupl
 
 
 class Model:
-    """Résultat immuable d'une saturation."""
+    """Immutable result of a saturation."""
 
     def __init__(self, program: Program, facts: dict[Atom, Justification]) -> None:
         self.program = program
@@ -116,7 +117,7 @@ class Model:
         self._index = _build_index(facts)
         self.violations = self._check_constraints()
 
-    # -- consultation ------------------------------------------------------
+    # -- lookup -----------------------------------------------------------
     def __contains__(self, atom: object) -> bool:
         return atom in self._facts
 
@@ -130,19 +131,19 @@ class Model:
         try:
             return self._facts[atom]
         except KeyError:
-            raise KnowledgeError(f"« {atom} » n'est pas établi") from None
+            raise KnowledgeError("knowledge.not_established", atom=atom) from None
 
     def is_base(self, atom: Atom) -> bool:
         return self.justification(atom).rule_index is None
 
     def query(self, body: Sequence[Literal]) -> list[Answer]:
-        """Répond à une conjonction de littéraux ; réponses uniques, ordre canonique."""
+        """Answer a conjunction of literals; unique answers in canonical order."""
         variables: dict[Var, None] = {}
         for lit in body:
             if not lit.negated:
                 for v in lit.atom.variables():
                     variables.setdefault(v, None)
-        check_body_safety(body, (), "requête")
+        check_body_safety(body, (), msg("where.query"))
         positives, negatives = _split(body)
         answers: dict[tuple[tuple[Var, Term], ...], Answer] = {}
         sources = [self._index] * len(positives)
@@ -164,7 +165,7 @@ class Model:
         return build(atom)
 
     def support(self, atom: Atom) -> frozenset[Atom]:
-        """Faits de base dont dépend ``atom`` (sa « racine » épistémique)."""
+        """Base facts that ``atom`` depends on (its epistemic roots)."""
         out: set[Atom] = set()
         stack = [atom]
         seen: set[Atom] = set()
@@ -179,7 +180,7 @@ class Model:
             stack.extend(j.premises)
         return frozenset(out)
 
-    # -- intégrité ---------------------------------------------------------
+    # -- integrity ---------------------------------------------------------
     def _check_constraints(self) -> tuple[Violation, ...]:
         found: dict[tuple[str, frozenset[Atom]], Violation] = {}
         for c in self.program.constraints:
@@ -191,11 +192,11 @@ class Model:
 
 
 def evaluate(program: Program, base: Iterable[Atom]) -> Model:
-    """Calcule le modèle stratifié de ``program`` à partir des faits ``base``."""
+    """Compute the stratified model of ``program`` from the ``base`` facts."""
     known: dict[Atom, Justification] = {}
     for atom in sorted(set(base), key=Atom.sort_key):
         if not atom.is_ground():
-            raise ProgramError(f"un fait doit être clos (sans variable) : {atom}")
+            raise ProgramError("program.non_ground_fact", atom=atom)
         known[atom] = BASE
 
     for stratum in program.strata:
@@ -209,9 +210,9 @@ def evaluate(program: Program, base: Iterable[Atom]) -> Model:
             for rule_index in stratum:
                 rule = program.rules[rule_index]
                 positives, negatives = _split(rule.body)
-                # Semi-naïf : la i-ème prémisse vient du delta, les précédentes de
-                # l'ancien état, les suivantes de l'état complet → chaque combinaison
-                # contenant au moins un fait nouveau est énumérée exactement une fois.
+                # Semi-naive: the i-th premise comes from the delta, earlier ones from
+                # the old state and later ones from the full state, so every combination
+                # containing at least one new fact is enumerated exactly once.
                 for i in range(len(positives)):
                     sources = [old] * i + [delta_index] + [full] * (len(positives) - i - 1)
                     for subst, premises, absent in _solve(positives, sources, negatives, known, {}):
