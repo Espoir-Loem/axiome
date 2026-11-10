@@ -28,7 +28,7 @@ make check   # ruff + format + mypy --strict + pytest --cov (≥ 90 %)
 ## Style
 - **Tout le code source est en anglais** : identifiants, commentaires, docstrings, messages d'erreur et vocabulaire de la base (ADR-0005).
 - Aucun texte affiché dans le code : passer par `axiome.i18n` (`t()` / `msg()`) et ajouter la clé dans **les deux** catalogues `src/axiome/locales/{en,fr}.json` (un test le vérifie).
-- Commits et PR en anglais. **Aucun agent IA comme co-auteur** : pas de ligne `Co-Authored-By` d'outil IA.
+- Commits et PR en anglais. **Aucun agent IA ni bot comme contributeur** : pas de ligne `Co-Authored-By` d'outil IA, pas de PR automatiques (Dependabot, Renovate…).
 - Typage complet, `mypy --strict`.
 - Fonctions pures dès que possible ; les E/S restent aux bords (`knowledge`, `cli`).
 - Toute affirmation ajoutée à la graine cite sa source (voir `src/axiome/data/seed/README.md`).
