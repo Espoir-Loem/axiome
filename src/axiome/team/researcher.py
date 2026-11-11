@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 from axiome.core.errors import ResearchError
 from axiome.dialogue.events import Event, Searching, SourceFound
+from axiome.perception.normalize import fold, words
 from axiome.research.extract import sentences
 from axiome.research.providers.base import Document, SearchProvider
 from axiome.research.rank import bm25, overlap
@@ -25,6 +26,7 @@ SENTENCES_PER_DOCUMENT = 25
 BUDGET_S = 10.0
 AGREEMENT_PERCENT = 50  # content-word overlap for two sentences to say the same thing
 LEAD_BONUS = 0.5  # the opening sentence of a summary is usually the definition
+TITLE_BONUS = 2.0  # a page titled exactly like the question is the page about it
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,11 +93,14 @@ def digest(query: str, docs: Sequence[Document], stopwords: Iterable[str] = ()) 
         for pos, sentence in enumerate(sentences(doc.text)[:SENTENCES_PER_DOCUMENT]):
             passages.append((d, pos, sentence))
     ranked = bm25(query, [p[2] for p in passages], stop)
+    wanted = words(fold(query))
+    titled = {d for d, doc in enumerate(docs) if words(fold(doc.title)) == wanted}
     best: dict[int, Excerpt] = {}
     order: list[tuple[float, int, int]] = []
     for r in ranked:
         d, pos, text = passages[r.index]
-        score = round(r.score * (1 + LEAD_BONUS / (1 + pos)), 9)
+        bonus = TITLE_BONUS if d in titled else 1.0
+        score = round(r.score * bonus * (1 + LEAD_BONUS / (1 + pos)), 9)
         order.append((-score, d, r.index))
         if d not in best or score > best[d].score:
             best[d] = Excerpt(docs[d].source, text, score)

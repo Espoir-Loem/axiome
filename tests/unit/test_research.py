@@ -155,3 +155,18 @@ def test_setup(tmp_path: Path) -> None:
     built = build_researcher(Config("x", cache_dir=str(tmp_path)))
     assert built is not None and built.names == ["Wikipedia"]
     assert build_researcher(Config("x"), fetcher) is not None
+
+
+def test_digest_prefers_the_page_named_like_the_question() -> None:
+    side = Document(
+        web_source("https://a.org/x", "A"),
+        "Interaction photon-photon",
+        "L'interaction photon-photon est la diffusion d'un photon par un autre photon.",
+    )
+    main = Document(
+        web_source("https://b.org/p", "B"),
+        "Photon",
+        "Le photon est une particule élémentaire associée aux ondes électromagnétiques.",
+    )
+    found = digest("photon", [side, main], ["le", "est", "une", "d", "l", "par", "un"])
+    assert found.summary is not None and found.summary.source.organization == "b.org"
