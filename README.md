@@ -98,6 +98,7 @@ Wikimedia limite le débit des clients qui ne donnent pas de contact. Pour un ap
 - [Architecture](docs/architecture.md)
 - [Épistémologie](docs/epistemologie.md) : spécification normative des statuts de vérité
 - [ADR](docs/adr/) : décisions d'architecture · [RFC](docs/rfc/) : documents de conception
+- [Mémoires](memoires/README.md) : état, décisions et raisonnement, pour reprendre le travail d'une session à l'autre
 - [Contribuer](CONTRIBUTING.md) · [Sécurité](SECURITY.md)
 
 ## Développement

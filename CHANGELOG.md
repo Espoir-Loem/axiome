@@ -3,6 +3,9 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (mémoire du projet)
+- Dossier `memoires/` : vision, état, architecture, journal des décisions, méthode d'évaluation, leçons, journal de session et feuille de route, pour qu'une autre session reprenne le travail avec le raisonnement suivi.
+
 ### Ajouté (suivi de la conversation)
 - Axiome suit le fil : une relance courte reprend la dernière question sur un autre sujet (« et le tri rapide ? », « et celle de la recherche linéaire ? », « what about heapsort? »).
 - Questions sans sujet résolues sur le sujet en cours : « est-il un mammifère ? », « c'est un animal ? », « et sa complexité ? ».

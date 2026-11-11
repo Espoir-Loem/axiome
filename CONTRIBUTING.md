@@ -5,6 +5,7 @@
 2. **Une branche par changement** : `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. On ne pousse jamais directement sur `main`.
 3. **Petites PR** : moins de 400 lignes modifiées, hors données et tests, et un seul sujet par PR.
 4. **Revue obligatoire** et CI verte avant toute fusion. On fusionne en *squash merge*.
+5. **Mémoires à jour.** En fin de session, on met à jour `memoires/projet/etat-actuel.md` et `memoires/suite/feuille-de-route.md`, et on ajoute une entrée dans `memoires/sessions/` (voir `memoires/README.md`).
 
 ## Commits
 [Conventional Commits](https://www.conventionalcommits.org/), in English:
