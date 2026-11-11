@@ -59,6 +59,26 @@ Avec un moteur web, Axiome lit les pages trouvées. Il recoupe ce qu'elles disen
 
 Les réponses web sont mises en cache dans `$XDG_CACHE_HOME/axiome/web`.
 
+### Connaissances apprises depuis Wikidata
+
+Quand une question oui/non porte sur un concept inconnu, Axiome l'apprend sur Wikidata : ses classes, ses noms en français et en anglais, le genre des noms. Il raisonne ensuite dessus :
+
+```
+axiome> le lion est-il un oiseau ?
+  Je ne connais pas encore lion. Je l'apprends sur Wikidata.
+Non. Le lion est un mammifère, et rien ne peut être à la fois un mammifère et un oiseau.
+
+Fiabilité : une seule source fiable pour l'instant, à recouper.
+```
+
+On peut aussi apprendre à l'avance, puis répondre hors ligne :
+
+```bash
+axiome --learn "trou noir" --learn "étoile"
+```
+
+Wikimedia limite le débit des clients qui ne donnent pas de contact. Pour un apprentissage plus rapide, ajoutez une adresse ou une URL de contact au User-Agent : `AXIOME_CONTACT="vous@exemple.org"`. Rien n'est envoyé si la variable est vide. Détails : [ADR-0008](docs/adr/0008-wikidata.md).
+
 ## État du projet
 
 | Jalon | Contenu | État |

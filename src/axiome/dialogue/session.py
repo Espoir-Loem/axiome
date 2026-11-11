@@ -12,28 +12,32 @@ from collections.abc import Callable, Generator, Iterator
 from dataclasses import replace
 from datetime import datetime, tzinfo
 
+from axiome.core.errors import ResearchError
 from axiome.dialogue.events import Done, Event, Say, Thinking
 from axiome.dialogue.layout import render
 from axiome.dialogue.level import ANY_DOMAIN, Level, LevelProfile
 from axiome.i18n import get_locale
 from axiome.kernel import Kernel
+from axiome.knowledge.wikidata import Librarian
 from axiome.language.lexicon import GENERAL_DOMAIN
 from axiome.language.pack import LanguagePack, load_pack
 from axiome.perception.normalize import fold, slug, words
 from axiome.reasoning.terms import Atom
 from axiome.team.analyst import TOPICAL, Analysis, Analyst, Context, Intent, Mention
 from axiome.team.calculator import CalculationError, DivisionByZeroError, calculate, decimal, exact
-from axiome.team.planner import make_plan
+from axiome.team.planner import Aspect, make_plan
 from axiome.team.researcher import Researcher, WebFindings, digest, is_ambiguous
 from axiome.team.reviewer import Reviewer
-from axiome.team.verifier import Findings, is_a_path, verify
+from axiome.team.verifier import Findings, disjointness, is_a_path, verify
 from axiome.team.writer import (
     CORROBORATIONS,
     DETAILS,
     EXPLICIT_MEMBER_CAP,
     LEAD,
     LEXICON_SOURCE,
+    NOTE,
     POINT,
+    SOURCE,
     Claim,
     Writer,
 )
@@ -42,6 +46,7 @@ from axiome.verification.epistemic import Status
 Step = Generator[Event | Claim, None, None]
 Handler = Callable[[Analysis, Level], Step]
 CALCULATOR_SOURCE = "calculator"
+CHECK_DEPTH = 3  # Wikidata class levels learned on demand (the Sun is a star three levels up)
 MIN_PURPOSE_OVERLAP = 2  # shared word stems between a need and a pattern's use
 STEM = 5
 SOCIAL = {
@@ -80,12 +85,14 @@ class Session:
         language: str | None = None,
         researcher: Researcher | None = None,
         profile: LevelProfile | None = None,
+        *,
         timezone: tzinfo | None = None,
+        librarian: Librarian | None = None,
     ) -> None:
         self.kernel = kernel
         self.pack: LanguagePack = load_pack(language or get_locale())
-        for form, concept in kernel.store.words(self.pack.code):
-            self.pack.lexicon.learn(form, concept)
+        for word in kernel.store.words(self.pack.code):
+            self.pack.lexicon.learn(word.form, word.concept, word.gender, proper=word.proper)
         self.researcher = researcher
         self.profile = profile or LevelProfile(kernel.store)
         self.analyst = Analyst(self.pack)
@@ -93,6 +100,7 @@ class Session:
         self.reviewer = Reviewer(self.pack)
         self.context = Context()
         self.timezone = timezone  # None: the machine's local time zone
+        self.librarian = librarian  # learns concepts and classes from Wikidata
         self._handlers: dict[Intent, Handler] = {
             Intent.USER_NAME: self._user_name,
             Intent.ASK_USER_NAME: self._ask_user_name,
@@ -133,13 +141,22 @@ class Session:
         """Review a whole answer at once (the reliability note covers its sentences)."""
         if not pending:
             return
-        review = self.reviewer.review(_with_lead(pending), analysis.waivers)
+        review = self.reviewer.review(self._with_note(_with_lead(pending)), analysis.waivers)
         pending.clear()
         counts[1] += len(review.blocked)
         counts[2] += review.corrected
         for claim in review.approved:
             counts[0] += 1
             yield Say(claim.text, claim.status, claim.support, claim.role)
+
+    def _with_note(self, claims: list[Claim]) -> list[Claim]:
+        """Sentences relying on the reliability note get one, at the end of the answer."""
+        covered = [c.status for c in claims if c.covered and c.status is not None]
+        if not covered or any(c.role == NOTE for c in claims):
+            return claims
+        tail = [c for c in claims if c.role == SOURCE]
+        body = [c for c in claims if c.role != SOURCE]
+        return [*body, *self.writer.reliability(min(covered)), *tail]
 
     def answer_text(self, text: str) -> str:
         """The whole formatted answer, without the progress lines (non-streaming)."""
@@ -252,6 +269,28 @@ class Session:
             text = self.pack.say("arith_approx", expr=shown, value=exact(value), approx=approx)
         yield Claim(text, Status.PROVED, (CALCULATOR_SOURCE,), role=LEAD)
 
+    def _library(self, text: str) -> str | None:
+        """Learn ``text`` from Wikidata (classes and names); the concept, or None."""
+        if self.librarian is None or not text.strip():
+            return None
+        try:
+            imported = self.librarian.learn(text, self.pack.code, CHECK_DEPTH)
+        except ResearchError:
+            return None
+        self._reload_words()
+        return imported.concept
+
+    def _reload_words(self) -> None:
+        for word in self.kernel.store.words(self.pack.code):
+            self.pack.lexicon.learn(word.form, word.concept, word.gender, proper=word.proper)
+
+    def _known(self, mention: Mention | None) -> Mention | None:
+        """The mention, resolved through Wikidata when the lexicon does not know it."""
+        if mention is None or mention.concepts or mention.pronoun:
+            return mention
+        concept = self._library(mention.text)
+        return replace(mention, concepts=(concept,)) if concept else mention
+
     def _unresolved(self, mention: Mention | None) -> Claim | None:
         if mention is None:
             return self.writer.social("not_understood")
@@ -329,7 +368,8 @@ class Session:
             yield self.writer.social("search_failed", x=mention.text)
             return
         yield from claims
-        if learn:
+        if learn:  # Wikidata first: the page text is then filed under the same concept
+            concept = concept or self._library(mention.text)
             self._learn(mention, concept, found)
 
     def _learn(self, mention: Mention, concept: str | None, found: WebFindings) -> None:
@@ -351,6 +391,16 @@ class Session:
         )
 
     def _check(self, analysis: Analysis, level: Level) -> Step:
+        unknown = [
+            m.text
+            for m in (analysis.subject, analysis.obj)
+            if m and not m.concepts and not m.pronoun
+        ]
+        if unknown and self.librarian is not None:
+            yield Thinking(self.pack.say("think_learn", x=self.pack.join(unknown)))
+            analysis = replace(
+                analysis, subject=self._known(analysis.subject), obj=self._known(analysis.obj)
+            )
         for mention in (analysis.subject, analysis.obj):
             problem = self._unresolved(mention)
             if problem is not None:
@@ -362,7 +412,34 @@ class Session:
         if subject is None or obj is None or plan is None:
             yield Claim(self.pack.say("unknown_check"), factual=False)
             return
-        yield from self.writer.check(subject, obj, verify(self.kernel, plan), level)
+        findings = verify(self.kernel, plan)
+        if self._undecided(findings, subject, obj) and self.librarian is not None:
+            yield Thinking(self.pack.say("think_connect"))
+            if self._connect(analysis, subject, obj):
+                findings = verify(self.kernel, plan)
+        yield from self.writer.check(subject, obj, findings, level)
+
+    def _undecided(self, findings: Findings, subject: str, obj: str) -> bool:
+        return (
+            not findings.of(Aspect.CHECK)
+            and not findings.refuted
+            and disjointness(self.kernel, subject, obj) is None
+        )
+
+    def _connect(self, analysis: Analysis, subject: str, obj: str) -> bool:
+        """Look for a chain of classes between two concepts on Wikidata."""
+        assert self.librarian is not None and analysis.subject and analysis.obj
+        code = self.pack.code
+        try:
+            child = self.librarian.qid(subject, analysis.subject.text, code)
+            goal = self.librarian.qid(obj, analysis.obj.text, code)
+            if child is None or goal is None:
+                return False
+            done = self.librarian.connect(child, goal, code)
+        except ResearchError:
+            return False
+        self._reload_words()
+        return done.concept is not None
 
     def _check_property(self, analysis: Analysis, level: Level) -> Step:
         problem = self._unresolved(analysis.subject)
@@ -452,7 +529,13 @@ class Session:
                 proper = not mention.article and mention.text[:1].isupper()
                 self.pack.lexicon.learn(mention.text, concept, gender, proper=proper)
                 self.kernel.store.add_word(
-                    self.pack.code, mention.text, concept, "user", self.kernel.clock.now()
+                    self.pack.code,
+                    mention.text,
+                    concept,
+                    "user",
+                    self.kernel.clock.now(),
+                    gender=gender,
+                    proper=proper,
                 )
         atom = Atom("is_a", (names[0], names[1]))
         ack = self.kernel.tell(str(atom))

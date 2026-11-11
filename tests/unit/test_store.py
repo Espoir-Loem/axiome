@@ -79,3 +79,23 @@ def test_config_and_clock() -> None:
     assert Config.from_env().db_path
     assert "T" in SystemClock().now()
     assert FixedClock("t").now() == "t"
+
+
+def test_v2_database_is_migrated(tmp_path: Path) -> None:
+    path = tmp_path / "v2.db"
+    con = sqlite3.connect(path)
+    con.executescript(
+        "CREATE TABLE lexicon (language TEXT NOT NULL, form TEXT NOT NULL, concept TEXT NOT NULL,"
+        " source_id TEXT NOT NULL, recorded_at TEXT NOT NULL,"
+        " PRIMARY KEY (language, form, concept));"
+        "INSERT INTO lexicon VALUES ('fr', 'baleine', 'whale', 'user', 't');"
+        "PRAGMA user_version = 2;"
+    )
+    con.close()
+    st = KnowledgeStore(str(path))
+    load_seed(st, FixedClock())  # registers the "user" source
+    word = st.words("fr")[0]
+    assert (word.form, word.gender, word.proper) == ("baleine", "m", False)
+    st.add_word("fr", "Félix", "felix", "user", "t", gender="m", proper=True)
+    assert {w.form: w.proper for w in st.words("fr")} == {"baleine": False, "Félix": True}
+    st.close()

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from axiome.core.config import Config
+from axiome.kernel import Kernel
+from axiome.knowledge.wikidata import Librarian, Wikidata
 from axiome.research.fetch import CachedFetcher, Fetcher, HttpFetcher
 from axiome.research.providers.base import SearchProvider
 from axiome.research.providers.brave import BraveSearch
@@ -27,11 +29,23 @@ def providers(config: Config, fetcher: Fetcher) -> list[SearchProvider]:
     return found
 
 
+def default_fetcher(config: Config) -> Fetcher:
+    fetcher: Fetcher = HttpFetcher(contact=config.contact)
+    if config.cache_dir:
+        fetcher = CachedFetcher(fetcher, config.cache_dir)
+    return fetcher
+
+
 def build_researcher(config: Config, fetcher: Fetcher | None = None) -> Researcher | None:
     if config.offline:
         return None
-    if fetcher is None:
-        fetcher = HttpFetcher()
-        if config.cache_dir:
-            fetcher = CachedFetcher(fetcher, config.cache_dir)
-    return Researcher(providers(config, fetcher))
+    return Researcher(providers(config, fetcher or default_fetcher(config)))
+
+
+def build_librarian(
+    config: Config, kernel: Kernel, fetcher: Fetcher | None = None
+) -> Librarian | None:
+    """Wikidata learning (concepts, classes, names), unless offline."""
+    if config.offline:
+        return None
+    return Librarian(kernel, Wikidata(fetcher or default_fetcher(config)))

@@ -62,6 +62,7 @@ DETAILS = (2, 4, 6)  # details taken from the main page per level
 CORROBORATIONS = (0, 2, 4)  # details taken from other organizations per level
 
 # (beginner, intermediate, expert) caps on how many items of a kind are given.
+MAX_CHAIN = 4  # links spelled out in a "because"; longer lineages are summarized
 PROPERTY_CAP = (1, 3, 99)
 MEMBER_CAP = (2, 4, 99)
 EXPLICIT_MEMBER_CAP = (4, 8, 99)
@@ -130,8 +131,11 @@ class Writer:
         self, key: str, facts: Sequence[Fact], level: Level, role: str = POINT, **slots: object
     ) -> Claim:
         status = _weakest(facts)
+        support = tuple(str(f.atom) for f in facts)
+        if status is Status.PLAUSIBLE:  # said once for the whole answer, by the reliability note
+            return Claim(self.pack.say(key, **slots), status, support, role=role, covered=True)
         text, hedged = self.hedge(self.pack.say(key, **slots), status, level)
-        return Claim(text, status, tuple(str(f.atom) for f in facts), hedged=hedged, role=role)
+        return Claim(text, status, support, hedged=hedged, role=role)
 
     def gloss(self, concept: str) -> Claim | None:
         lexeme = self.pack.lexicon.get(concept)
@@ -325,14 +329,20 @@ class Writer:
     # -- reasoning answers -------------------------------------------------------
     def because(self, path: Sequence[Fact], level: Level, key: str = "because") -> list[Claim]:
         """Explain a deduction from its chain: "because the cat is a mammal and..."."""
+        shown = path if len(path) <= MAX_CHAIN else [path[0]]
         clauses = [  # raw templates: these are pieces of one sentence, not capitalized
             self.pack.templates["is_a_clause" if i == 0 else "is_a_general"].format(
                 s=self.np(_arg(step.atom, 0)), o=self.np(_arg(step.atom, 1))
             )
-            for i, step in enumerate(path)
+            for i, step in enumerate(shown)
         ]
+        reasons = self.pack.join(clauses)
+        if len(path) > MAX_CHAIN:  # a long lineage: first link, then where it leads
+            last = self.np(_arg(path[-1].atom, 1))
+            lineage = self.pack.templates["is_a_lineage"].format(o=last, n=len(path) - 1)
+            reasons = f"{reasons}, {lineage}"
         status = _weakest(path)
-        text = self.pack.say(key, reasons=self.pack.join(clauses))
+        text = self.pack.say(key, reasons=reasons)
         support = tuple(str(f.atom) for f in path)
         claim = Claim(text, status, support, hedged=status < Status.CONFIRMED, role=LEAD)
         return [claim, *self.reliability(status)]
@@ -443,13 +453,19 @@ class Writer:
             *self.complexity(subject, findings, level),
             *self.constraints(subject, findings, level),
         ]
+        learned = self.learned_definitions(findings, level)
+        if learned and own is None:  # a learned definition answers better than a class
+            text = [c for c in learned if c.role in (LEAD, POINT)]
+            rest = [c for c in learned if c.role not in (LEAD, POINT)]
+            known = [replace(c, role=POINT) if c.role == LEAD else c for c in claims]
+            return [*text, *known, *rest]
         if claims:
             lemma = self.pack.lexicon.lexeme(subject).lemma
             first = claims[0]
             claims[0] = replace(first, text=emphasize(first.text, lemma))
             if level is Level.EXPERT:
                 claims += self.expert_note(claims)
-        return claims + self.learned_definitions(findings, level)
+        return claims + learned
 
     def check(self, subject: str, obj: str, findings: Findings, level: Level) -> list[Claim]:
         if findings.refuted:
@@ -462,11 +478,9 @@ class Writer:
             if clash is None:
                 return [Claim(self.pack.say("unknown_check"), None, (), factual=False)]
             a, b, support = clash
-            text = self.pack.say("no_disjoint", s=self.np(subject), a=self.np(a), b=self.np(b))
-            text, _ = self.hedge(text, _weakest(support), level)
-            return [
-                Claim(text, _weakest(support), tuple(str(f.atom) for f in support), hedged=True)
-            ]
+            slots = {"s": self.np(subject), "a": self.np(a), "b": self.np(b)}
+            claim = self.fact_claim("no_disjoint", support, level, LEAD, **slots)
+            return [replace(claim, hedged=True)]
         statement = self.fact_claim(
             "is_a", facts[:1], level, LEAD, s=self.np(subject), o=self.np(obj)
         )

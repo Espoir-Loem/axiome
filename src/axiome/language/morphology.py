@@ -21,6 +21,9 @@ from axiome.language.lexicon import Lexeme
 from axiome.perception.normalize import fold
 
 _FR_VOWEL_START = re.compile(r"^[aeiouyh]")
+_FR_LINKERS = frozenset(
+    {"de", "du", "des", "à", "au", "aux", "en", "pour", "sans", "sur", "par", "avec", "et", "ou"}
+)
 _EN_VOWEL_LETTER_NAMES = frozenset("aefhilmnorsx")  # "an SI unit", "an HTML page"
 _WORD_ACRONYM = 4  # SOLID, FIFO: long acronyms with a vowel are read as words
 
@@ -43,8 +46,16 @@ class French:
     def plural(self, lexeme: Lexeme) -> str:
         if lexeme.plural:
             return lexeme.plural
-        head, sep, rest = lexeme.lemma.partition(" ")
-        return self._plural_word(head) + sep + rest
+        words = lexeme.lemma.split(" ")
+        out: list[str] = []
+        for i, word in enumerate(words):  # "naine jaune" -> "naines jaunes"
+            if word in _FR_LINKERS or "'" in word:  # "patron de conception": stop at "de"
+                return " ".join(out + words[i:])
+            spelled = word.isupper() and len(word) > 1  # acronyms do not inflect
+            out.append(
+                word if spelled or any(c.isdigit() for c in word) else self._plural_word(word)
+            )
+        return " ".join(out)
 
     @staticmethod
     def _elides(word: str) -> bool:

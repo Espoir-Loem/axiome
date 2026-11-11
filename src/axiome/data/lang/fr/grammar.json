@@ -88,6 +88,9 @@
     "day_first": "1er",
     "limits": "Je ne connais en profondeur que quelques domaines : biologie, structures de données, algorithmes, patrons de conception et grandeurs physiques. Je n'écris pas encore de code, je ne comprends que les tournures que j'ai apprises, et je n'ai accès ni à la météo ni à l'actualité. Quand je ne sais pas, je le dis ou je cherche sur le web.",
     "ambiguous_topic": "« {x} » a plusieurs sens : {items}. Lequel t'intéresse ?",
-    "ambiguous_topic_bare": "« {x} » a plusieurs sens. Lequel t'intéresse ?"
+    "ambiguous_topic_bare": "« {x} » a plusieurs sens. Lequel t'intéresse ?",
+    "think_learn": "Je ne connais pas encore {x}. Je l'apprends sur Wikidata.",
+    "think_connect": "Je cherche sur Wikidata un lien de classification entre les deux.",
+    "is_a_lineage": "lui-même classé {n} rangs sous les {o:pl}"
   }
 }

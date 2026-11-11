@@ -5,8 +5,13 @@ from pathlib import Path
 
 import pytest
 
+from axiome.cli import main as cli
 from axiome.cli.main import execute, main
+from axiome.core.clock import FixedClock
+from axiome.core.errors import ResearchError
 from axiome.kernel import Kernel
+from axiome.knowledge.wikidata import Librarian, Wikidata
+from tests.wikidata_fake import FakeWikidata
 
 
 def test_execute_commands(kernel: Kernel) -> None:
@@ -92,3 +97,18 @@ def test_converse_renders_thinking_on_its_own_line() -> None:
     assert chunks[-1] == "\n"
     session.answer_text("salut")
     assert list(converse(session, "salut")) == ["Bonjour. Je t'écoute.", "\n"]
+
+
+def test_learn_option(capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    lib = Librarian(Kernel.in_memory(FixedClock()), Wikidata(FakeWikidata(), interval_s=0))
+    assert cli._learn(lib, ["trou noir"], "fr") == 0
+    assert "black_hole" in capsys.readouterr().out
+    assert cli._learn(lib, ["zorglub"], "fr") == 1
+    assert cli._learn(None, ["x"], "fr") == 1
+
+    def boom(*args: object, **kwargs: object) -> object:
+        raise ResearchError("research.fetch_failed", url="u", detail="down")
+
+    monkeypatch.setattr(lib, "learn", boom)
+    assert cli._learn(lib, ["x"], "fr") == 1
+    assert main(["--memory", "--learn", "x"]) == 1  # tests run offline

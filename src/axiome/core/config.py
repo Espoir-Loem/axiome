@@ -20,6 +20,7 @@ class Config:
     google_engine_id: str = ""
     searxng_url: str = ""  # e.g. http://localhost:8888
     brave_api_key: str = ""  # Brave Search API (independent whole-web index)
+    contact: str = ""  # URL or e-mail added to the User-Agent (Wikimedia etiquette), opt-in
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Config:
@@ -35,4 +36,5 @@ class Config:
             google_engine_id=env.get("AXIOME_GOOGLE_CX", ""),
             searxng_url=env.get("AXIOME_SEARXNG_URL", ""),
             brave_api_key=env.get("AXIOME_BRAVE_API_KEY", ""),
+            contact=env.get("AXIOME_CONTACT", ""),
         )

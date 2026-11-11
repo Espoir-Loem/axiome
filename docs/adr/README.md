@@ -11,5 +11,6 @@ Une décision structurante = un ADR, numéroté, **immuable** une fois accepté 
 | [0005](0005-code-source-en-anglais.md) | Tout le code source en anglais, textes via catalogues i18n | Accepté |
 | [0006](0006-zero-modele-preentraine.md) | 100 % de zéro, pas de parité avec les grands modèles | Accepté |
 | [0007](0007-assistant-conversationnel.md) | Assistant conversationnel, équipe interne, paquets de langue | Accepté |
+| [0008](0008-wikidata.md) | Apprendre les concepts et leurs classes depuis Wikidata | Accepté |
 
 Modèle : [0000-modele.md](0000-modele.md).

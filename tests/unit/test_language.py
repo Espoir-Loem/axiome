@@ -156,3 +156,12 @@ def test_typo_correction() -> None:
     assert lexicon.closest("tas") == ()  # too short to correct
     assert lexicon.closest("zzzzzzzz") == ()
     assert lexicon.closest("pila") == ("stack",)  # "pile"
+
+
+def test_french_plural_of_compounds() -> None:
+    fr = French("{lemma}")
+    assert fr.plural(Lexeme("x", "naine jaune")) == "naines jaunes"
+    assert fr.plural(Lexeme("x", "patron de conception")) == "patrons de conception"
+    assert fr.plural(Lexeme("x", "principe SOLID")) == "principes SOLID"
+    assert fr.plural(Lexeme("x", "trou noir d'étoile")) == "trous noirs d'étoile"
+    assert fr.form(Lexeme("x", "Félix", proper=True), "def") == "Félix"

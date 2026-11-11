@@ -3,6 +3,18 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (Wikidata)
+- **Apprentissage depuis Wikidata** (ADR-0008) : classes (`is_a`), noms FR/EN avec le genre grammatical (Wikidata Lexemes) et définition courte. Les métaclasses, les éléments d'homonymie et les noms non traduits sont écartés. La classification du vivant est suivie (taxon parent).
+- Questions oui/non sur des concepts inconnus : Axiome les apprend à la demande, puis cherche un chemin de classification (« le lion est-il un mammifère ? » remonte une dizaine de rangs). Un « pourquoi » sur une longue lignée est résumé (« le lion est un Panthera, lui-même classé 5 rangs sous les mammifères »).
+- Option `axiome --learn "sujet"` pour apprendre à l'avance. Variable `AXIOME_CONTACT` (facultative) pour le User-Agent demandé par Wikimedia.
+- Requêtes HTTP : nouvelle tentative sur 429 ou 503, en respectant `Retry-After`.
+- Pluriel des noms composés appris (« naines jaunes », « patrons de conception »).
+
+### Modifié (Wikidata)
+- Un fait PLAUSIBLE n'est plus nuancé dans chaque phrase : une seule note de fiabilité couvre la réponse.
+- Une définition apprise (page web ou Wikidata) ouvre la réponse, avant les classes.
+- Schéma de base v3 : genre et nom propre des mots appris (migration automatique des bases v2).
+
 ### Ajouté (évaluation)
 - **Bancs d'évaluation** (`evals/`, `python -m axiome.evaluation`) : 105 cas de travail et 42 cas réservés, en français et en anglais, notés par catégorie, avec un rapport des échecs. Score : 61/105 au départ, puis 105/105 ; banc réservé à 38/42 (90 %) à sa première mesure.
 - Calcul exact sur des fractions (« combien font 10 / 4 ? » donne 5/2, soit environ 2,5). Les opérations peuvent être écrites en mots (« fois », « divided by »). La division par zéro est signalée. Aucune exécution de code.

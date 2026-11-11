@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import io
 import json
 import re
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -11,6 +14,8 @@ import pytest
 from axiome.core.config import Config
 from axiome.core.errors import ResearchError
 from axiome.dialogue.events import Searching, SourceFound
+from axiome.knowledge.wikidata import Wikidata
+from axiome.research import fetch
 from axiome.research.extract import main_text, sentences
 from axiome.research.fetch import CachedFetcher, HttpFetcher, build_url
 from axiome.research.providers.base import Document, load_json, organization, web_source
@@ -22,6 +27,7 @@ from axiome.research.setup import build_researcher, providers
 from axiome.team.researcher import Researcher, digest
 from axiome.verification.epistemic import Reliability, Source, SourceKind, Status
 from tests.fakes import PAGE, PHOTON_FR, FakeFetcher, wikipedia_routes
+from tests.wikidata_fake import FakeWikidata
 
 
 def test_extract_and_sentences() -> None:
@@ -254,3 +260,37 @@ def test_disambiguation_page_makes_the_question_ambiguous() -> None:
     ]
     found = digest("mercure", other, ambiguous=pattern)
     assert found.lead is not None and found.lead.doc == 1  # the listing page is skipped
+
+
+def test_http_retries_when_asked_to_slow_down(monkeypatch: pytest.MonkeyPatch) -> None:
+    answers: list[object] = [
+        urllib.error.HTTPError("u", 429, "slow", {"Retry-After": "2"}, None),  # type: ignore[arg-type]
+        urllib.error.HTTPError("u", 503, "busy", {"Retry-After": "soon"}, None),  # type: ignore[arg-type]
+        io.BytesIO(b"ok"),
+    ]
+
+    def urlopen(request: object, timeout: float) -> object:
+        item = answers.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+    waits: list[float] = []
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    fetcher = HttpFetcher(sleep=waits.append, contact="ops@example.org")
+    assert fetcher.get("https://example.org/a") == b"ok"
+    assert waits == [2.0, fetch.MAX_WAIT_S]
+    assert "ops@example.org" in fetcher.user_agent
+    answers[:] = [urllib.error.HTTPError("u", 404, "no", {}, None)]  # type: ignore[arg-type]
+    with pytest.raises(ResearchError):
+        fetcher.get("https://example.org/b")
+    assert fetch._retry_after(None, 1) == 1.0
+
+
+def test_wikidata_spaces_its_requests() -> None:
+    now = [0.0]
+    waits: list[float] = []
+    wd = Wikidata(FakeWikidata(), clock=lambda: now[0], sleep=waits.append, interval_s=0.5)
+    wd.find("lion", "fr")
+    wd.find("lion", "fr")
+    assert waits and all(0 < w <= 0.5 for w in waits)

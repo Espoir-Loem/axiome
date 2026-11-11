@@ -88,6 +88,9 @@
     "day_first": "1",
     "limits": "I only know a few fields in depth: biology, data structures, algorithms, design patterns and physical quantities. I can't write code yet, I only understand the phrasings I have learned, and I have no access to weather or news. When I don't know, I say so or search the web.",
     "ambiguous_topic": "\"{x}\" has several meanings: {items}. Which one do you mean?",
-    "ambiguous_topic_bare": "\"{x}\" has several meanings. Which one do you mean?"
+    "ambiguous_topic_bare": "\"{x}\" has several meanings. Which one do you mean?",
+    "think_learn": "I don't know {x} yet. Learning it from Wikidata.",
+    "think_connect": "Looking on Wikidata for a classification link between the two.",
+    "is_a_lineage": "which sits {n} ranks below the {o:pl}"
   }
 }

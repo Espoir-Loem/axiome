@@ -18,7 +18,7 @@ from axiome.reasoning.syntax import parse_atom
 from axiome.reasoning.terms import Atom
 from axiome.verification.epistemic import Evidence, Reliability, Source, SourceKind, Stance
 
-SCHEMA_VERSION = 2  # v2 adds the learned lexicon (v1 databases are migrated)
+SCHEMA_VERSION = 3  # v2: learned lexicon; v3: gender and proper-name flag of learned words
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -50,9 +50,23 @@ CREATE TABLE IF NOT EXISTS lexicon (
     concept TEXT NOT NULL,
     source_id TEXT NOT NULL REFERENCES sources(id),
     recorded_at TEXT NOT NULL,
+    gender TEXT NOT NULL DEFAULT 'm',
+    proper INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (language, form, concept)
 );
 """
+_MIGRATE_V2 = (
+    "ALTER TABLE lexicon ADD COLUMN gender TEXT NOT NULL DEFAULT 'm'",
+    "ALTER TABLE lexicon ADD COLUMN proper INTEGER NOT NULL DEFAULT 0",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class LearnedWord:
+    form: str
+    concept: str
+    gender: str = "m"
+    proper: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,9 +85,12 @@ class KnowledgeStore:
             raise StorageError("storage.open_failed", path=path, detail=exc) from exc
         self._db.execute("PRAGMA foreign_keys = ON")
         version = self._db.execute("PRAGMA user_version").fetchone()[0]
-        if version not in (0, 1, SCHEMA_VERSION):
+        if version not in (0, 1, 2, SCHEMA_VERSION):
             raise StorageError("storage.unsupported_schema", found=version, expected=SCHEMA_VERSION)
         with self._tx() as db:
+            if version == 2:
+                for statement in _MIGRATE_V2:
+                    db.execute(statement)
             db.executescript(_SCHEMA)
             db.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
@@ -172,23 +189,32 @@ class KnowledgeStore:
 
     # -- learned lexicon -------------------------------------------------------
     def add_word(
-        self, language: str, form: str, concept: str, source_id: str, recorded_at: str
+        self,
+        language: str,
+        form: str,
+        concept: str,
+        source_id: str,
+        recorded_at: str,
+        *,
+        gender: str = "m",
+        proper: bool = False,
     ) -> bool:
         self.source(source_id)
         with self._tx() as db:
             cur = db.execute(
-                "INSERT OR IGNORE INTO lexicon VALUES (?, ?, ?, ?, ?)",
-                (language, form, concept, source_id, recorded_at),
+                "INSERT OR IGNORE INTO lexicon VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (language, form, concept, source_id, recorded_at, gender, int(proper)),
             )
             return cur.rowcount == 1
 
-    def words(self, language: str) -> list[tuple[str, str]]:
-        """Learned (form, concept) pairs of a language, sorted."""
+    def words(self, language: str) -> list[LearnedWord]:
+        """Learned words of a language, sorted by form."""
         rows = self._db.execute(
-            "SELECT form, concept FROM lexicon WHERE language = ? ORDER BY form, concept",
+            "SELECT form, concept, gender, proper FROM lexicon WHERE language = ?"
+            " ORDER BY form, concept",
             (language,),
         ).fetchall()
-        return [(str(f), str(c)) for f, c in rows]
+        return [LearnedWord(str(f), str(c), str(g), bool(p)) for f, c, g, p in rows]
 
     # -- rules ---------------------------------------------------------------
     def add_rule(self, text: str, axiomatic: bool) -> bool:

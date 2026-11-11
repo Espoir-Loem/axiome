@@ -12,12 +12,13 @@ from dataclasses import replace
 from axiome import __version__
 from axiome.core.clock import FixedClock
 from axiome.core.config import IN_MEMORY, Config
-from axiome.core.errors import AxiomeError
+from axiome.core.errors import AxiomeError, ResearchError
 from axiome.dialogue import layout
 from axiome.dialogue.session import Session
 from axiome.i18n import SUPPORTED, get_locale, set_locale, t
 from axiome.kernel import Kernel
-from axiome.research.setup import build_researcher
+from axiome.knowledge.wikidata import Librarian
+from axiome.research.setup import build_librarian, build_researcher
 from axiome.response import render
 
 QUIT = (":quit", ":q")
@@ -75,6 +76,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--offline", action="store_true", help=t("cli.opt_offline"))
     p.add_argument("--lang", choices=SUPPORTED, default=None, help=t("cli.opt_lang"))
     p.add_argument("-c", "--command", action="append", default=[], help=t("cli.opt_command"))
+    p.add_argument("--learn", action="append", default=[], help=t("cli.opt_learn"))
     return p
 
 
@@ -137,6 +139,28 @@ def _repl(session: Session) -> int:
         _handle(session, line, color)
 
 
+def _learn(librarian: Librarian | None, topics: Sequence[str], language: str) -> int:
+    """``--learn``: import topics from Wikidata ahead of time, then answer offline."""
+    if librarian is None:
+        print(t("cli.learn_offline"))
+        return 1
+    failed = 0
+    for topic in topics:
+        try:
+            done = librarian.learn(topic, language)
+        except ResearchError as exc:
+            print(t("cli.learn_failed", topic=topic, detail=exc))
+            failed += 1
+            continue
+        if done.concept is None:
+            print(t("cli.learn_unknown", topic=topic))
+            failed += 1
+            continue
+        counts = {"concepts": len(done.concepts), "facts": done.facts, "words": done.words}
+        print(t("cli.learned", topic=topic, concept=done.concept, **counts))
+    return 1 if failed else 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     previous = get_locale()
@@ -148,7 +172,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         # In command mode the clock is frozen, so output is byte-for-byte reproducible.
         config = _config(args)
         kernel = Kernel.open(config, FixedClock() if args.command else None)
-        session = Session(kernel, researcher=build_researcher(config))
+        librarian = build_librarian(config, kernel)
+        if args.learn:
+            return _learn(librarian, args.learn, get_locale())
+        session = Session(kernel, researcher=build_researcher(config), librarian=librarian)
         return _run_commands(session, args.command) if args.command else _repl(session)
     finally:
         set_locale(previous)
