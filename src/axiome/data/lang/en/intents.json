@@ -1,0 +1,126 @@
+{
+  "comment": "Patterns run on folded text (lowercase, no diacritics, straight apostrophes). First match wins.",
+  "articles": [
+    "a",
+    "an",
+    "the",
+    "some",
+    "this",
+    "that",
+    "these",
+    "those"
+  ],
+  "pronouns": [
+    "it",
+    "he",
+    "she",
+    "him",
+    "her",
+    "they",
+    "them",
+    "this",
+    "that"
+  ],
+  "stopwords": [
+    "a",
+    "an",
+    "the",
+    "of",
+    "and",
+    "or",
+    "in",
+    "on",
+    "to",
+    "for",
+    "by",
+    "with",
+    "is",
+    "are",
+    "was",
+    "be",
+    "it",
+    "its",
+    "that",
+    "this",
+    "which",
+    "what",
+    "as",
+    "at",
+    "from"
+  ],
+  "level_signals": {
+    "beginner": "\\b(?:more simply|simpler|explain simply|simply|in simple terms|like i'?m five|i'?m a beginner|beginner level|eli5)\\b",
+    "expert": "\\b(?:expert level|professor level|advanced level|in detail|in depth|more technical|technically|i'?m an expert)\\b"
+  },
+  "intents": [
+    [
+      "greeting",
+      "^(?:hello|hi|hey|good (?:morning|afternoon|evening))[ !.,]*$"
+    ],
+    [
+      "thanks",
+      "^(?:thanks|thank you|cheers)\\b[^?]*$"
+    ],
+    [
+      "farewell",
+      "^(?:bye|goodbye|see you|good night)\\b"
+    ],
+    [
+      "identity",
+      "(?:who are you|what are you|what is axiome)"
+    ],
+    [
+      "capabilities",
+      "(?:what can you do|what do you do)"
+    ],
+    [
+      "confusion",
+      "^(?:i don'?t understand|i do not understand|i didn'?t understand|i didn'?t get it|not clear|that'?s not clear|unclear)\\b"
+    ],
+    [
+      "properties",
+      "^(?:what are )?(?:the )?(?:properties|characteristics) of (?P<x>.+?)\\??$"
+    ],
+    [
+      "unit",
+      "^(?:what is )?(?:the )?(?:si )?unit of (?P<x>.+?)\\??$"
+    ],
+    [
+      "unit",
+      "^what is (?P<x>.+?) measured in\\??$"
+    ],
+    [
+      "complexity",
+      "^(?:what is )?(?:the )?(?:time )?complexity of (?P<x>.+?)\\??$"
+    ],
+    [
+      "members",
+      "^(?:which|what) are the (?P<x>.+?)\\??$"
+    ],
+    [
+      "members",
+      "^(?:give (?:me )?|list )?(?:some )?examples? of (?P<x>.+?)\\??$"
+    ],
+    [
+      "check_is_a",
+      "^(?:is|are) (?P<x>.+?) (?P<ya>a |an )(?P<y>.+?)\\?$"
+    ],
+    [
+      "definition",
+      "^(?:what is |what's |what are |define |explain |tell me about |describe )(?P<x>.+?)\\??$"
+    ],
+    [
+      "research",
+      "^(?:search|look up|research)(?: for| about)? (?P<x>.+?)[.?]?$"
+    ],
+    [
+      "follow_up",
+      "^(?:and|what about|how about) (?P<x>.+?)\\?$"
+    ],
+    [
+      "teach_is_a",
+      "^(?!.*\\?)(?P<x>.+?) (?:is|are) (?P<ya>a |an )(?P<y>.+?)\\.?$"
+    ]
+  ],
+  "level_only": "^(?:(?:explain|say|rephrase|tell me|continue)(?: it| that| again| me)*)?[ .!?]*$"
+}

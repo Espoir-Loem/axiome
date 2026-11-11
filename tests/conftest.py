@@ -10,6 +10,12 @@ from axiome.kernel import Kernel
 
 
 @pytest.fixture(autouse=True)
+def no_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests never touch the network: web research uses recorded responses."""
+    monkeypatch.setenv("AXIOME_OFFLINE", "1")
+
+
+@pytest.fixture(autouse=True)
 def english_locale() -> Iterator[None]:
     """Assertions are written against the English catalog."""
     previous = get_locale()

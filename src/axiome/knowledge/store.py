@@ -18,7 +18,7 @@ from axiome.reasoning.syntax import parse_atom
 from axiome.reasoning.terms import Atom
 from axiome.verification.epistemic import Evidence, Reliability, Source, SourceKind, Stance
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # v2 adds the learned lexicon (v1 databases are migrated)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -44,6 +44,14 @@ CREATE TABLE IF NOT EXISTS rules (
     text TEXT NOT NULL UNIQUE,
     axiomatic INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS lexicon (
+    language TEXT NOT NULL,
+    form TEXT NOT NULL,
+    concept TEXT NOT NULL,
+    source_id TEXT NOT NULL REFERENCES sources(id),
+    recorded_at TEXT NOT NULL,
+    PRIMARY KEY (language, form, concept)
+);
 """
 
 
@@ -63,7 +71,7 @@ class KnowledgeStore:
             raise StorageError("storage.open_failed", path=path, detail=exc) from exc
         self._db.execute("PRAGMA foreign_keys = ON")
         version = self._db.execute("PRAGMA user_version").fetchone()[0]
-        if version not in (0, SCHEMA_VERSION):
+        if version not in (0, 1, SCHEMA_VERSION):
             raise StorageError("storage.unsupported_schema", found=version, expected=SCHEMA_VERSION)
         with self._tx() as db:
             db.executescript(_SCHEMA)
@@ -89,6 +97,13 @@ class KnowledgeStore:
         with self._tx() as db:
             db.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", (key, value))
 
+    def meta_items(self, prefix: str) -> list[tuple[str, str]]:
+        rows = self._db.execute(
+            "SELECT key, value FROM meta WHERE substr(key, 1, ?) = ? ORDER BY key",
+            (len(prefix), prefix),
+        ).fetchall()
+        return [(str(k), str(v)) for k, v in rows]
+
     # -- sources -------------------------------------------------------------
     def add_source(self, s: Source) -> None:
         with self._tx() as db:
@@ -112,7 +127,7 @@ class KnowledgeStore:
         ).fetchall()
         return [_row_to_source(r) for r in rows]
 
-    # -- faits et preuves ----------------------------------------------------
+    # -- facts and evidence ----------------------------------------------------
     def add_evidence(
         self, atom: Atom, source_id: str, stance: Stance, recorded_at: str, excerpt: str = ""
     ) -> bool:
@@ -142,6 +157,35 @@ class KnowledgeStore:
                 Evidence(sources[source_id], Stance(stance), excerpt)
             )
         return out
+
+    def evidence_for(self, atom: Atom) -> list[Evidence]:
+        sources = {s.id: s for s in self.sources()}
+        rows = self._db.execute(
+            "SELECT e.source_id, e.stance, e.excerpt FROM evidence e "
+            "JOIN facts f ON f.id = e.fact_id WHERE f.text = ? ORDER BY e.source_id, e.stance",
+            (str(atom),),
+        ).fetchall()
+        return [Evidence(sources[sid], Stance(st), ex) for sid, st, ex in rows]
+
+    # -- learned lexicon -------------------------------------------------------
+    def add_word(
+        self, language: str, form: str, concept: str, source_id: str, recorded_at: str
+    ) -> bool:
+        self.source(source_id)
+        with self._tx() as db:
+            cur = db.execute(
+                "INSERT OR IGNORE INTO lexicon VALUES (?, ?, ?, ?, ?)",
+                (language, form, concept, source_id, recorded_at),
+            )
+            return cur.rowcount == 1
+
+    def words(self, language: str) -> list[tuple[str, str]]:
+        """Learned (form, concept) pairs of a language, sorted."""
+        rows = self._db.execute(
+            "SELECT form, concept FROM lexicon WHERE language = ? ORDER BY form, concept",
+            (language,),
+        ).fetchall()
+        return [(str(f), str(c)) for f, c in rows]
 
     # -- rules ---------------------------------------------------------------
     def add_rule(self, text: str, axiomatic: bool) -> bool:

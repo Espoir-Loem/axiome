@@ -1,0 +1,151 @@
+{
+  "comment": "Patterns run on folded text (lowercase, no diacritics, straight apostrophes). First match wins.",
+  "articles": [
+    "un",
+    "une",
+    "le",
+    "la",
+    "l'",
+    "les",
+    "des",
+    "du",
+    "de",
+    "d'",
+    "ce",
+    "cet",
+    "cette",
+    "ces",
+    "de la",
+    "de l'"
+  ],
+  "pronouns": [
+    "il",
+    "elle",
+    "lui",
+    "ca",
+    "cela",
+    "celui-ci",
+    "celle-ci",
+    "ceux-ci",
+    "eux",
+    "elles"
+  ],
+  "stopwords": [
+    "le",
+    "la",
+    "les",
+    "un",
+    "une",
+    "des",
+    "du",
+    "de",
+    "d",
+    "l",
+    "et",
+    "ou",
+    "a",
+    "au",
+    "aux",
+    "en",
+    "dans",
+    "par",
+    "pour",
+    "sur",
+    "avec",
+    "est",
+    "sont",
+    "qui",
+    "que",
+    "qu",
+    "quoi",
+    "ce",
+    "c",
+    "se",
+    "s",
+    "il",
+    "elle",
+    "on",
+    "ne",
+    "pas",
+    "plus"
+  ],
+  "level_signals": {
+    "beginner": "\\b(?:plus simplement|plus simple|simplement|en termes simples|niveau debutant|je suis debutant|vulgarise[sz]?|comme a un enfant)\\b",
+    "expert": "\\b(?:niveau expert|niveau professeur|niveau avance|niveau master|niveau doctorat|plus technique|techniquement|en detail|en profondeur|je suis expert)\\b"
+  },
+  "intents": [
+    [
+      "greeting",
+      "^(?:bonjour|salut|bonsoir|coucou|hello|hey)[ !.,]*$"
+    ],
+    [
+      "thanks",
+      "^merci\\b[^?]*$"
+    ],
+    [
+      "farewell",
+      "^(?:au revoir|a bientot|bonne nuit|a plus|bye)\\b"
+    ],
+    [
+      "identity",
+      "(?:qui es[- ]tu|tu es qui|qui etes[- ]vous|c'est quoi axiome|qu'est[- ]ce qu'axiome)"
+    ],
+    [
+      "capabilities",
+      "(?:que sais[- ]tu faire|tu sais faire quoi|que peux[- ]tu faire|a quoi sers[- ]tu)"
+    ],
+    [
+      "confusion",
+      "^(?:je n'ai pas compris|j'ai pas compris|pas compris|je ne comprends pas|je comprends pas|c'est pas clair|ce n'est pas clair)\\b"
+    ],
+    [
+      "properties",
+      "^(?:quelles sont )?les (?:proprietes|caracteristiques) d(?:e |u |es |')(?P<x>.+?)\\??$"
+    ],
+    [
+      "unit",
+      "^(?:quelle est )?l'unite(?: si)? d(?:e |u |es |')(?P<x>.+?)\\??$"
+    ],
+    [
+      "unit",
+      "^en quoi se mesure (?P<x>.+?)\\??$"
+    ],
+    [
+      "complexity",
+      "^(?:quelle est )?la complexite d(?:e |u |es |')(?P<x>.+?)\\??$"
+    ],
+    [
+      "members",
+      "^(?:quels|quelles) sont les (?P<x>.+?)\\??$"
+    ],
+    [
+      "members",
+      "^(?:donne(?:[- ]moi)? |cite(?:[- ]moi)? )?(?:des |quelques )?exemples? d(?:e |u |es |')(?P<x>.+?)\\??$"
+    ],
+    [
+      "check_is_a",
+      "^(?:est[- ]ce qu(?:e |'))?(?P<x>.+?) (?:est[- ]il|est[- ]elle|est) (?P<ya>un |une )(?P<y>.+?)\\?$"
+    ],
+    [
+      "definition",
+      "^(?:explique(?:[- ]moi)? ce qu(?:'est |e sont )|dis[- ]moi ce qu(?:'est |e sont )|ce qu'est |qu'est[- ]ce qu(?:e |')|c'est quoi |que signifie |que veut dire |definis |definition d(?:e |u |es |')|explique(?:[- ]moi)? |parle(?:[- ]moi)? d(?:e |u |es |'))(?P<x>.+?)\\??$"
+    ],
+    [
+      "definition",
+      "^(?P<x>.+?),? c'est quoi\\??$"
+    ],
+    [
+      "research",
+      "^(?:cherche|recherche|fais (?:une |des )?recherches?)(?: sur| a propos d(?:e |u |es |'))? (?P<x>.+?)[.?]?$"
+    ],
+    [
+      "follow_up",
+      "^et (?P<x>.+?)\\?$"
+    ],
+    [
+      "teach_is_a",
+      "^(?!.*\\?)(?P<x>.+?) (?:est|sont) (?P<ya>un |une |des )(?P<y>.+?)\\.?$"
+    ]
+  ],
+  "level_only": "^(?:(?:re)?(?:explique|dis|redis|reformule|parle|continue)(?:[- ](?:moi|le|la|ca|nous))*)?[ .!?]*$"
+}

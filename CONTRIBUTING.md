@@ -28,6 +28,7 @@ make check   # ruff + format + mypy --strict + pytest --cov (≥ 90 %)
 ## Style
 - **Tout le code source est en anglais** : identifiants, commentaires, docstrings, messages d'erreur et vocabulaire de la base (ADR-0005).
 - Aucun texte affiché dans le code : passer par `axiome.i18n` (`t()` / `msg()`) et ajouter la clé dans **les deux** catalogues `src/axiome/locales/{en,fr}.json` (un test le vérifie).
+- Les phrases d'Axiome viennent des paquets `src/axiome/data/lang/<code>/`. Tout gabarit doit exister dans chaque langue (un test le vérifie) et ne contenir aucun signe IA ([docs/signes-ia.md](docs/signes-ia.md)). La même règle vaut pour la documentation : pas d'emoji de statut, pas de formules creuses.
 - Commits et PR en anglais. **Aucun agent IA ni bot comme contributeur** : pas de ligne `Co-Authored-By` d'outil IA, pas de PR automatiques (Dependabot, Renovate…).
 - Typage complet, `mypy --strict`.
 - Fonctions pures dès que possible ; les E/S restent aux bords (`knowledge`, `cli`).

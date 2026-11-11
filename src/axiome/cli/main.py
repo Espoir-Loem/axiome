@@ -4,18 +4,45 @@ from __future__ import annotations
 
 import argparse
 import io
+import re
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from dataclasses import replace
 
 from axiome import __version__
 from axiome.core.clock import FixedClock
 from axiome.core.config import IN_MEMORY, Config
 from axiome.core.errors import AxiomeError
+from axiome.dialogue.events import Done, Say, Thinking
+from axiome.dialogue.session import Session
 from axiome.i18n import SUPPORTED, get_locale, set_locale, t
 from axiome.kernel import Kernel
+from axiome.research.setup import build_researcher
 from axiome.response import render
 
 QUIT = (":quit", ":q")
+# A logic statement starts with "?-" or with "predicate(" (fact or rule).
+_LOGIC = re.compile(r"^\s*(?:\?-|[a-z_][A-Za-z0-9_]*\()")
+DIM, RESET = "\x1b[2m", "\x1b[0m"
+
+
+def is_logic(line: str) -> bool:
+    return bool(_LOGIC.match(line))
+
+
+def converse(session: Session, line: str, *, color: bool = False) -> Iterator[str]:
+    """Render the event stream of one turn as text chunks, as soon as they come."""
+    started = False
+    for event in session.respond(line):
+        if isinstance(event, Thinking):
+            text = f"  {event.text}"
+            yield ("\n" if started else "") + (f"{DIM}{text}{RESET}" if color else text) + "\n"
+            started = False
+        elif isinstance(event, Say):
+            yield (" " if started else "") + event.text
+            started = True
+        elif isinstance(event, Done) and started:
+            yield "\n"
 
 
 def _rules(k: Kernel) -> str:
@@ -56,6 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--version", action="version", version=f"axiome {__version__}")
     p.add_argument("--db", help=t("cli.opt_db"))
     p.add_argument("--memory", action="store_true", help=t("cli.opt_memory"))
+    p.add_argument("--offline", action="store_true", help=t("cli.opt_offline"))
     p.add_argument("--lang", choices=SUPPORTED, default=None, help=t("cli.opt_lang"))
     p.add_argument("-c", "--command", action="append", default=[], help=t("cli.opt_command"))
     return p
@@ -70,25 +98,45 @@ def _safe_execute(kernel: Kernel, line: str) -> tuple[str, bool]:
 
 
 def _config(args: argparse.Namespace) -> Config:
+    config = Config.from_env()
     if args.memory:
-        return Config(IN_MEMORY)
-    if args.db:
-        return Config(args.db)
-    return Config.from_env()
+        config = replace(config, db_path=IN_MEMORY)
+    elif args.db:
+        config = replace(config, db_path=args.db)
+    if args.offline:
+        config = replace(config, offline=True)
+    return config
 
 
-def _run_commands(kernel: Kernel, lines: Sequence[str]) -> int:
-    status = 0
-    for line in lines:
-        out, ok = _safe_execute(kernel, line)
-        status = status if ok else 1
+def _handle(session: Session, line: str, color: bool) -> bool:
+    """Process one line, streaming its output; return False on an expected error."""
+    stripped = line.strip()
+    if not stripped:
+        return True
+    if stripped.startswith(":") or is_logic(stripped):
+        out, ok = _safe_execute(session.kernel, stripped)
         if out:
             print(out)
+        return ok
+    try:
+        for chunk in converse(session, stripped, color=color):
+            print(chunk, end="", flush=True)
+    except AxiomeError as exc:
+        print(t("cli.error", message=exc))
+        return False
+    return True
+
+
+def _run_commands(session: Session, lines: Sequence[str]) -> int:
+    status = 0
+    for line in lines:
+        status = status if _handle(session, line, color=False) else 1
     return status
 
 
-def _repl(kernel: Kernel) -> int:
+def _repl(session: Session) -> int:
     print(t("cli.banner", version=__version__))
+    color = sys.stdout.isatty()
     while True:
         try:
             line = input("axiome> ")
@@ -97,9 +145,7 @@ def _repl(kernel: Kernel) -> int:
             return 0
         if line.strip() in QUIT:
             return 0
-        out, _ = _safe_execute(kernel, line)
-        if out:
-            print(out)
+        _handle(session, line, color)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -111,8 +157,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     try:
         # In command mode the clock is frozen, so output is byte-for-byte reproducible.
-        kernel = Kernel.open(_config(args), FixedClock() if args.command else None)
-        return _run_commands(kernel, args.command) if args.command else _repl(kernel)
+        config = _config(args)
+        kernel = Kernel.open(config, FixedClock() if args.command else None)
+        session = Session(kernel, researcher=build_researcher(config))
+        return _run_commands(session, args.command) if args.command else _repl(session)
     finally:
         set_locale(previous)
 

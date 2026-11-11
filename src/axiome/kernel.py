@@ -19,7 +19,7 @@ from axiome.reasoning.engine import Answer, Proof
 from axiome.reasoning.program import Constraint, Program, Rule
 from axiome.reasoning.syntax import Query, parse_program, parse_statement
 from axiome.reasoning.terms import Atom
-from axiome.verification.epistemic import Assessment, Stance, Status, assess
+from axiome.verification.epistemic import Assessment, Evidence, Source, Stance, Status, assess
 from axiome.verification.revision import CLOSED_WORLD_CAP, BeliefState, revise
 
 USER_SOURCE = "user"
@@ -101,6 +101,14 @@ class Kernel:
             raise ProgramError("knowledge.constraint_seed_only")
         raise KnowledgeError("knowledge.use_ask")
 
+    def record(self, atom: Atom, source: Source, excerpt: str = "") -> bool:
+        """Store evidence coming from an external source (web page, reference)."""
+        self.store.add_source(source)
+        added = self.store.add_evidence(atom, source.id, Stance.SUPPORTS, self.clock.now(), excerpt)
+        if added:
+            self._state = None
+        return added
+
     # -- reads ---------------------------------------------------------------
     def ask(self, text: str) -> QueryResult:
         stmt = parse_statement(text if text.lstrip().startswith("?-") else f"?- {text}")
@@ -115,6 +123,9 @@ class Kernel:
             if not lit.negated and lit.atom in state.refuted
         )
         return QueryResult(stmt, views, refuted)
+
+    def evidence(self, atom: Atom) -> list[Evidence]:
+        return self.store.evidence_for(atom)
 
     def explain(self, text: str) -> Explanation:
         stmt = parse_statement(text)

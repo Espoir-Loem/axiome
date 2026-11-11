@@ -44,3 +44,7 @@ class StorageError(AxiomeError):
 
 class KnowledgeError(AxiomeError):
     """Inconsistent knowledge operation (unknown source, non-ground fact, ...)."""
+
+
+class ResearchError(AxiomeError):
+    """Web research failure (network, malformed response); never fatal to a turn."""

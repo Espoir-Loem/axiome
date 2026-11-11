@@ -1,0 +1,35 @@
+{
+  "comment": "AI tells (docs/signes-ia.md). Patterns run on folded text; S5 (typography) is handled in code.",
+  "rules": {
+    "S1": [
+      "^(?:excellente|bonne|tres bonne|super|belle) question\\s*[!.,:]?\\s*",
+      "^(?:bien sur|absolument|certainement|evidemment)\\s*[!,.]\\s+(?=\\S)"
+    ],
+    "S2": [
+      "en tant qu(?:e |')(?:ia|intelligence artificielle|assistant|modele de langage)",
+      "je ne suis qu(?:e |')(?:une? )?(?:ia|intelligence artificielle|programme|modele)"
+    ],
+    "S3": [
+      "\\s*n'hesite[sz]? pas a\\b[^.!?]*[.!?]?",
+      "\\s*j'espere que (?:cela|ca) (?:t'|vous )?aide[^.!?]*[.!?]?",
+      "\\s*si (?:tu as|vous avez) d'autres questions[^.!?]*[.!?]?"
+    ],
+    "S4": [
+      "il est (?:important|essentiel|crucial) de (?:noter|souligner|rappeler) que ",
+      "il convient de (?:noter|souligner) que ",
+      "force est de constater que ",
+      "dans un monde en constante evolution,? ",
+      "\\s*plongeons (?:dans|ensemble)[^.!?]*[.!?]?"
+    ],
+    "S6": [
+      "\\s*(?:je m'excuse|desole|toutes mes excuses) (?:pour|de) (?:la|toute) confusion[^.!?]*[.!?]?"
+    ],
+    "S7": [
+      "\\s*(?:veux|voulez)[- ](?:tu|vous) (?:que je|un exemple|en savoir plus)[^?]*\\?",
+      "\\s*souhaite[sz]?[- ](?:tu|vous) [^?]*\\?"
+    ]
+  },
+  "waivers": {
+    "S5": "\\b(?:emojis?|emoticones?|smileys?)\\b"
+  }
+}

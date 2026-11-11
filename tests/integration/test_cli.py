@@ -57,3 +57,33 @@ def test_repl_eof(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AXIOME_DB", str(tmp_path / "e.db"))
     monkeypatch.setattr(builtins, "input", raise_eof)
     assert main([]) == 0
+
+
+def test_conversation_in_command_mode(capsys: pytest.CaptureFixture[str]) -> None:
+    code = main(
+        ["--memory", "--offline", "--lang", "fr", "-c", "Bonjour", "-c", "qu'est-ce qu'une pile ?"]
+    )
+    out = capsys.readouterr().out
+    assert code == 0
+    assert out.startswith("Bonjour. Je t'écoute.\nLa pile est une structure de données.")
+
+
+def test_converse_renders_thinking_on_its_own_line() -> None:
+    from axiome.cli.main import converse, is_logic  # noqa: PLC0415
+    from axiome.core.clock import FixedClock  # noqa: PLC0415
+    from axiome.dialogue.session import Session  # noqa: PLC0415
+    from axiome.research.providers.wikipedia import Wikipedia  # noqa: PLC0415
+    from axiome.team.researcher import Researcher  # noqa: PLC0415
+    from tests.fakes import FakeFetcher, wikipedia_routes  # noqa: PLC0415
+
+    assert is_logic("?- p(X).") and is_logic("p(a).") and not is_logic("le chat est un animal.")
+    session = Session(
+        Kernel.in_memory(FixedClock()),
+        "fr",
+        Researcher([Wikipedia(FakeFetcher(wikipedia_routes()))]),
+    )
+    chunks = list(converse(session, "qu'est-ce qu'un photon ?", color=True))
+    assert chunks[0].startswith("\x1b[2m  Je ne le sais pas encore.")
+    assert chunks[-1] == "\n"
+    session.answer_text("salut")
+    assert list(converse(session, "salut")) == ["Bonjour. Je t'écoute.", "\n"]

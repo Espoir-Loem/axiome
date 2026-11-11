@@ -36,10 +36,17 @@ def get_locale() -> str:
     return locale if locale in SUPPORTED else DEFAULT
 
 
+def t_in(locale: str, key: str, **params: object) -> str:
+    """Translate ``key`` in ``locale`` (falls back to English, then to the key)."""
+    locale = locale if locale in SUPPORTED else DEFAULT
+    template = _catalog(locale).get(key) or _catalog("en").get(key) or key
+    rendered = {k: v.render(locale) if isinstance(v, Msg) else str(v) for k, v in params.items()}
+    return template.format(**rendered)
+
+
 def t(key: str, **params: object) -> str:
     """Translate ``key`` in the active locale (falls back to English, then to the key)."""
-    template = _catalog(get_locale()).get(key) or _catalog("en").get(key) or key
-    return template.format(**{k: str(v) for k, v in params.items()})
+    return t_in(get_locale(), key, **params)
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +58,9 @@ class Msg:
 
     def __str__(self) -> str:
         return t(self.key, **dict(self.params))
+
+    def render(self, locale: str) -> str:
+        return t_in(locale, self.key, **dict(self.params))
 
 
 def msg(key: str, **params: object) -> Msg:

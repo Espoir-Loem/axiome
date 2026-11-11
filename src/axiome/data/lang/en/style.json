@@ -1,0 +1,34 @@
+{
+  "comment": "AI tells (docs/signes-ia.md). Patterns run on folded text; S5 (typography) is handled in code.",
+  "rules": {
+    "S1": [
+      "^(?:great|good|excellent|what a great) question\\s*[!.,:]?\\s*",
+      "^(?:of course|absolutely|certainly|sure)\\s*[!,.]\\s+(?=\\S)"
+    ],
+    "S2": [
+      "as an (?:ai|artificial intelligence|ai assistant|ai language model|language model)",
+      "i'?m (?:just|only) an? (?:ai|program|language model)"
+    ],
+    "S3": [
+      "\\s*feel free to\\b[^.!?]*[.!?]?",
+      "\\s*i hope (?:this|that) helps[^.!?]*[.!?]?",
+      "\\s*if you have (?:any )?(?:other|more|further) questions[^.!?]*[.!?]?"
+    ],
+    "S4": [
+      "it(?:'s| is) (?:important|worth|crucial) to (?:note|mention|remember) that ",
+      "in today'?s (?:fast-paced|ever-changing|ever-evolving) world,? ",
+      "\\s*let'?s (?:delve|dive) (?:into|in)[^.!?]*[.!?]?",
+      "\\bdelves? into "
+    ],
+    "S6": [
+      "\\s*(?:i apologi[sz]e|sorry) for (?:the|any) confusion[^.!?]*[.!?]?"
+    ],
+    "S7": [
+      "\\s*would you like (?:me to|an example|to know more)[^?]*\\?",
+      "\\s*do you want me to [^?]*\\?"
+    ]
+  },
+  "waivers": {
+    "S5": "\\b(?:emojis?|emoticons?|smileys?)\\b"
+  }
+}
