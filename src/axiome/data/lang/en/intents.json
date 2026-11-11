@@ -57,6 +57,10 @@
   },
   "intents": [
     [
+      "letter",
+      "\\bthe letter (?P<p>[a-z])\\b"
+    ],
+    [
       "greeting",
       "^(?:hello|hi|hey|good (?:morning|afternoon|evening))[ !.,]*$"
     ],
@@ -288,5 +292,7 @@
     "non-",
     "non"
   ],
-  "disambiguation": "(?:may (?:also )?refer to|can refer to|may stand for|is the name of several|(?:several|different|multiple) meanings)"
+  "disambiguation": "(?:may (?:also )?refer to|can refer to|may stand for|is the name of several|(?:several|different|multiple) meanings)",
+  "letter_confirm": "^(?:yes|yeah|yep|exactly|the letter|i mean the letter)\\b",
+  "vowels": "aeiou"
 }

@@ -4,6 +4,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 
 ## [Non publié]
 ### Ajouté (Wikidata)
+- Lettres de l'alphabet : après « Tu parles de la lettre « L » ? », une confirmation (« oui », « je parle bien de la lettre l ») obtient une vraie réponse : rang dans l'alphabet, voyelle ou consonne, minuscule.
 - **Apprentissage depuis Wikidata** (ADR-0008) : classes (`is_a`), noms FR/EN avec le genre grammatical (Wikidata Lexemes) et définition courte. Les métaclasses, les éléments d'homonymie et les noms non traduits sont écartés. La classification du vivant est suivie (taxon parent).
 - Questions oui/non sur des concepts inconnus : Axiome les apprend à la demande, puis cherche un chemin de classification (« le lion est-il un mammifère ? » remonte une dizaine de rangs). Un « pourquoi » sur une longue lignée est résumé (« le lion est un Panthera, lui-même classé 5 rangs sous les mammifères »).
 - Option `axiome --learn "sujet"` pour apprendre à l'avance. Variable `AXIOME_CONTACT` (facultative) pour le User-Agent demandé par Wikimedia.

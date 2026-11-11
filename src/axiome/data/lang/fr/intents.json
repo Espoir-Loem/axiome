@@ -81,6 +81,10 @@
   },
   "intents": [
     [
+      "letter",
+      "\\b(?:la|une) lettre (?P<p>[a-z])\\b"
+    ],
+    [
       "greeting",
       "^(?:bonjour|salut|bonsoir|coucou|hello|hey)[ !.,]*$"
     ],
@@ -317,5 +321,7 @@
   "negative_prefixes": [
     "non-"
   ],
-  "disambiguation": "(?:peut (?:designer|faire reference a|renvoyer a|se referer a)|est un homonyme|(?:differentes|plusieurs) (?:significations|sens|acceptions)|^(?:le mot|le terme|le nom) \\S+ (?:peut|est))"
+  "disambiguation": "(?:peut (?:designer|faire reference a|renvoyer a|se referer a)|est un homonyme|(?:differentes|plusieurs) (?:significations|sens|acceptions)|^(?:le mot|le terme|le nom) \\S+ (?:peut|est))",
+  "letter_confirm": "^(?:oui|ouais|exactement|c'est ca|la lettre|je parle (?:bien )?de la lettre|bien la lettre)\\b",
+  "vowels": "aeiouy"
 }

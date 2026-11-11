@@ -73,6 +73,7 @@ class Intent(Enum):
     FILLER = "filler"
     GIBBERISH = "gibberish"
     LIMITS = "limits"
+    LETTER = "letter"
     UNKNOWN = "unknown"
 
 
@@ -269,6 +270,13 @@ class Analyst:
             cut = folded.rindex(", ") + 2
             orig, folded = orig[cut:], folded[cut:]
             intent, match = self._match(folded, context)
+        if (
+            intent is not Intent.LETTER
+            and context.expect.startswith("letter:")
+            and self.pack.letter_confirm.search(folded)  # "oui, la lettre"
+        ):
+            letter = context.expect.removeprefix("letter:")
+            return Intent.LETTER, re.match(r"(?P<p>.+)", letter), orig, folded
         if match is None and context.expect == "user_name" and 0 < len(words(folded)) <= 2:
             name = orig.strip(" ?.!")  # the answer to "what's your name?"
             return Intent.USER_NAME, re.match(r"(?P<n>.+)", name), name, name

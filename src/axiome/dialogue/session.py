@@ -46,6 +46,8 @@ from axiome.verification.epistemic import Status
 Step = Generator[Event | Claim, None, None]
 Handler = Callable[[Analysis, Level], Step]
 CALCULATOR_SOURCE = "calculator"
+ALPHABET_SOURCE = "alphabet:latin"
+ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 CHECK_DEPTH = 3  # Wikidata class levels learned on demand (the Sun is a star three levels up)
 MIN_PURPOSE_OVERLAP = 2  # shared word stems between a need and a pattern's use
 STEM = 5
@@ -118,6 +120,7 @@ class Session:
             Intent.DATE: self._date,
             Intent.CLOCK: self._clock,
             Intent.GIBBERISH: self._gibberish,
+            Intent.LETTER: self._letter,
         }
 
     # -- public ----------------------------------------------------------------
@@ -222,7 +225,32 @@ class Session:
 
     def _single_letter(self, analysis: Analysis, level: Level) -> Step:
         letter = analysis.subject.text.strip(" ?.!").upper() if analysis.subject else ""
+        self.context.expect = f"letter:{letter.lower()}"
         yield self.writer.social("single_letter", x=letter)
+
+    def _letter(self, analysis: Analysis, level: Level) -> Step:
+        """Facts about a letter of the Latin alphabet, computed (they never need a source)."""
+        lower = fold(analysis.detail).strip()[:1]
+        if not lower.isalpha() or not lower.isascii():
+            yield self.writer.social("not_understood")
+            return
+        vowel = lower in self.pack.vowels
+        same = [c for c in ALPHABET if (c in self.pack.vowels) == vowel]
+        text = self.pack.say(
+            "letter",
+            upper=lower.upper(),
+            lower=lower,
+            n=self._ordinal(ALPHABET.index(lower) + 1),
+            k=self._ordinal(same.index(lower) + 1),
+            kind=self.pack.say("vowel" if vowel else "consonant").lower(),
+        )
+        yield Claim(text, Status.PROVED, (ALPHABET_SOURCE,), role=LEAD)
+
+    def _ordinal(self, n: int) -> str:
+        if self.pack.code == "fr":
+            return "1re" if n == 1 else f"{n}e"
+        suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+        return f"{n}{suffix}"
 
     def _gibberish(self, analysis: Analysis, level: Level) -> Step:
         yield self.writer.social("not_a_word", x=analysis.subject.text if analysis.subject else "")

@@ -74,7 +74,9 @@ class LanguagePack:
     months: tuple[str, ...]
     negations: frozenset[str]
     disambiguation: re.Pattern[str]  # a web page listing meanings, not defining one
-    negative_prefixes: tuple[str, ...]  # "unsorted" -> sorted, negated
+    negative_prefixes: tuple[str, ...]
+    letter_confirm: re.Pattern[str]  # "yes, the letter" after Axiome asked
+    vowels: str  # "unsorted" -> sorted, negated
 
     def say(self, key: str, **slots: object) -> str:
         """Realize a sentence template; the first letter is capitalized."""
@@ -140,5 +142,7 @@ def load_pack(code: str) -> LanguagePack:
         months=tuple(intents["months"]),
         negations=frozenset(intents["negations"]),
         negative_prefixes=tuple(intents["negative_prefixes"]),
+        letter_confirm=re.compile(intents["letter_confirm"]),
+        vowels=intents["vowels"],
         disambiguation=re.compile(intents["disambiguation"]),
     )

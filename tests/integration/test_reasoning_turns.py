@@ -152,3 +152,18 @@ def test_name_given_as_an_answer() -> None:
 def test_limits_are_stated() -> None:
     assert "code" in answer(session("fr"), "quelles sont tes limites ?")
     assert "code" in answer(session("en"), "what are your limitations?")
+
+
+def test_letters_after_a_clarification() -> None:
+    s = session()
+    assert "« L »" in answer(s, "c'est quoi l")
+    reply = answer(s, "je parle bien de la lettre l")
+    assert reply.startswith("**L** est la 12e lettre") and "consonne, la 9e" in reply
+    assert "voyelle, la 1re" in answer(s, "c'est quoi la lettre a ?")
+    answer(s, "c'est quoi h")
+    assert "8e lettre" in answer(s, "oui")
+    en = session("en")
+    answer(en, "what is b")
+    assert "the 1st consonant" in answer(en, "yes, the letter")
+    assert "13th letter" in answer(en, "tell me about the letter m")
+    assert "22nd letter" in answer(en, "the letter v")

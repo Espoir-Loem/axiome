@@ -91,6 +91,9 @@
     "ambiguous_topic_bare": "\"{x}\" has several meanings. Which one do you mean?",
     "think_learn": "I don't know {x} yet. Learning it from Wikidata.",
     "think_connect": "Looking on Wikidata for a classification link between the two.",
-    "is_a_lineage": "which sits {n} ranks below the {o:pl}"
+    "is_a_lineage": "which sits {n} ranks below the {o:pl}",
+    "letter": "**{upper}** is the {n} letter of the Latin alphabet, which has 26. It is a {kind}: the {k} {kind} of the alphabet. Its lowercase form is \"{lower}\".",
+    "vowel": "vowel",
+    "consonant": "consonant"
   }
 }

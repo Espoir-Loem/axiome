@@ -91,6 +91,9 @@
     "ambiguous_topic_bare": "« {x} » a plusieurs sens. Lequel t'intéresse ?",
     "think_learn": "Je ne connais pas encore {x}. Je l'apprends sur Wikidata.",
     "think_connect": "Je cherche sur Wikidata un lien de classification entre les deux.",
-    "is_a_lineage": "lui-même classé {n} rangs sous les {o:pl}"
+    "is_a_lineage": "lui-même classé {n} rangs sous les {o:pl}",
+    "letter": "**{upper}** est la {n} lettre de l'alphabet latin, qui en compte 26. C'est une {kind}, la {k} de l'alphabet. En minuscule, elle s'écrit « {lower} ».",
+    "vowel": "voyelle",
+    "consonant": "consonne"
   }
 }

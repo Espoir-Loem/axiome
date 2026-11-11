@@ -27,3 +27,6 @@
 {"lang": "fr", "turn": "quelle sont tes limites", "expect": {"contains": ["code"], "no_search": true}, "id": "smalltalk-fr-027", "category": "smalltalk"}
 {"lang": "en", "turn": "what are your limits?", "expect": {"contains": ["code"], "no_search": true}, "id": "smalltalk-en-028", "category": "smalltalk"}
 {"lang": "en", "turn": "Bob", "expect": {"contains": ["Bob"], "no_search": true}, "id": "smalltalk-en-029", "category": "smalltalk", "setup": ["what's my name?"]}
+{"lang": "fr", "turn": "je parle bien de la lettre l", "setup": ["c'est quoi l"], "expect": {"contains": ["12e lettre", "consonne"], "no_search": true}, "id": "smalltalk-fr-030", "category": "smalltalk"}
+{"lang": "fr", "turn": "oui", "setup": ["c'est quoi h"], "expect": {"contains": ["8e lettre"], "no_search": true}, "id": "smalltalk-fr-031", "category": "smalltalk"}
+{"lang": "en", "turn": "yes, the letter", "setup": ["what is b"], "expect": {"contains": ["2nd letter"], "no_search": true}, "id": "smalltalk-en-032", "category": "smalltalk"}
