@@ -160,7 +160,7 @@ def test_web_research_failure_and_english() -> None:
 def test_small_talk_is_never_searched() -> None:
     s = fresh(researcher=web())
     assert s.answer_text("comment vas tu") == "Ça va bien, merci. Et toi ?"
-    assert s.answer_text("bien et toi") == "Tant mieux."
+    assert s.answer_text("bien et toi") == "Tant mieux. Moi aussi, ça va bien, merci."
     assert s.answer_text("tu t'appelles comment ?") == "Je m'appelle Axiome."
     assert s.answer_text("je m'appelle espoir") == "Enchanté, Espoir."
     assert s.answer_text("salut") == "Bonjour, Espoir."

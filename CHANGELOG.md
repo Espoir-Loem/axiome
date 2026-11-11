@@ -3,6 +3,17 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (suivi de la conversation)
+- Axiome suit le fil : une relance courte reprend la dernière question sur un autre sujet (« et le tri rapide ? », « et celle de la recherche linéaire ? », « what about heapsort? »).
+- Questions sans sujet résolues sur le sujet en cours : « est-il un mammifère ? », « c'est un animal ? », « et sa complexité ? ».
+- « Pourquoi ? » seul explique la dernière réponse (chaîne de déduction, prérequis, propriété).
+- Corrections : « non, je voulais dire une file », « I meant a queue ».
+- « Développe », « plus de détails », « tell me more » : le dernier sujet, avec tout ce qui est vérifié.
+- Traduction des mots connus : « et en anglais ? », « comment dit-on baleine en anglais ? », « and in French? ».
+- Calcul enchaîné : « et fois 3 ? » repart du dernier résultat.
+- « bien et toi ? » : Axiome répond aussi à la question.
+- Banc d'évaluation `context` (24 conversations) et banc réservé (20 conversations) : 5/24 au départ, puis 24/24. Le banc réservé a obtenu 19/20 à sa première mesure ; l'échec venait d'un vrai défaut de motif (« je parlais d'une pile »), corrigé depuis.
+
 ### Ajouté (Wikidata)
 - Lettres de l'alphabet : après « Tu parles de la lettre « L » ? », une confirmation (« oui », « je parle bien de la lettre l ») obtient une vraie réponse : rang dans l'alphabet, voyelle ou consonne, minuscule.
 - **Apprentissage depuis Wikidata** (ADR-0008) : classes (`is_a`), noms FR/EN avec le genre grammatical (Wikidata Lexemes) et définition courte. Les métaclasses, les éléments d'homonymie et les noms non traduits sont écartés. La classification du vivant est suivie (taxon parent).

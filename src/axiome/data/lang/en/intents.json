@@ -81,6 +81,10 @@
       "(?:what'?s your name|what is your name|who should i call you|your name)"
     ],
     [
+      "user_fine_ask",
+      "^(?:i'?m )?(?:fine|good|great|well|ok|okay)(?:,? thanks?| thank you)?,? (?:and you|you)\\s*\\??$"
+    ],
+    [
       "user_fine",
       "^(?:(?:i'?m )?(?:fine|good|great|ok|okay|well|not bad|doing well)(?:,? thanks| thank you)?(?:,? and you\\??)?|me too)[ !.]*$"
     ],
@@ -107,6 +111,46 @@
     [
       "confusion",
       "^(?:i don'?t understand|i do not understand|i didn'?t understand|i didn'?t get it|not clear|that'?s not clear|unclear)\\b"
+    ],
+    [
+      "why_last",
+      "^(?:but )?(?:why|how come|why so|really)\\s*[?!]*$"
+    ],
+    [
+      "more",
+      "^(?:tell me more|more details|more info|go on|elaborate|give me more details)\\b"
+    ],
+    [
+      "follow_up",
+      "^(?:no,? )?(?:i meant|i mean|i was talking about|rather) (?:an? |the )?(?P<x>.+?)\\??$"
+    ],
+    [
+      "follow_up",
+      "^(?:and )?(?:that|the one) of (?P<x>.+?)\\??$"
+    ],
+    [
+      "translate",
+      "^(?:and )?in (?P<l>english|french)(?P<x>)\\??$"
+    ],
+    [
+      "translate",
+      "^how (?:do you|do i|would you|to) say (?P<x>.+?) in (?P<l>english|french)\\??$"
+    ],
+    [
+      "translate",
+      "^what(?:'s| is) (?P<x>.+?) in (?P<l>english|french)\\??$"
+    ],
+    [
+      "complexity",
+      "^(?:and )?(?:what(?:'s| is) )?(?P<x>its|their) (?:time )?complexity\\??$"
+    ],
+    [
+      "unit",
+      "^(?:and )?(?:what(?:'s| is) )?(?P<x>its|their) (?:si )?unit\\??$"
+    ],
+    [
+      "properties",
+      "^and (?P<x>its|their) (?:properties|characteristics)\\??$"
     ],
     [
       "ask_user_name",
@@ -294,5 +338,17 @@
   ],
   "disambiguation": "(?:may (?:also )?refer to|can refer to|may stand for|is the name of several|(?:several|different|multiple) meanings)",
   "letter_confirm": "^(?:yes|yeah|yep|exactly|the letter|i mean the letter)\\b",
-  "vowels": "aeiou"
+  "vowels": "aeiou",
+  "languages": {
+    "english": "en",
+    "french": "fr"
+  },
+  "language_names": {
+    "en": "English",
+    "fr": "French"
+  },
+  "continuers": [
+    "and",
+    "then"
+  ]
 }

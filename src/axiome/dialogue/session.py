@@ -23,7 +23,15 @@ from axiome.language.lexicon import GENERAL_DOMAIN
 from axiome.language.pack import LanguagePack, load_pack
 from axiome.perception.normalize import fold, slug, words
 from axiome.reasoning.terms import Atom
-from axiome.team.analyst import TOPICAL, Analysis, Analyst, Context, Intent, Mention
+from axiome.team.analyst import (
+    REPEATABLE,
+    TOPICAL,
+    Analysis,
+    Analyst,
+    Context,
+    Intent,
+    Mention,
+)
 from axiome.team.calculator import CalculationError, DivisionByZeroError, calculate, decimal, exact
 from axiome.team.planner import Aspect, make_plan
 from axiome.team.researcher import Researcher, WebFindings, digest, is_ambiguous
@@ -70,6 +78,7 @@ SOCIAL = {
     Intent.LAUGHTER: "laughter",
     Intent.FILLER: "filler",
     Intent.LIMITS: "limits",
+    Intent.USER_FINE_ASK: "user_fine_ask",
 }
 USER_NAME_KEY = "user:name"
 FEMININE_ARTICLES = frozenset({"une", "la", "cette"})
@@ -103,6 +112,7 @@ class Session:
         self.context = Context()
         self.timezone = timezone  # None: the machine's local time zone
         self.librarian = librarian  # learns concepts and classes from Wikidata
+        self._other_packs: dict[str, LanguagePack] = {}
         self._handlers: dict[Intent, Handler] = {
             Intent.USER_NAME: self._user_name,
             Intent.ASK_USER_NAME: self._ask_user_name,
@@ -121,6 +131,9 @@ class Session:
             Intent.CLOCK: self._clock,
             Intent.GIBBERISH: self._gibberish,
             Intent.LETTER: self._letter,
+            Intent.WHY_LAST: self._why_last,
+            Intent.MORE: self._more,
+            Intent.TRANSLATE: self._translate,
         }
 
     # -- public ----------------------------------------------------------------
@@ -188,6 +201,8 @@ class Session:
             self.context.topic = analysis.subject
         if analysis.intent in TOPICAL or analysis.intent is Intent.CHECK_IS_A:
             self.context.intent = analysis.intent
+        if analysis.intent in REPEATABLE:
+            self.context.last = analysis
 
     # -- answering ---------------------------------------------------------------
     def _answer(self, analysis: Analysis, level: Level) -> Step:
@@ -261,6 +276,60 @@ class Session:
             repeat = Analysis(self.context.intent, self.context.topic, domain=analysis.domain)
             yield from self._topical(repeat, level)
 
+    # -- following the conversation ---------------------------------------------
+    def _why_last(self, analysis: Analysis, level: Level) -> Step:
+        """A bare "why?" asks for the reason of the last answer."""
+        last = self.context.last
+        if last is not None and last.intent is Intent.CHECK_IS_A:
+            yield from self._why_is_a(replace(last, intent=Intent.WHY_IS_A), level)
+        elif last is not None and last.intent is Intent.REQUIREMENTS:
+            yield from self._requirements(last, level)
+        elif last is not None and last.intent is Intent.CHECK_PROPERTY:
+            yield from self._check_property(last, level)
+        else:
+            yield self.writer.social("why_unclear")
+
+    def _more(self, analysis: Analysis, level: Level) -> Step:
+        """ "Tell me more": the last subject again, with everything verified (expert depth)."""
+        last = self.context.last
+        if last is None or last.subject is None:
+            yield self.writer.social("no_topic")
+            return
+        intent = last.intent if last.intent in TOPICAL else Intent.DEFINITION
+        yield from self._topical(replace(last, intent=intent), Level.EXPERT)
+
+    def _translate(self, analysis: Analysis, level: Level) -> Step:
+        mention = analysis.subject
+        problem = self._unresolved(mention)
+        if problem is not None or mention is None:
+            yield problem or self.writer.social("not_understood")
+            return
+        target = self.pack.languages.get(fold(analysis.detail).strip(), "")
+        name = self.pack.language_names.get(target, analysis.detail)
+        concept = mention.concept
+        source = self.pack.lexicon.lexeme(concept).lemma if concept else mention.text
+        if target == self.pack.code:
+            yield self.writer.social("translation_same", lang=name, src=source)
+            return
+        other = self._pack(target) if target else None
+        lexeme = other.lexicon.get(concept) if other and concept else None
+        if other is None or lexeme is None or (lexeme.learned and lexeme.lemma == concept):
+            yield self.writer.social("translation_unknown", lang=name, src=source)
+            return
+        word = format(other.lexicon.phrase(lexeme.concept), "indef" if target == "fr" else "bare")
+        text = self.pack.say("translation", src=source, dst=word, lang=name)
+        support = (f"{LEXICON_SOURCE}:{target}:{lexeme.concept}",)
+        yield Claim(text, Status.PROVED, support, role=LEAD)
+
+    def _pack(self, code: str) -> LanguagePack:
+        """Another language's pack, with the words learned in that language."""
+        if code not in self._other_packs:
+            pack = load_pack(code)
+            for word in self.kernel.store.words(code):
+                pack.lexicon.learn(word.form, word.concept, word.gender, proper=word.proper)
+            self._other_packs[code] = pack
+        return self._other_packs[code]
+
     def _now(self) -> datetime:
         moment = datetime.fromisoformat(self.kernel.clock.now())
         return moment.astimezone(self.timezone)
@@ -290,6 +359,7 @@ class Session:
         except CalculationError:
             yield self.writer.social("arith_invalid")
             return
+        self.context.last_result = exact(value)
         if value.denominator == 1:
             text = self.pack.say("arith_result", expr=shown, value=exact(value))
         else:
@@ -300,6 +370,8 @@ class Session:
     def _library(self, text: str) -> str | None:
         """Learn ``text`` from Wikidata (classes and names); the concept, or None."""
         if self.librarian is None or not text.strip():
+            return None
+        if self.pack.lexicon.lookup(fold(text)):  # taught or learned meanwhile
             return None
         try:
             imported = self.librarian.learn(text, self.pack.code, CHECK_DEPTH)
@@ -316,6 +388,8 @@ class Session:
         """The mention, resolved through Wikidata when the lexicon does not know it."""
         if mention is None or mention.concepts or mention.pronoun:
             return mention
+        if found := self.pack.lexicon.lookup(fold(mention.text)):  # learned since it was said
+            return replace(mention, concepts=found)
         concept = self._library(mention.text)
         return replace(mention, concepts=(concept,)) if concept else mention
 
@@ -424,8 +498,9 @@ class Session:
             for m in (analysis.subject, analysis.obj)
             if m and not m.concepts and not m.pronoun
         ]
-        if unknown and self.librarian is not None:
-            yield Thinking(self.pack.say("think_learn", x=self.pack.join(unknown)))
+        if unknown:
+            if self.librarian is not None:
+                yield Thinking(self.pack.say("think_learn", x=self.pack.join(unknown)))
             analysis = replace(
                 analysis, subject=self._known(analysis.subject), obj=self._known(analysis.obj)
             )

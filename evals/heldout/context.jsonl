@@ -1,0 +1,20 @@
+{"id": "heldout-context-fr-001", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'une baleine ?"], "turn": "est-elle un poisson ?", "expect": {"not_contains": ["Oui"], "no_search": true}}
+{"id": "heldout-context-fr-002", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un chien ?"], "turn": "c'est un animal ?", "expect": {"starts_with": "Oui", "no_search": true}}
+{"id": "heldout-context-fr-003", "category": "context", "lang": "fr", "setup": ["le tri par insertion est-il stable ?"], "turn": "et le tri par tas ?", "expect": {"contains": ["Je ne sais pas"], "no_search": true}}
+{"id": "heldout-context-fr-004", "category": "context", "lang": "fr", "setup": ["quelle est la complexité de la recherche dichotomique ?"], "turn": "et celle de la recherche linéaire ?", "expect": {"contains": ["O(n)"], "no_search": true}}
+{"id": "heldout-context-fr-005", "category": "context", "lang": "fr", "setup": ["la baleine est-elle un mammifère ?"], "turn": "pourquoi ?", "expect": {"any_of": ["vertébré", "mammifère"], "no_search": true}}
+{"id": "heldout-context-fr-006", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'une file ?"], "turn": "non, je parlais d'une pile", "expect": {"contains": ["LIFO"], "no_search": true}}
+{"id": "heldout-context-fr-007", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un chien ?"], "turn": "et en anglais ?", "expect": {"contains": ["dog"], "no_search": true}}
+{"id": "heldout-context-fr-008", "category": "context", "lang": "fr", "setup": [], "turn": "comment dit-on pile en anglais ?", "expect": {"contains": ["stack"], "no_search": true}}
+{"id": "heldout-context-fr-009", "category": "context", "lang": "fr", "setup": ["calcule 10 * 10"], "turn": "et moins 1 ?", "expect": {"contains": ["99"], "no_search": true}}
+{"id": "heldout-context-fr-010", "category": "context", "lang": "fr", "setup": ["quelle est l'unité de la force ?"], "turn": "et celle de l'énergie ?", "expect": {"contains": ["joule"], "no_search": true}}
+{"id": "heldout-context-fr-011", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'une pile ?"], "turn": "développe", "expect": {"contains": ["LIFO"], "no_search": true}}
+{"id": "heldout-context-fr-012", "category": "context", "lang": "fr", "setup": [], "turn": "pourquoi ?", "expect": {"no_search": true, "contains": ["explique"]}}
+{"id": "heldout-context-en-013", "category": "context", "lang": "en", "setup": ["what is a dog?"], "turn": "is it a mammal?", "expect": {"starts_with": "Yes", "no_search": true}}
+{"id": "heldout-context-en-014", "category": "context", "lang": "en", "setup": ["is insertion sort stable?"], "turn": "what about heapsort?", "expect": {"contains": ["don't know"], "no_search": true}}
+{"id": "heldout-context-en-015", "category": "context", "lang": "en", "setup": ["what is the complexity of binary search?"], "turn": "and that of linear search?", "expect": {"contains": ["O(n)"], "no_search": true}}
+{"id": "heldout-context-en-016", "category": "context", "lang": "en", "setup": ["is a whale a mammal?"], "turn": "why?", "expect": {"any_of": ["vertebrate", "mammal"], "no_search": true}}
+{"id": "heldout-context-en-017", "category": "context", "lang": "en", "setup": ["what is a stack?"], "turn": "I meant a queue", "expect": {"contains": ["FIFO"], "no_search": true}}
+{"id": "heldout-context-en-018", "category": "context", "lang": "en", "setup": ["what is a whale?"], "turn": "and in French?", "expect": {"contains": ["baleine"], "no_search": true}}
+{"id": "heldout-context-en-019", "category": "context", "lang": "en", "setup": ["what is 2 + 3?"], "turn": "and times 4?", "expect": {"contains": ["20"], "no_search": true}}
+{"id": "heldout-context-en-020", "category": "context", "lang": "en", "setup": ["what is a queue?"], "turn": "tell me more", "expect": {"contains": ["FIFO"], "no_search": true}}

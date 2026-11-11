@@ -94,6 +94,11 @@
     "is_a_lineage": "lui-même classé {n} rangs sous les {o:pl}",
     "letter": "**{upper}** est la {n} lettre de l'alphabet latin, qui en compte 26. C'est une {kind}, la {k} de l'alphabet. En minuscule, elle s'écrit « {lower} ».",
     "vowel": "voyelle",
-    "consonant": "consonne"
+    "consonant": "consonne",
+    "user_fine_ask": "Tant mieux. Moi aussi, ça va bien, merci.",
+    "why_unclear": "Pourquoi quoi ? Dis-moi ce que tu veux que j'explique.",
+    "translation": "« {src} » se dit « {dst} » en {lang}.",
+    "translation_same": "Tu parles déjà en {lang} : « {src} ».",
+    "translation_unknown": "Je ne connais pas encore la traduction de « {src} » en {lang}."
   }
 }

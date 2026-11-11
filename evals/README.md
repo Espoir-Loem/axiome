@@ -30,7 +30,7 @@ Un cas est une ligne JSON :
 
 Contrôles : `contains`, `not_contains`, `any_of`, `starts_with`, `equals`, `no_search`, `searches`, `max_chars`. Deux contrôles s'appliquent toujours : aucun signe IA (`docs/signes-ia.md`) et aucun plantage.
 
-Catégories : arithmétique, code, honnêteté, connaissances, niveau, raisonnement, recherche, robustesse, petite conversation, heure et date.
+Catégories : arithmétique, code, contexte (conversations à plusieurs tours), honnêteté, connaissances, niveau, raisonnement, recherche, robustesse, petite conversation, heure et date.
 
 ## Historique des scores
 
@@ -40,6 +40,7 @@ Catégories : arithmétique, code, honnêteté, connaissances, niveau, raisonnem
 | 2026-11-11 | 105/105 | 38/42 (90 %) à la première mesure, 42/42 après | Calcul exact, date et heure, questions oui/non sur une propriété, prérequis, « pourquoi » expliqué par la chaîne de déduction, comparaison, choix d'un patron selon le besoin, « qui est », relances (« ses propriétés », « un exemple »), petite conversation élargie, bruit clavier, apostrophes manquantes. |
 
 | 2026-11-11 | 111/111 | 42/42 | Cas relevés en usage réel : prénom donné en réponse, « mon nom c'est… », limites, pages d'homonymie. |
+| 2026-11-11 | 138/138 | 62/62 ; conversations : 19/20 (95 %) à la première mesure | Suivi du fil : relances, questions sans sujet, « pourquoi ? », corrections, « développe », traduction, calcul enchaîné. Banc `context` : 5/24 au départ. |
 
 Le chiffre honnête est celui du banc réservé à sa **première** mesure : 90 %. Une fois ses échecs corrigés, il ne mesure plus la généralisation. Il faut alors écrire un nouveau banc réservé.
 

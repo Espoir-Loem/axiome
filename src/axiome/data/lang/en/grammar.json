@@ -94,6 +94,11 @@
     "is_a_lineage": "which sits {n} ranks below the {o:pl}",
     "letter": "**{upper}** is the {n} letter of the Latin alphabet, which has 26. It is a {kind}: the {k} {kind} of the alphabet. Its lowercase form is \"{lower}\".",
     "vowel": "vowel",
-    "consonant": "consonant"
+    "consonant": "consonant",
+    "user_fine_ask": "Glad to hear it. I'm doing well too, thanks.",
+    "why_unclear": "Why what? Tell me what you would like me to explain.",
+    "translation": "\"{src}\" is \"{dst}\" in {lang}.",
+    "translation_same": "You are already speaking {lang}: \"{src}\".",
+    "translation_unknown": "I don't know the {lang} for \"{src}\" yet."
   }
 }

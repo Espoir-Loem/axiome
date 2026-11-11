@@ -1,0 +1,24 @@
+{"id": "context-fr-001", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un chat ?"], "turn": "est-il un mammifère ?", "expect": {"starts_with": "Oui", "no_search": true}}
+{"id": "context-fr-002", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un chat ?", "et le chien ?"], "turn": "est-il un vertébré ?", "expect": {"starts_with": "Oui", "contains": ["chien"], "no_search": true}}
+{"id": "context-fr-003", "category": "context", "lang": "fr", "setup": ["le tri fusion est-il stable ?"], "turn": "et le tri rapide ?", "expect": {"contains": ["Je ne sais pas"], "no_search": true}}
+{"id": "context-fr-004", "category": "context", "lang": "fr", "setup": ["le tri fusion est-il stable ?"], "turn": "et sa complexité ?", "expect": {"contains": ["O(n log n)"], "no_search": true}}
+{"id": "context-fr-005", "category": "context", "lang": "fr", "setup": ["quelle est la complexité du tri fusion ?"], "turn": "et celle du tri par insertion ?", "expect": {"contains": ["O(n"], "not_contains": ["fusion"], "no_search": true}}
+{"id": "context-fr-006", "category": "context", "lang": "fr", "setup": ["le chat est-il un vertébré ?"], "turn": "pourquoi ?", "expect": {"contains": ["mammifère"], "no_search": true}}
+{"id": "context-fr-007", "category": "context", "lang": "fr", "setup": ["la recherche dichotomique marche-t-elle sur une liste non triée ?"], "turn": "pourquoi ?", "expect": {"contains": ["triée"], "no_search": true}}
+{"id": "context-fr-008", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'une pile ?"], "turn": "non, je voulais dire une file", "expect": {"contains": ["FIFO"], "no_search": true}}
+{"id": "context-fr-009", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'une pile ?"], "turn": "donne-moi plus de détails", "expect": {"contains": ["LIFO"], "no_search": true}}
+{"id": "context-fr-010", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un patron de conception ?"], "turn": "explique plus simplement", "expect": {"contains": ["solution"], "no_search": true}}
+{"id": "context-fr-011", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un mammifère ?"], "turn": "donne-moi des exemples", "expect": {"any_of": ["chat", "chien", "baleine"], "no_search": true}}
+{"id": "context-fr-012", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un chat ?"], "turn": "et en anglais ?", "expect": {"contains": ["cat"], "no_search": true}}
+{"id": "context-fr-013", "category": "context", "lang": "fr", "setup": [], "turn": "comment dit-on baleine en anglais ?", "expect": {"contains": ["whale"], "no_search": true}}
+{"id": "context-fr-014", "category": "context", "lang": "fr", "setup": ["combien font 2 + 2 ?"], "turn": "et fois 3 ?", "expect": {"contains": ["12"], "no_search": true}}
+{"id": "context-fr-015", "category": "context", "lang": "fr", "setup": ["Félix est un chat."], "turn": "est-il un animal ?", "expect": {"starts_with": "Oui", "no_search": true}}
+{"id": "context-fr-016", "category": "context", "lang": "fr", "setup": ["comment vas-tu ?"], "turn": "bien et toi ?", "expect": {"no_search": true, "any_of": ["bien", "Ça va"]}}
+{"id": "context-fr-017", "category": "context", "lang": "fr", "setup": ["qu'est-ce qu'un chat ?"], "turn": "et une baleine ?", "expect": {"contains": ["mammifère"], "no_search": true}}
+{"id": "context-en-018", "category": "context", "lang": "en", "setup": ["what is a stack?"], "turn": "is it a data structure?", "expect": {"starts_with": "Yes", "no_search": true}}
+{"id": "context-en-019", "category": "context", "lang": "en", "setup": ["is merge sort stable?"], "turn": "and quicksort?", "expect": {"contains": ["don't know"], "no_search": true}}
+{"id": "context-en-020", "category": "context", "lang": "en", "setup": ["is a cat a vertebrate?"], "turn": "why?", "expect": {"contains": ["mammal"], "no_search": true}}
+{"id": "context-en-021", "category": "context", "lang": "en", "setup": ["what is a queue?"], "turn": "no, I meant a stack", "expect": {"contains": ["LIFO"], "no_search": true}}
+{"id": "context-en-022", "category": "context", "lang": "en", "setup": ["what is a cat?"], "turn": "how do you say it in French?", "expect": {"contains": ["chat"], "no_search": true}}
+{"id": "context-en-023", "category": "context", "lang": "en", "setup": ["what is 6 times 7?"], "turn": "and minus 2?", "expect": {"contains": ["40"], "no_search": true}}
+{"id": "context-en-024", "category": "context", "lang": "en", "setup": ["what is a mammal?"], "turn": "give me some examples", "expect": {"any_of": ["cat", "dog", "whale"], "no_search": true}}

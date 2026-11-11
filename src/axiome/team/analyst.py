@@ -9,7 +9,7 @@ technical the user's wording is.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 
 from axiome.dialogue.level import Level
@@ -21,7 +21,8 @@ SHORT_PHRASE = 4  # an unmatched message of at most this many words is read as a
 MEANINGFUL_WORD = 2  # a message with no word of at least this many letters is incomplete
 CONSONANT_RUN = 6  # a word with this many consonants in a row is keyboard noise ("asdfghjkl")
 _ARITH = re.compile(r"[\d\s+\-*/^%().,]+")
-_OPERATOR = re.compile(r"\d\s*[+\-*/^%]\s*[\d(]|\d\s*\^")
+_OPERATOR = re.compile(r"[\d)]\s*[+\-*/^%]\s*[\d(]|\d\s*\^")
+_LEADING_OPERATOR = re.compile(r"^[+\-*/^%]")
 _CONSONANTS = re.compile(r"[bcdfghjklmnpqrstvwxz]+")
 
 
@@ -74,6 +75,10 @@ class Intent(Enum):
     GIBBERISH = "gibberish"
     LIMITS = "limits"
     LETTER = "letter"
+    USER_FINE_ASK = "user_fine_ask"
+    WHY_LAST = "why_last"
+    MORE = "more"
+    TRANSLATE = "translate"
     UNKNOWN = "unknown"
 
 
@@ -87,6 +92,22 @@ TOPICAL = frozenset(
         Intent.RESEARCH,
         Intent.WHO,
         Intent.WHY,
+    }
+)
+
+
+# Questions a short follow-up can repeat on another subject ("and quicksort?").
+REPEATABLE = frozenset(
+    {
+        Intent.PROPERTIES,
+        Intent.UNIT,
+        Intent.COMPLEXITY,
+        Intent.MEMBERS,
+        Intent.DEFINITION,
+        Intent.WHO,
+        Intent.CHECK_IS_A,
+        Intent.CHECK_PROPERTY,
+        Intent.REQUIREMENTS,
     }
 )
 
@@ -128,6 +149,8 @@ class Context:
     intent: Intent | None = None
     history: list[str] = field(default_factory=list)
     expect: str = ""  # what Axiome just asked for ("user_name"), valid for one turn
+    last: Analysis | None = None  # the last complete question: short follow-ups reuse it
+    last_result: str = ""  # the last calculated value: "and times 3?" continues from it
 
 
 def _cut(orig: str, folded: str, pattern: re.Pattern[str]) -> tuple[str, str]:
@@ -151,6 +174,22 @@ def _tidy(orig: str, folded: str) -> tuple[str, str]:
     folded = re.sub(r" ([?!.])$", r"\1", folded)
     orig = re.sub(r" ([?!.])$", r"\1", orig)
     return orig, folded
+
+
+def _detail(match: re.Match[str] | None) -> str:
+    if match is None:
+        return ""
+    groups = match.groupdict()
+    return groups.get("p") or groups.get("q") or groups.get("l") or ""
+
+
+def _continue(analysis: Analysis, context: Context) -> Analysis:
+    """A follow-up ("and quicksort?", "I meant a queue") asks the last question again."""
+    last = context.last
+    if last is not None and last.intent in REPEATABLE:
+        return replace(last, subject=analysis.subject, level=analysis.level)
+    intent = context.intent if context.intent in TOPICAL else Intent.DEFINITION
+    return replace(analysis, intent=intent or Intent.DEFINITION)
 
 
 def _gibberish(folded: str) -> bool:
@@ -196,12 +235,21 @@ class Analyst:
             )
         return True
 
-    def arithmetic(self, folded: str) -> str | None:
-        """The expression if the message is a calculation ("combien font 2 + 2 ?")."""
+    def arithmetic(self, folded: str, previous: str = "") -> str | None:
+        """The expression if the message is a calculation ("combien font 2 + 2 ?").
+
+        A message starting with an operator ("et fois 3 ?") continues ``previous``.
+        """
         text = self.pack.arith_prefix.sub("", folded.strip()).rstrip(" ?!=.")
+        first, _, rest = text.partition(" ")
+        if first in self.pack.continuers:
+            text = rest
         for spoken in sorted(self.pack.operators, key=lambda w: (-len(w), w)):
             text = re.sub(rf"\b{re.escape(spoken)}\b", f" {self.pack.operators[spoken]} ", text)
         text = " ".join(text.split())
+        if previous and _LEADING_OPERATOR.match(text):
+            base = previous if previous.lstrip("-").isdigit() else f"({previous})"
+            text = f"{base} {text}"
         if text and _ARITH.fullmatch(text) and _OPERATOR.search(text):
             return text
         return None
@@ -247,9 +295,9 @@ class Analyst:
                 obj = Mention(obj.text, obj.concepts, obj.pronoun, match["ya"].strip())
         return subject, obj
 
-    def _shortcut(self, folded: str, waivers: frozenset[str]) -> Analysis | None:
+    def _shortcut(self, folded: str, waivers: frozenset[str], context: Context) -> Analysis | None:
         """Messages recognized as a whole: a calculation, a laugh, a hesitation."""
-        expression = self.arithmetic(folded)
+        expression = self.arithmetic(folded, context.last_result)
         if expression is not None:
             return Analysis(Intent.ARITHMETIC, waivers=waivers, detail=expression)
         for intent, pattern in (
@@ -292,7 +340,7 @@ class Analyst:
                 level = Level.BEGINNER if name == "beginner" else Level.EXPERT
                 orig, folded = _cut(orig, folded, signal)
         orig, folded = _tidy(orig, folded)
-        shortcut = self._shortcut(folded, waivers)
+        shortcut = self._shortcut(folded, waivers, context)
         if shortcut is not None:
             return shortcut
         greeting = self.pack.greeting_prefix.match(folded)
@@ -306,9 +354,6 @@ class Analyst:
             intent, subject, obj = Intent.INCOMPLETE, None, None
         elif intent in TOPICAL and subject is not None and _letters(subject.text) == 1:
             intent = Intent.SINGLE_LETTER
-        if intent is Intent.FOLLOW_UP:
-            intent = context.intent if context.intent in TOPICAL else Intent.DEFINITION
-
         lexicon = self.pack.lexicon
         own = set(subject.concepts if subject else ()) | set(obj.concepts if obj else ())
         technical = {
@@ -322,10 +367,8 @@ class Analyst:
             focus = context.topic.concept
         if focus is not None:
             domain = lexicon.lexeme(focus).domain
-        detail = ""
-        if match is not None:
-            detail = match.groupdict().get("p") or match.groupdict().get("q") or ""
-            if intent is Intent.PURPOSE:
-                detail = match["x"]
-                subject = None
-        return Analysis(intent, subject, obj, level, waivers, len(technical), domain, detail)
+        detail = _detail(match)
+        if intent is Intent.PURPOSE and match is not None:
+            detail, subject = match["x"], None
+        analysis = Analysis(intent, subject, obj, level, waivers, len(technical), domain, detail)
+        return _continue(analysis, context) if intent is Intent.FOLLOW_UP else analysis

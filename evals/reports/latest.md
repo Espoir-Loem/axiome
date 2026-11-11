@@ -1,11 +1,12 @@
 # Rapport d'évaluation
 
-Score global : **114/114** (100 %)
+Score global : **138/138** (100 %)
 
 | Catégorie | Réussis | Total | % |
 |---|---|---|---|
 | arithmetic | 8 | 8 | 100 |
 | code | 4 | 4 | 100 |
+| context | 24 | 24 | 100 |
 | honesty | 8 | 8 | 100 |
 | knowledge | 19 | 19 | 100 |
 | level | 4 | 4 | 100 |

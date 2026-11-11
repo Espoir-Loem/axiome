@@ -105,6 +105,10 @@
       "(?:comment (?:tu t'appelles|t'appelles[- ]tu|vous appelez[- ]vous)|tu t'appelles comment|quel est ton nom|c'est quoi ton nom|ton nom)"
     ],
     [
+      "user_fine_ask",
+      "^(?:ca va |tres |plutot |ca va tres )?bien(?:,? merci)?,? et (?:toi|vous)\\s*\\??$"
+    ],
+    [
       "user_fine",
       "^(?:(?:ca va|tres bien|bien|pas mal|ca roule|nickel|tranquille|ca va bien)(?:,? merci)?(?: et toi\\??)?|moi aussi)[ !.]*$"
     ],
@@ -131,6 +135,50 @@
     [
       "confusion",
       "^(?:je n'ai pas compris|j'ai pas compris|pas compris|je ne comprends pas|je comprends pas|c'est pas clair|ce n'est pas clair)\\b"
+    ],
+    [
+      "why_last",
+      "^(?:mais |et )?(?:pourquoi|pour quelle raison|comment ca|ah bon)\\s*[?!]*$"
+    ],
+    [
+      "more",
+      "^(?:donne[- ]moi |dis[- ]m'en |je veux )?(?:plus|davantage) (?:de details|d'informations|d'infos|d'explications)\\b|^(?:developpe|detaille|continue|dis[- ]m'en plus|explique davantage|en savoir plus)\\b"
+    ],
+    [
+      "follow_up",
+      "^(?:non,? |pas ca,? )?(?:je voulais dire |je parlais d(?:e |u |es |')|je pensais a |plutot )(?P<x>.+?)\\??$"
+    ],
+    [
+      "follow_up",
+      "^et (?:celle|celui|ceux|celles) d(?:e |u |es |')(?P<x>.+?)\\??$"
+    ],
+    [
+      "translate",
+      "^(?:et )?en (?P<l>anglais|francais)(?P<x>)\\s*\\??$"
+    ],
+    [
+      "translate",
+      "^comment (?:dit[- ]on|on dit|se dit|traduit[- ]on|traduire) (?P<x>.+?) en (?P<l>anglais|francais)\\??$"
+    ],
+    [
+      "check_is_a",
+      "^(?P<x>)(?:est[- ]il|est[- ]elle|c'est) (?P<ya>un |une )(?P<y>.+?)\\?$"
+    ],
+    [
+      "check_property",
+      "^(?P<x>)(?:est[- ]il|est[- ]elle) (?P<p>[a-z]+)\\?$"
+    ],
+    [
+      "complexity",
+      "^(?:et )?(?:quelle est |c'est quoi )?(?P<x>sa|son|leur) complexite\\??$"
+    ],
+    [
+      "unit",
+      "^(?:et )?(?:quelle est |c'est quoi )?(?P<x>sa|son|leur) unite\\??$"
+    ],
+    [
+      "properties",
+      "^et (?P<x>ses|leurs|son|sa) (?:proprietes|caracteristiques)\\??$"
     ],
     [
       "ask_user_name",
@@ -323,5 +371,18 @@
   ],
   "disambiguation": "(?:peut (?:designer|faire reference a|renvoyer a|se referer a)|est un homonyme|(?:differentes|plusieurs) (?:significations|sens|acceptions)|^(?:le mot|le terme|le nom) \\S+ (?:peut|est))",
   "letter_confirm": "^(?:oui|ouais|exactement|c'est ca|la lettre|je parle (?:bien )?de la lettre|bien la lettre)\\b",
-  "vowels": "aeiouy"
+  "vowels": "aeiouy",
+  "languages": {
+    "anglais": "en",
+    "francais": "fr"
+  },
+  "language_names": {
+    "en": "anglais",
+    "fr": "français"
+  },
+  "continuers": [
+    "et",
+    "puis",
+    "ensuite"
+  ]
 }
