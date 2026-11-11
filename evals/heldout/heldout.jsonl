@@ -1,0 +1,42 @@
+{"id": "heldout-fr-001", "category": "arithmetic", "lang": "fr", "turn": "combien font 7 fois 8 ?", "expect": {"contains": ["56"], "no_search": true}}
+{"id": "heldout-fr-002", "category": "arithmetic", "lang": "fr", "turn": "100 - 37", "expect": {"contains": ["63"], "no_search": true}}
+{"id": "heldout-fr-003", "category": "arithmetic", "lang": "fr", "turn": "calcule 3,5 * 2", "expect": {"contains": ["7"], "no_search": true}}
+{"id": "heldout-en-004", "category": "arithmetic", "lang": "en", "turn": "what is 9 divided by 3?", "expect": {"contains": ["3"], "no_search": true}}
+{"id": "heldout-en-005", "category": "arithmetic", "lang": "en", "turn": "how much is 2 to the power of 8?", "expect": {"contains": ["256"], "no_search": true}}
+{"id": "heldout-fr-006", "category": "time", "lang": "fr", "turn": "on est quel jour ?", "expect": {"contains": ["11 novembre 2026"], "no_search": true}}
+{"id": "heldout-en-007", "category": "time", "lang": "en", "turn": "what time is it?", "expect": {"contains": ["9:30"], "no_search": true}}
+{"id": "heldout-fr-008", "category": "smalltalk", "lang": "fr", "turn": "coucou", "expect": {"no_search": true, "max_chars": 120}}
+{"id": "heldout-fr-009", "category": "smalltalk", "lang": "fr", "turn": "bonsoir, comment vas-tu ?", "expect": {"no_search": true, "any_of": ["bien", "Ça va"]}}
+{"id": "heldout-fr-010", "category": "smalltalk", "lang": "fr", "turn": "merci beaucoup !", "expect": {"no_search": true}}
+{"id": "heldout-fr-011", "category": "smalltalk", "lang": "fr", "turn": "tu sers à quoi ?", "expect": {"no_search": true, "any_of": ["explique", "cherche", "vérifie"]}}
+{"id": "heldout-fr-012", "category": "smalltalk", "lang": "fr", "turn": "ptdr", "expect": {"no_search": true}}
+{"id": "heldout-fr-013", "category": "smalltalk", "lang": "fr", "turn": "es-tu un robot ?", "expect": {"no_search": true, "any_of": ["programme", "Axiome"]}}
+{"id": "heldout-en-014", "category": "smalltalk", "lang": "en", "turn": "hey, how are you?", "expect": {"no_search": true, "any_of": ["well", "fine", "good"]}}
+{"id": "heldout-en-015", "category": "smalltalk", "lang": "en", "turn": "who are you?", "expect": {"no_search": true, "contains": ["Axiome"]}}
+{"id": "heldout-en-016", "category": "smalltalk", "lang": "en", "turn": "haha", "expect": {"no_search": true}}
+{"id": "heldout-en-017", "category": "smalltalk", "lang": "en", "turn": "can you help me?", "expect": {"no_search": true, "starts_with": "Yes"}}
+{"id": "heldout-fr-018", "category": "knowledge", "lang": "fr", "turn": "qu'est-ce qu'une baleine ?", "expect": {"contains": ["mammifère"], "no_search": true}}
+{"id": "heldout-fr-019", "category": "knowledge", "lang": "fr", "turn": "c'est quoi une pile ?", "expect": {"contains": ["LIFO"], "no_search": true}}
+{"id": "heldout-fr-020", "category": "knowledge", "lang": "fr", "turn": "quelle est l'unité de la force ?", "expect": {"contains": ["newton"], "no_search": true}}
+{"id": "heldout-fr-021", "category": "knowledge", "lang": "fr", "turn": "quelle est la différence entre un chat et un chien ?", "expect": {"contains": ["mammifère"], "no_search": true}}
+{"id": "heldout-en-022", "category": "knowledge", "lang": "en", "turn": "what is a binary search tree?", "expect": {"no_search": true, "any_of": ["tree", "data structure"]}}
+{"id": "heldout-en-023", "category": "knowledge", "lang": "en", "turn": "tell me about heapsort", "expect": {"no_search": true, "contains": ["O(n log n)"]}}
+{"id": "heldout-en-024", "category": "knowledge", "lang": "en", "turn": "what's the difference between a cat and a bird?", "expect": {"no_search": true, "any_of": ["mammal", "animal"]}}
+{"id": "heldout-fr-025", "category": "reasoning", "lang": "fr", "turn": "le tri par insertion est-il stable ?", "expect": {"starts_with": "Oui", "no_search": true}}
+{"id": "heldout-fr-026", "category": "reasoning", "lang": "fr", "turn": "la baleine est-elle un poisson ?", "expect": {"not_contains": ["Oui"], "no_search": true}}
+{"id": "heldout-fr-027", "category": "reasoning", "lang": "fr", "turn": "pourquoi la baleine est-elle un animal ?", "expect": {"contains": ["mammifère"], "no_search": true}}
+{"id": "heldout-fr-028", "category": "reasoning", "lang": "fr", "turn": "un chien est-il un vertébré ?", "expect": {"starts_with": "Oui", "no_search": true}}
+{"id": "heldout-en-029", "category": "reasoning", "lang": "en", "turn": "is a dog an animal?", "expect": {"starts_with": "Yes", "no_search": true}}
+{"id": "heldout-en-030", "category": "reasoning", "lang": "en", "turn": "is heapsort stable?", "expect": {"contains": ["don't know"], "not_contains": ["Yes"], "no_search": true}}
+{"id": "heldout-en-031", "category": "reasoning", "lang": "en", "turn": "does binary search work on an unsorted list?", "expect": {"starts_with": "No", "no_search": true}}
+{"id": "heldout-fr-032", "category": "code", "lang": "fr", "turn": "quel patron de conception pour créer un objet complexe étape par étape ?", "expect": {"contains": ["monteur"], "no_search": true}}
+{"id": "heldout-fr-033", "category": "code", "lang": "fr", "turn": "programme-moi un script qui trie une liste", "expect": {"contains": ["pas encore"], "no_search": true}}
+{"id": "heldout-en-034", "category": "code", "lang": "en", "turn": "what pattern should I use to make incompatible interfaces work together?", "expect": {"contains": ["adapter"], "no_search": true}}
+{"id": "heldout-en-035", "category": "code", "lang": "en", "turn": "what is the complexity of binary search?", "expect": {"contains": ["O(log n)"], "no_search": true}}
+{"id": "heldout-fr-036", "category": "honesty", "lang": "fr", "turn": "quel temps fera-t-il demain ?", "expect": {"no_search": true, "any_of": ["pas accès", "ne peux pas"]}}
+{"id": "heldout-en-037", "category": "honesty", "lang": "en", "turn": "is quicksort stable?", "expect": {"contains": ["don't know"], "no_search": true}}
+{"id": "heldout-fr-038", "category": "robustness", "lang": "fr", "turn": "qu est ce qu un mammifere", "expect": {"contains": ["lait"], "no_search": true}}
+{"id": "heldout-fr-039", "category": "robustness", "lang": "fr", "turn": "zxcvbnm", "expect": {"no_search": true}}
+{"id": "heldout-en-040", "category": "robustness", "lang": "en", "turn": "WHAT IS A STACK", "expect": {"contains": ["LIFO"], "no_search": true}}
+{"id": "heldout-fr-041", "category": "research", "lang": "fr", "turn": "qui était Alan Turing ?", "expect": {"searches": true}}
+{"id": "heldout-fr-042", "category": "research", "lang": "fr", "turn": "pourquoi le ciel est-il bleu ?", "expect": {"searches": true}}

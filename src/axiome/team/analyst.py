@@ -19,6 +19,10 @@ from axiome.perception.normalize import fold, squash, words
 
 SHORT_PHRASE = 4  # an unmatched message of at most this many words is read as a topic
 MEANINGFUL_WORD = 2  # a message with no word of at least this many letters is incomplete
+CONSONANT_RUN = 6  # a word with this many consonants in a row is keyboard noise ("asdfghjkl")
+_ARITH = re.compile(r"[\d\s+\-*/^%().,]+")
+_OPERATOR = re.compile(r"\d\s*[+\-*/^%]\s*[\d(]|\d\s*\^")
+_CONSONANTS = re.compile(r"[bcdfghjklmnpqrstvwxz]+")
 
 
 def _letters(text: str) -> int:
@@ -50,6 +54,24 @@ class Intent(Enum):
     CHAT = "chat"  # addressed to Axiome but not understood: never a web search
     INCOMPLETE = "incomplete"  # nothing meaningful to work on ("h", "?")
     SINGLE_LETTER = "single_letter"  # topic is one letter: the letter itself, or a cut question
+    ASK_USER_NAME = "ask_user_name"
+    IDENTITY_AI = "identity_ai"
+    HELP = "help"
+    DATE = "date"
+    CLOCK = "clock"
+    FORECAST = "forecast"
+    CODE_REQUEST = "code_request"
+    PURPOSE = "purpose"
+    COMPARE = "compare"
+    WHY_IS_A = "why_is_a"
+    WHY = "why"
+    WHO = "who"
+    CHECK_PROPERTY = "check_property"
+    REQUIREMENTS = "requirements"
+    ARITHMETIC = "arithmetic"
+    LAUGHTER = "laughter"
+    FILLER = "filler"
+    GIBBERISH = "gibberish"
     UNKNOWN = "unknown"
 
 
@@ -61,6 +83,8 @@ TOPICAL = frozenset(
         Intent.MEMBERS,
         Intent.DEFINITION,
         Intent.RESEARCH,
+        Intent.WHO,
+        Intent.WHY,
     }
 )
 
@@ -91,6 +115,7 @@ class Analysis:
     waivers: frozenset[str] = frozenset()
     technical_terms: int = 0
     domain: str = GENERAL_DOMAIN
+    detail: str = ""  # extra slot: arithmetic expression, property adjective, need...
 
 
 @dataclass
@@ -125,6 +150,13 @@ def _tidy(orig: str, folded: str) -> tuple[str, str]:
     return orig, folded
 
 
+def _gibberish(folded: str) -> bool:
+    tokens = words(folded)
+    return len(tokens) == 1 and any(
+        len(run) >= CONSONANT_RUN for run in _CONSONANTS.findall(tokens[0])
+    )
+
+
 class Analyst:
     def __init__(self, pack: LanguagePack) -> None:
         self.pack = pack
@@ -150,14 +182,40 @@ class Analyst:
         guess = self.pack.lexicon.closest(folded)
         return Mention(orig, guess, article=article, corrected=bool(guess))
 
-    def _match(self, folded: str) -> tuple[Intent, re.Match[str] | None]:
+    def _valid(self, intent: Intent, m: re.Match[str], context: Context) -> bool:
+        """Some patterns are too broad on their own: check that the words make sense."""
+        if intent is Intent.CHECK_PROPERTY:
+            return self.pack.lexicon.adjective(m["p"]) is not None
+        if intent is Intent.WHY_IS_A:
+            return all(
+                self.resolve(m[g], m[g], context).concepts or m[g] in self.pack.pronouns
+                for g in ("x", "y")
+            )
+        return True
+
+    def arithmetic(self, folded: str) -> str | None:
+        """The expression if the message is a calculation ("combien font 2 + 2 ?")."""
+        text = self.pack.arith_prefix.sub("", folded.strip()).rstrip(" ?!=.")
+        for spoken in sorted(self.pack.operators, key=lambda w: (-len(w), w)):
+            text = re.sub(rf"\b{re.escape(spoken)}\b", f" {self.pack.operators[spoken]} ", text)
+        text = " ".join(text.split())
+        if text and _ARITH.fullmatch(text) and _OPERATOR.search(text):
+            return text
+        return None
+
+    def _match(
+        self, folded: str, context: Context | None = None
+    ) -> tuple[Intent, re.Match[str] | None]:
+        ctx = context or Context()
         for name, pattern in self.pack.intents:
             m = pattern.search(folded)
-            if m:
+            if m and self._valid(Intent(name), m, ctx):
                 return Intent(name), m
         tokens = words(folded)
         if self.pack.personal_markers.intersection(tokens):
             return Intent.CHAT, None
+        if _gibberish(folded) and not self.pack.lexicon.lookup(folded.strip(" ?.!")):
+            return Intent.GIBBERISH, None
         if folded.strip(" ?.!") and len(tokens) <= SHORT_PHRASE:
             return Intent.DEFINITION, None
         return Intent.UNKNOWN, None
@@ -176,13 +234,40 @@ class Analyst:
             subject = Mention(orig[match.start("n") : match.end("n")], ())
         elif match is not None and "x" in groups:
             subject = self.resolve(orig[match.start("x") : match.end("x")], match["x"], context)
-        elif intent is Intent.DEFINITION:
+        elif intent in (Intent.DEFINITION, Intent.GIBBERISH):
             subject = self.resolve(orig, folded, context)
+        elif intent is Intent.WHY:
+            subject = Mention(orig.strip(" ?.!"), ())
         if match is not None and groups.get("y"):
             obj = self.resolve(orig[match.start("y") : match.end("y")], match["y"], context)
             if groups.get("ya") and not obj.article:
                 obj = Mention(obj.text, obj.concepts, obj.pronoun, match["ya"].strip())
         return subject, obj
+
+    def _shortcut(self, folded: str, waivers: frozenset[str]) -> Analysis | None:
+        """Messages recognized as a whole: a calculation, a laugh, a hesitation."""
+        expression = self.arithmetic(folded)
+        if expression is not None:
+            return Analysis(Intent.ARITHMETIC, waivers=waivers, detail=expression)
+        for intent, pattern in (
+            (Intent.LAUGHTER, self.pack.laughter),
+            (Intent.FILLER, self.pack.filler),
+        ):
+            if pattern.fullmatch(folded):
+                return Analysis(intent, waivers=waivers)
+        return None
+
+    def _classify(
+        self, orig: str, folded: str, level: Level | None, context: Context
+    ) -> tuple[Intent, re.Match[str] | None, str, str]:
+        if level is not None and self.pack.level_only.fullmatch(folded.strip()):
+            return Intent.LEVEL, None, orig, folded
+        intent, match = self._match(folded, context)
+        if intent is Intent.UNKNOWN and ", " in folded:  # "context..., actual question?"
+            cut = folded.rindex(", ") + 2
+            orig, folded = orig[cut:], folded[cut:]
+            intent, match = self._match(folded, context)
+        return intent, match, orig, folded
 
     def analyze(self, text: str, context: Context) -> Analysis:
         orig = squash(text)
@@ -194,15 +279,13 @@ class Analyst:
                 level = Level.BEGINNER if name == "beginner" else Level.EXPERT
                 orig, folded = _cut(orig, folded, signal)
         orig, folded = _tidy(orig, folded)
-        if level is not None and self.pack.level_only.fullmatch(folded.strip()):
-            intent, match = Intent.LEVEL, None
-        else:
-            intent, match = self._match(folded)
-            if intent is Intent.UNKNOWN and ", " in folded:  # "context..., actual question?"
-                cut = folded.rindex(", ") + 2
-                orig, folded = orig[cut:], folded[cut:]
-                intent, match = self._match(folded)
-
+        shortcut = self._shortcut(folded, waivers)
+        if shortcut is not None:
+            return shortcut
+        greeting = self.pack.greeting_prefix.match(folded)
+        if greeting is not None:  # "salut, ça va ?": answer the question
+            orig, folded = orig[greeting.end() :], folded[greeting.end() :]
+        intent, match, orig, folded = self._classify(orig, folded, level, context)
         subject, obj = self._mentions(intent, match, orig, folded, context)
         if intent is not Intent.LEVEL and not any(
             len(w) >= MEANINGFUL_WORD for w in words(fold(text))
@@ -226,4 +309,10 @@ class Analyst:
             focus = context.topic.concept
         if focus is not None:
             domain = lexicon.lexeme(focus).domain
-        return Analysis(intent, subject, obj, level, waivers, len(technical), domain)
+        detail = ""
+        if match is not None:
+            detail = match.groupdict().get("p") or match.groupdict().get("q") or ""
+            if intent is Intent.PURPOSE:
+                detail = match["x"]
+                subject = None
+        return Analysis(intent, subject, obj, level, waivers, len(technical), domain, detail)

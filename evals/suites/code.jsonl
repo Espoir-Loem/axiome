@@ -1,0 +1,4 @@
+{"lang": "fr", "turn": "écris une fonction python qui inverse une chaîne", "expect": {"any_of": ["def ", "pas encore écrire", "pas encore"], "no_search": true}, "id": "code-fr-001", "category": "code"}
+{"lang": "fr", "turn": "c'est quoi la complexité de la recherche linéaire ?", "expect": {"contains": ["O(n)"], "no_search": true}, "id": "code-fr-002", "category": "code"}
+{"lang": "fr", "turn": "quel patron utiliser pour notifier plusieurs objets d'un changement ?", "expect": {"contains": ["observateur"], "no_search": true}, "id": "code-fr-003", "category": "code"}
+{"lang": "en", "turn": "write a python function to reverse a string", "expect": {"any_of": ["def ", "can't write", "cannot write", "not yet"], "no_search": true}, "id": "code-en-004", "category": "code"}

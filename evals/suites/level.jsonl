@@ -1,0 +1,4 @@
+{"lang": "fr", "turn": "explique simplement ce qu'est un graphe", "expect": {"contains": ["ensemble de points"], "no_search": true}, "id": "level-fr-001", "category": "level"}
+{"lang": "fr", "turn": "niveau expert", "expect": {"contains": ["Classification", "Statut"], "no_search": true}, "setup": ["qu'est-ce qu'un chat ?"], "id": "level-fr-002", "category": "level"}
+{"lang": "fr", "turn": "je n'ai pas compris", "expect": {"contains": ["D'accord"], "no_search": true}, "setup": ["niveau expert", "qu'est-ce qu'un tas ?"], "id": "level-fr-003", "category": "level"}
+{"lang": "en", "turn": "explain simply what a mammal is", "expect": {"contains": ["milk"], "no_search": true}, "id": "level-en-004", "category": "level"}

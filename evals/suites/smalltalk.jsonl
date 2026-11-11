@@ -1,0 +1,24 @@
+{"lang": "fr", "turn": "Bonjour", "expect": {"starts_with": "Bonjour", "no_search": true, "max_chars": 60}, "id": "smalltalk-fr-001", "category": "smalltalk"}
+{"lang": "fr", "turn": "salut ça va ?", "expect": {"any_of": ["ça va", "bien"], "no_search": true}, "id": "smalltalk-fr-002", "category": "smalltalk"}
+{"lang": "fr", "turn": "coucou", "expect": {"starts_with": "Bonjour", "no_search": true}, "id": "smalltalk-fr-003", "category": "smalltalk"}
+{"lang": "fr", "turn": "bonsoir", "expect": {"any_of": ["Bonsoir", "Bonjour"], "no_search": true}, "id": "smalltalk-fr-004", "category": "smalltalk"}
+{"lang": "fr", "turn": "comment vas tu", "expect": {"contains": ["bien"], "no_search": true}, "id": "smalltalk-fr-005", "category": "smalltalk"}
+{"lang": "fr", "turn": "ça va bien et toi ?", "expect": {"any_of": ["bien", "Tant mieux"], "no_search": true}, "id": "smalltalk-fr-006", "category": "smalltalk"}
+{"lang": "fr", "turn": "merci beaucoup", "expect": {"contains": ["plaisir"], "no_search": true}, "id": "smalltalk-fr-007", "category": "smalltalk"}
+{"lang": "fr", "turn": "t'es qui ?", "expect": {"contains": ["Axiome"], "no_search": true}, "id": "smalltalk-fr-008", "category": "smalltalk"}
+{"lang": "fr", "turn": "tu es une IA ?", "expect": {"any_of": ["Axiome", "programme", "assistant"], "no_search": true}, "id": "smalltalk-fr-009", "category": "smalltalk"}
+{"lang": "fr", "turn": "tu fais quoi ?", "expect": {"any_of": ["explique", "vérifie", "cherche"], "no_search": true}, "id": "smalltalk-fr-010", "category": "smalltalk"}
+{"lang": "fr", "turn": "tu peux m'aider ?", "expect": {"any_of": ["Oui", "Bien sûr", "explique", "Dis-moi"], "no_search": true}, "id": "smalltalk-fr-011", "category": "smalltalk"}
+{"lang": "fr", "turn": "je suis fatigué", "expect": {"no_search": true, "not_contains": ["source"]}, "id": "smalltalk-fr-012", "category": "smalltalk"}
+{"lang": "fr", "turn": "mdr", "expect": {"no_search": true}, "id": "smalltalk-fr-013", "category": "smalltalk"}
+{"lang": "fr", "turn": "hmm", "expect": {"no_search": true}, "id": "smalltalk-fr-014", "category": "smalltalk"}
+{"lang": "fr", "turn": "bonne nuit", "expect": {"any_of": ["Bonne nuit", "À bientôt"], "no_search": true}, "id": "smalltalk-fr-015", "category": "smalltalk"}
+{"lang": "fr", "turn": "salut", "expect": {"contains": ["Espoir"], "no_search": true}, "setup": ["je m'appelle Espoir"], "id": "smalltalk-fr-016", "category": "smalltalk"}
+{"lang": "fr", "turn": "comment je m'appelle ?", "expect": {"contains": ["Espoir"], "no_search": true}, "setup": ["je m'appelle Espoir"], "id": "smalltalk-fr-017", "category": "smalltalk"}
+{"lang": "en", "turn": "hi", "expect": {"starts_with": "Hello", "no_search": true}, "id": "smalltalk-en-018", "category": "smalltalk"}
+{"lang": "en", "turn": "how are you doing?", "expect": {"contains": ["well"], "no_search": true}, "id": "smalltalk-en-019", "category": "smalltalk"}
+{"lang": "en", "turn": "thanks a lot", "expect": {"contains": ["welcome"], "no_search": true}, "id": "smalltalk-en-020", "category": "smalltalk"}
+{"lang": "en", "turn": "who are you?", "expect": {"contains": ["Axiome"], "no_search": true}, "id": "smalltalk-en-021", "category": "smalltalk"}
+{"lang": "en", "turn": "can you help me?", "expect": {"any_of": ["Yes", "Sure", "explain", "Tell me"], "no_search": true}, "id": "smalltalk-en-022", "category": "smalltalk"}
+{"lang": "en", "turn": "what's my name?", "expect": {"contains": ["Espoir"], "no_search": true}, "setup": ["my name is Espoir"], "id": "smalltalk-en-023", "category": "smalltalk"}
+{"lang": "en", "turn": "lol", "expect": {"no_search": true}, "id": "smalltalk-en-024", "category": "smalltalk"}

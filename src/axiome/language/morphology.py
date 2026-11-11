@@ -53,6 +53,8 @@ class French:
     def form(self, lexeme: Lexeme, spec: str) -> str:
         lemma = lexeme.lemma
         feminine = lexeme.gender == "f"
+        if lexeme.proper and spec in ("def", "gen", "indef"):  # "Félix", not "le Félix"
+            return lemma
         if spec in ("def", "gen"):
             if self._elides(lemma):
                 return f"l'{lemma}"

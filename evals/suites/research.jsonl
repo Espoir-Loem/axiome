@@ -1,0 +1,8 @@
+{"lang": "fr", "turn": "qu'est-ce qu'un photon ?", "expect": {"searches": true, "contains": ["particule", "[1]", "Sources"]}, "id": "research-fr-001", "category": "research"}
+{"lang": "fr", "turn": "qu'est-ce qu'un trou noir ?", "expect": {"searches": true, "contains": ["objet céleste"], "not_contains": ["film"]}, "id": "research-fr-002", "category": "research"}
+{"lang": "fr", "turn": "fais des recherches sur le photon", "expect": {"searches": true, "contains": ["photon", "Sources"]}, "id": "research-fr-003", "category": "research"}
+{"lang": "fr", "turn": "pourquoi le ciel est bleu ?", "expect": {"searches": true, "contains": ["diffusion"]}, "id": "research-fr-004", "category": "research"}
+{"lang": "fr", "turn": "qui est Marie Curie ?", "expect": {"searches": true, "contains": ["physicienne"]}, "id": "research-fr-005", "category": "research"}
+{"lang": "fr", "turn": "qu'est-ce que l'ADN ?", "expect": {"searches": true, "contains": ["molécule"]}, "id": "research-fr-006", "category": "research"}
+{"lang": "en", "turn": "what is a photon?", "expect": {"searches": true, "contains": ["particle", "Sources"]}, "id": "research-en-007", "category": "research"}
+{"lang": "en", "turn": "who was Alan Turing?", "expect": {"searches": true, "contains": ["mathematician"]}, "id": "research-en-008", "category": "research"}

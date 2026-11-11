@@ -65,6 +65,15 @@ class LanguagePack:
     level_signals: Mapping[str, re.Pattern[str]]
     level_only: re.Pattern[str]  # what remains of a pure level request ("explique")
     style: StyleRules
+    greeting_prefix: re.Pattern[str]  # "salut, ..." in front of a real question
+    laughter: re.Pattern[str]
+    filler: re.Pattern[str]
+    operators: Mapping[str, str]  # spoken arithmetic ("fois") -> symbol
+    arith_prefix: re.Pattern[str]  # "combien font", "calcule"
+    weekdays: tuple[str, ...]
+    months: tuple[str, ...]
+    negations: frozenset[str]
+    negative_prefixes: tuple[str, ...]  # "unsorted" -> sorted, negated
 
     def say(self, key: str, **slots: object) -> str:
         """Realize a sentence template; the first letter is capitalized."""
@@ -91,6 +100,8 @@ def _lexeme(concept: str, data: Mapping[str, Any]) -> Lexeme:
         mass=bool(data.get("mass", False)),
         proper=bool(data.get("proper", False)),
         aliases=tuple(data.get("aliases", ())),
+        adj=data.get("adj", ""),
+        use=data.get("use", ""),
     )
 
 
@@ -119,4 +130,13 @@ def load_pack(code: str) -> LanguagePack:
             ),
             waivers={k: re.compile(v) for k, v in style["waivers"].items()},
         ),
+        greeting_prefix=re.compile(intents["greeting_prefix"]),
+        laughter=re.compile(intents["laughter"]),
+        filler=re.compile(intents["filler"]),
+        operators=intents["operators"],
+        arith_prefix=re.compile(intents["arith_prefix"]),
+        weekdays=tuple(intents["weekdays"]),
+        months=tuple(intents["months"]),
+        negations=frozenset(intents["negations"]),
+        negative_prefixes=tuple(intents["negative_prefixes"]),
     )

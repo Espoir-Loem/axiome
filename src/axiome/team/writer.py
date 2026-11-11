@@ -25,14 +25,22 @@ from dataclasses import dataclass, replace
 
 from axiome.dialogue.level import Level
 from axiome.i18n import t_in
-from axiome.kernel import Kernel
+from axiome.kernel import USER_SOURCE, Kernel
 from axiome.language.pack import LanguagePack
 from axiome.perception.normalize import fold
 from axiome.reasoning.terms import Atom
 from axiome.research.providers.base import Document
 from axiome.team.planner import Aspect
 from axiome.team.researcher import WebFindings
-from axiome.team.verifier import Fact, Findings, ancestry, disjointness
+from axiome.team.verifier import (
+    Fact,
+    Findings,
+    ancestry,
+    base_facts,
+    disjointness,
+    held,
+    is_a_path,
+)
 from axiome.verification.epistemic import Evidence, Source, Stance, Status, assess
 
 LEXICON_SOURCE = "lexicon"
@@ -305,9 +313,127 @@ class Writer:
         note = self.pack.say("note_status", status=label, sources=self.pack.join(sorted(names)))
         return [Claim(note, factual=False, role=NOTE)]
 
+    def _told_by_user(self, path: Sequence[Fact]) -> bool:
+        """Every weak link of the chain comes from the user alone (and nothing contradicts it)."""
+        weak = [f for f in path if f.status < Status.PLAUSIBLE]
+        if not weak or any(f.status is Status.CONTESTED for f in weak):
+            return False
+        return all(
+            {e.source.id for e in self.kernel.evidence(f.atom)} == {USER_SOURCE} for f in weak
+        )
+
+    # -- reasoning answers -------------------------------------------------------
+    def because(self, path: Sequence[Fact], level: Level, key: str = "because") -> list[Claim]:
+        """Explain a deduction from its chain: "because the cat is a mammal and..."."""
+        clauses = [  # raw templates: these are pieces of one sentence, not capitalized
+            self.pack.templates["is_a_clause" if i == 0 else "is_a_general"].format(
+                s=self.np(_arg(step.atom, 0)), o=self.np(_arg(step.atom, 1))
+            )
+            for i, step in enumerate(path)
+        ]
+        status = _weakest(path)
+        text = self.pack.say(key, reasons=self.pack.join(clauses))
+        support = tuple(str(f.atom) for f in path)
+        claim = Claim(text, status, support, hedged=status < Status.CONFIRMED, role=LEAD)
+        return [claim, *self.reliability(status)]
+
+    def check_property(self, subject: str, prop: str, level: Level) -> list[Claim]:
+        """Yes/no question on a property: "is merge sort stable?"."""
+        atom = Atom("has_property", (subject, prop))
+        refuted = self.kernel.state.refuted.get(atom)
+        if refuted is not None:
+            text = self.pack.say("no_refuted", reasons=self.reasons(refuted))
+            return [Claim(text, Status.REFUTED, (str(atom),), hedged=True)]
+        found = held(self.kernel, atom)
+        if found is None:
+            return [Claim(self.pack.say("unknown_property"), factual=False, role=SOCIAL)]
+        statement = self.fact_claim(
+            "has_property", [found], level, LEAD, s=self.np(subject), p=self.np(prop)
+        )
+        if found.status < Status.PLAUSIBLE:
+            return [statement]
+        yes = Claim(self.pack.say("yes"), found.status, (str(atom),), hedged=True, role=LEAD)
+        return [yes, statement]
+
+    def requirements(
+        self, subject: str, target: set[str], negated: bool, level: Level
+    ) -> list[Claim]:
+        """Does an algorithm apply to some input? Answered from its prerequisites."""
+        needs = base_facts(self.kernel, "prerequisite", subject)
+        if not needs:
+            return [Claim(self.pack.say("requirements_none", s=self.np(subject)), factual=False)]
+
+        def mentioned(f: Fact) -> bool:
+            words_ = fold(self.pack.lexicon.lexeme(_arg(f.atom, 1)).lemma).split()
+            return any(w[:4] in {t[:4] for t in target} for w in words_ if len(w) > 2)
+
+        hit = next((f for f in needs if mentioned(f)), None)
+        out: list[Claim] = []
+        if hit is not None and negated:
+            p = self.np(_arg(hit.atom, 1))
+            out.append(
+                self.fact_claim("requirements_no", [hit], level, LEAD, s=self.np(subject), p=p)
+            )
+        elif hit is not None:
+            out.append(self.fact_claim("requirements_yes", needs, level, LEAD))
+        out += [
+            self.fact_claim(
+                "prerequisite", [f], level, POINT, s=self.np(subject), p=self.np(_arg(f.atom, 1))
+            )
+            for f in needs
+            if f is not hit or not negated
+        ]
+        return out
+
+    def compare(self, a: str, b: str, level: Level) -> list[Claim]:
+        """What two things share (closest common category) and what sets them apart."""
+        out: list[Claim] = []
+        up_b = ancestry(self.kernel, b)
+        common = next((c for c in ancestry(self.kernel, a)[1:] if c in up_b[1:]), None)
+        if common is not None:
+            links = [held(self.kernel, Atom("is_a", (x, common))) for x in (a, b)]
+            facts = [f for f in links if f is not None]
+            out.append(
+                self.fact_claim(
+                    "compare_common",
+                    facts,
+                    level,
+                    LEAD,
+                    a=self.np(a),
+                    b=self.np(b),
+                    c=self.np(common),
+                )
+            )
+        for concept in (a, b):  # what sets each apart: its own class, then its own properties
+            for f in base_facts(self.kernel, "is_a", concept):
+                if _arg(f.atom, 1) != common:
+                    out.append(
+                        self.fact_claim(
+                            "is_a",
+                            [f],
+                            level,
+                            POINT,
+                            s=self.np(concept),
+                            o=self.np(_arg(f.atom, 1)),
+                        )
+                    )
+            for f in base_facts(self.kernel, "has_property", concept)[: PROPERTY_CAP[level] + 1]:
+                out.append(
+                    self.fact_claim(
+                        "has_property",
+                        [f],
+                        level,
+                        POINT,
+                        s=self.np(concept),
+                        p=self.np(_arg(f.atom, 1)),
+                    )
+                )
+        return out
+
     # -- whole answers ---------------------------------------------------------
     def definition(self, subject: str, findings: Findings, level: Level) -> list[Claim]:
-        own = self.gloss(subject) if self._needs_gloss(subject, level) else None
+        """A definition question is answered by the definition first, when there is one."""
+        own = self.gloss(subject) if level is not Level.EXPERT else None
         claims = [
             *([own] if own is not None else []),
             *self.categories(subject, findings, level),
@@ -341,8 +467,13 @@ class Writer:
             return [
                 Claim(text, _weakest(support), tuple(str(f.atom) for f in support), hedged=True)
             ]
-        statement = self.fact_claim("is_a", facts[:1], level, s=self.np(subject), o=self.np(obj))
+        statement = self.fact_claim(
+            "is_a", facts[:1], level, LEAD, s=self.np(subject), o=self.np(obj)
+        )
         if facts[0].status < Status.PLAUSIBLE:  # no plain "yes" on a weak fact
+            path = is_a_path(self.kernel, subject, obj)
+            if path and self._told_by_user(path):
+                return self.because(path, level, key="yes_if_told")
             return [statement]
         yes = Claim(self.pack.say("yes"), facts[0].status, (str(facts[0].atom),), hedged=True)
         return [yes, statement]

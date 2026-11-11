@@ -1,0 +1,19 @@
+{"lang": "fr", "turn": "qu'est-ce qu'un chat ?", "expect": {"contains": ["mammifère"], "no_search": true}, "id": "knowledge-fr-001", "category": "knowledge"}
+{"lang": "fr", "turn": "c'est quoi un algorithme ?", "expect": {"contains": ["instructions"], "no_search": true}, "id": "knowledge-fr-002", "category": "knowledge"}
+{"lang": "fr", "turn": "quels sont les patrons de création ?", "expect": {"contains": ["singleton", "fabrique", "monteur"], "no_search": true}, "id": "knowledge-fr-003", "category": "knowledge"}
+{"lang": "fr", "turn": "donne-moi des exemples d'algorithmes de tri", "expect": {"contains": ["tri fusion", "tri rapide"], "no_search": true}, "id": "knowledge-fr-004", "category": "knowledge"}
+{"lang": "fr", "turn": "quelle est l'unité de la force ?", "expect": {"contains": ["newton"], "no_search": true}, "id": "knowledge-fr-005", "category": "knowledge"}
+{"lang": "fr", "turn": "en quoi se mesure l'énergie ?", "expect": {"contains": ["joule"], "no_search": true}, "id": "knowledge-fr-006", "category": "knowledge"}
+{"lang": "fr", "turn": "quelle est la complexité du tri rapide ?", "expect": {"contains": ["O(n^2)"], "no_search": true}, "id": "knowledge-fr-007", "category": "knowledge"}
+{"lang": "fr", "turn": "quelles sont les propriétés d'une pile ?", "expect": {"contains": ["LIFO"], "no_search": true}, "id": "knowledge-fr-008", "category": "knowledge"}
+{"lang": "fr", "turn": "et la file ?", "expect": {"contains": ["FIFO"], "no_search": true}, "setup": ["quelles sont les propriétés d'une pile ?"], "id": "knowledge-fr-009", "category": "knowledge"}
+{"lang": "fr", "turn": "et le chien ?", "expect": {"contains": ["mammifère"], "no_search": true}, "setup": ["qu'est-ce qu'un chat ?"], "id": "knowledge-fr-010", "category": "knowledge"}
+{"lang": "fr", "turn": "quelles sont ses propriétés ?", "expect": {"contains": ["colonne vertébrale"], "no_search": true}, "setup": ["qu'est-ce qu'un chat ?"], "id": "knowledge-fr-011", "category": "knowledge"}
+{"lang": "fr", "turn": "donne-moi un exemple", "expect": {"any_of": ["singleton", "adaptateur", "observateur", "patron de création"], "no_search": true}, "setup": ["qu'est-ce qu'un patron de conception ?"], "id": "knowledge-fr-012", "category": "knowledge"}
+{"lang": "fr", "turn": "quelles sont les grandeurs de base du SI ?", "expect": {"contains": ["longueur", "masse", "temps"], "no_search": true}, "id": "knowledge-fr-013", "category": "knowledge"}
+{"lang": "fr", "turn": "quelle est la différence entre une pile et une file ?", "expect": {"contains": ["LIFO", "FIFO"], "no_search": true}, "id": "knowledge-fr-014", "category": "knowledge"}
+{"lang": "fr", "turn": "la baleine est-elle un poisson ?", "expect": {"any_of": ["mammifère", "Je ne sais pas"], "not_contains": ["Oui"], "no_search": true}, "id": "knowledge-fr-015", "category": "knowledge"}
+{"lang": "en", "turn": "what is a binary search tree?", "expect": {"contains": ["tree"], "no_search": true}, "id": "knowledge-en-016", "category": "knowledge"}
+{"lang": "en", "turn": "what is the SI unit of mass?", "expect": {"contains": ["kilogram"], "no_search": true}, "id": "knowledge-en-017", "category": "knowledge"}
+{"lang": "en", "turn": "examples of behavioral patterns", "expect": {"contains": ["observer", "strategy", "command"], "no_search": true}, "id": "knowledge-en-018", "category": "knowledge"}
+{"lang": "en", "turn": "what's the difference between a stack and a queue?", "expect": {"contains": ["LIFO", "FIFO"], "no_search": true}, "id": "knowledge-en-019", "category": "knowledge"}

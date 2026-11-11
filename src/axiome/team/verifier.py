@@ -97,3 +97,41 @@ def disjointness(
                 facts = tuple(Fact(x, state.assessments[x], model.is_base(x)) for x in atoms)
                 return a, b, facts
     return None
+
+
+def held(kernel: Kernel, atom: Atom) -> Fact | None:
+    """The checked fact for ``atom``, or None if it is not (or no longer) held."""
+    state = kernel.state
+    if atom not in state.model or atom in state.refuted:
+        return None
+    return Fact(atom, state.assessments[atom], state.model.is_base(atom))
+
+
+def base_facts(kernel: Kernel, predicate: str, subject: str) -> list[Fact]:
+    """Stated (not deduced) facts ``predicate(subject, _)``, in a stable order."""
+    model = kernel.state.model
+    atoms = sorted(
+        (f for f in model.facts() if f.predicate == predicate and str(f.args[0]) == subject),
+        key=str,
+    )
+    return [f for a in atoms if (f := held(kernel, a)) is not None and f.base]
+
+
+def is_a_path(kernel: Kernel, subject: str, obj: str) -> list[Fact] | None:
+    """Shortest chain of stated ``is_a`` facts from ``subject`` up to ``obj`` (breadth first)."""
+    if subject == obj:
+        return None
+    frontier: list[tuple[str, list[Fact]]] = [(subject, [])]
+    seen = {subject}
+    while frontier:
+        nxt: list[tuple[str, list[Fact]]] = []
+        for node, path in frontier:
+            for step in base_facts(kernel, "is_a", node):
+                parent = str(step.atom.args[1])
+                if parent == obj:
+                    return [*path, step]
+                if parent not in seen:
+                    seen.add(parent)
+                    nxt.append((parent, [*path, step]))
+        frontier = nxt
+    return None

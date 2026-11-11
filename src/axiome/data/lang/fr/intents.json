@@ -28,7 +28,13 @@
     "celle-ci",
     "ceux-ci",
     "eux",
-    "elles"
+    "elles",
+    "ses",
+    "son",
+    "sa",
+    "leurs",
+    "leur",
+    ""
   ],
   "stopwords": [
     "le",
@@ -108,19 +114,87 @@
     ],
     [
       "identity",
-      "(?:qui es[- ]tu|tu es qui|qui etes[- ]vous|c'est quoi axiome|qu'est[- ]ce qu'axiome)"
+      "(?:qui es[- ]tu|tu es qui|t'es qui|qui t'es|qui etes[- ]vous|c'est quoi axiome|qu'est[- ]ce qu'axiome|presente[- ]toi)"
     ],
     [
       "capabilities",
-      "(?:que sais[- ]tu faire|tu sais faire quoi|que peux[- ]tu faire|a quoi sers[- ]tu)"
+      "(?:que sais[- ]tu faire|tu sais faire quoi|que peux[- ]tu faire|a quoi sers[- ]tu|tu fais quoi|que fais[- ]tu|tu sers a quoi)"
     ],
     [
       "confusion",
       "^(?:je n'ai pas compris|j'ai pas compris|pas compris|je ne comprends pas|je comprends pas|c'est pas clair|ce n'est pas clair)\\b"
     ],
     [
+      "ask_user_name",
+      "(?:comment je m'appelle|quel est mon (?:nom|prenom)|tu sais comment je m'appelle|c'est quoi mon (?:nom|prenom))"
+    ],
+    [
+      "identity_ai",
+      "(?:(?:tu es|t'es|es[- ]tu|etes[- ]vous) (?:une? )?(?:ia|intelligence artificielle|robot|bot|humain|machine|programme))"
+    ],
+    [
+      "help",
+      "^(?:tu peux m'aider|peux[- ]tu m'aider|aide[- ]moi|j'ai besoin d'aide|help)\\b"
+    ],
+    [
+      "date",
+      "(?:quel jour (?:sommes[- ]nous|on est|est[- ]on)|on est quel jour|quelle (?:est la )?date|la date d'aujourd'hui|quel jour est[- ]ce)"
+    ],
+    [
+      "clock",
+      "(?:quelle heure (?:est[- ]il|il est)|il est quelle heure|l'heure qu'il est)"
+    ],
+    [
+      "forecast",
+      "(?:quel temps fera|meteo|quel temps fait[- ]il|va[- ]t[- ]il pleuvoir)"
+    ],
+    [
+      "code_request",
+      "^(?:ecris|code|programme|implemente|genere|cree|fais)(?:[- ]moi)? (?:une?|le|la|du) (?:fonction|programme|script|classe|code|methode|algorithme)\\b"
+    ],
+    [
+      "purpose",
+      "^(?:quel|quelle) (?:patron|design pattern|pattern|patron de conception)(?: de conception)? (?:utiliser |choisir |faut[- ]il )?pour (?P<x>.+?)\\??$"
+    ],
+    [
+      "compare",
+      "^(?:quelle est |c'est quoi )?la difference entre (?P<x>.+?) et (?P<y>.+?)\\??$"
+    ],
+    [
+      "why_is_a",
+      "^pourquoi (?P<x>.+?) (?:est[- ]il|est[- ]elle|est|sont[- ]ils|sont[- ]elles|sont) (?P<ya>un |une |des )(?P<y>.+?)\\??$"
+    ],
+    [
+      "why",
+      "^(?:pourquoi|comment se fait[- ]il que|comment ca se fait que) (?P<q>.+?)\\??$"
+    ],
+    [
+      "who",
+      "^(?:qui (?:est|etait|etaient|sont)|c'est qui) (?P<x>.+?)\\??$"
+    ],
+    [
+      "check_property",
+      "^(?:est[- ]ce qu(?:e |'))?(?P<x>.+?) (?:est[- ]il|est[- ]elle|est) (?P<p>[a-z]+)\\?$"
+    ],
+    [
+      "requirements",
+      "^(?P<x>.+?) (?:marche|fonctionne|s'applique)[- ]t[- ](?:il|elle) (?:sur|avec|pour) (?P<y>.+?)\\??$"
+    ],
+    [
+      "requirements",
+      "^(?:de quoi a besoin|qu'exige|que faut[- ]il pour utiliser) (?P<x>.+?)\\??$"
+    ],
+    [
       "properties",
-      "^(?:quelles sont )?les (?:proprietes|caracteristiques) d(?:e |u |es |')(?P<x>.+?)\\??$"
+      "^(?:quelles sont |c'est quoi )?(?P<x>ses|leurs|son|sa) (?:proprietes|caracteristiques)\\??$"
+    ],
+    [
+      "properties",
+      "^(?:quelles sont |c'est quoi )?(?:les )?(?:proprietes|caracteristiques) d(?:e |u |es |')(?P<x>.+?)\\??$"
+    ],
+    [
+      "unit",
+      "^(?:quelle est |c'est quoi )?l'unite(?: si)? d(?:e |u |es |')(?P<x>.+?)\\??$"
     ],
     [
       "unit",
@@ -132,7 +206,7 @@
     ],
     [
       "complexity",
-      "^(?:quelle est )?la complexite d(?:e |u |es |')(?P<x>.+?)\\??$"
+      "^(?:quelle est |c'est quoi )?la complexite d(?:e |u |es |')(?P<x>.+?)\\??$"
     ],
     [
       "members",
@@ -143,12 +217,16 @@
       "^(?:donne(?:[- ]moi)? |cite(?:[- ]moi)? )?(?:des |quelques )?exemples? d(?:e |u |es |')(?P<x>.+?)\\??$"
     ],
     [
+      "members",
+      "^(?:donne(?:[- ]moi)?|cite(?:[- ]moi)?|montre(?:[- ]moi)?) (?:un |des |quelques )?exemples?(?P<x>)\\??$"
+    ],
+    [
       "check_is_a",
       "^(?:est[- ]ce qu(?:e |'))?(?P<x>.+?) (?:est[- ]il|est[- ]elle|est) (?P<ya>un |une )(?P<y>.+?)\\?$"
     ],
     [
       "definition",
-      "^(?:explique(?:[- ]moi)? ce qu(?:'est |e sont )|dis[- ]moi ce qu(?:'est |e sont )|ce qu'est |qu'est[- ]ce qu(?:e |')|c'est quoi |que signifie |que veut dire |definis |definition d(?:e |u |es |')|explique(?:[- ]moi)? |parle(?:[- ]moi)? d(?:e |u |es |'))(?P<x>.+?)\\??$"
+      "^(?:explique(?:[- ]moi)? ce qu(?:'est |e sont )|dis[- ]moi ce qu(?:'est |e sont )|ce qu'est |qu['\\s]?est[- ]?ce qu(?:e |'| ?(?=une?\\b))|c'est quoi |que signifie |que veut dire |definis |definition d(?:e |u |es |')|explique(?:[- ]moi)? |parle(?:[- ]moi)? d(?:e |u |es |'))(?P<x>.+?)\\??$"
     ],
     [
       "definition",
@@ -186,5 +264,53 @@
     "mon",
     "ma",
     "mes"
+  ],
+  "greeting_prefix": "^(?:bonjour|salut|coucou|bonsoir|hello|hey)[ ,!.]+(?=\\S)",
+  "laughter": "^(?:mdr|lol|ptdr|xd|(?:ha){2,}h?|(?:hi){2,}|hehe)[ !.]*$",
+  "filler": "^(?:hmm+|euh+|bof|ah+|oh+|ben|bah)[ !.]*$",
+  "operators": {
+    "plus": "+",
+    "moins": "-",
+    "fois": "*",
+    "multiplie par": "*",
+    "divise par": "/",
+    "sur": "/",
+    "puissance": "^",
+    "au carre": "^2",
+    "modulo": "%"
+  },
+  "arith_prefix": "^(?:combien (?:font|fait|vaut|valent)|calcule(?:[- ]moi)?|ca fait combien|quel est le resultat de|resultat de)\\s*",
+  "weekdays": [
+    "lundi",
+    "mardi",
+    "mercredi",
+    "jeudi",
+    "vendredi",
+    "samedi",
+    "dimanche"
+  ],
+  "months": [
+    "janvier",
+    "février",
+    "mars",
+    "avril",
+    "mai",
+    "juin",
+    "juillet",
+    "août",
+    "septembre",
+    "octobre",
+    "novembre",
+    "décembre"
+  ],
+  "negations": [
+    "non",
+    "pas",
+    "sans",
+    "aucun",
+    "aucune"
+  ],
+  "negative_prefixes": [
+    "non-"
   ]
 }

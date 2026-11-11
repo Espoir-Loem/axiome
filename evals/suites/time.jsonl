@@ -1,0 +1,3 @@
+{"lang": "fr", "turn": "quel jour sommes-nous ?", "expect": {"contains": ["11 novembre 2026"], "no_search": true}, "id": "time-fr-001", "category": "time"}
+{"lang": "fr", "turn": "quelle heure est-il ?", "expect": {"contains": ["9 h 30"], "no_search": true}, "id": "time-fr-002", "category": "time"}
+{"lang": "en", "turn": "what day is it today?", "expect": {"contains": ["November 11, 2026"], "no_search": true}, "id": "time-en-003", "category": "time"}

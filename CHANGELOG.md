@@ -3,7 +3,22 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (évaluation)
+- **Bancs d'évaluation** (`evals/`, `python -m axiome.evaluation`) : 105 cas de travail et 42 cas réservés, en français et en anglais, notés par catégorie, avec un rapport des échecs. Score : 61/105 au départ, puis 105/105 ; banc réservé à 38/42 (90 %) à sa première mesure.
+- Calcul exact sur des fractions (« combien font 10 / 4 ? » donne 5/2, soit environ 2,5). Les opérations peuvent être écrites en mots (« fois », « divided by »). La division par zéro est signalée. Aucune exécution de code.
+- Date et heure tirées de l'horloge (« quel jour sommes-nous ? », « what time is it? »). Pour la météo, Axiome dit qu'il n'y a pas accès.
+- Questions oui/non sur une propriété (« le tri fusion est-il stable ? »). Réponse « Je ne sais pas » quand rien ne permet de l'établir.
+- Prérequis (« la recherche dichotomique marche-t-elle sur une liste non triée ? » donne « Non. Elle exige une entrée triée. »).
+- « Pourquoi » expliqué par la chaîne de déduction (« parce que le chat est un mammifère et les mammifères sont des vertébrés »). Une prémisse fausse est corrigée.
+- Comparaison (« différence entre une pile et une file ») et choix d'un patron de conception d'après le besoin décrit.
+- « Qui est… » et « pourquoi… » sur un sujet inconnu lancent une recherche.
+- Relances sur le sujet en cours (« ses propriétés », « donne-moi un exemple »).
+- Petite conversation : « salut, ça va ? », « t'es qui », « tu es une IA ? », « mdr », « hmm », « comment je m'appelle ? », « tu peux m'aider ? ».
+- Le bruit clavier (« asdfghjkl ») et les demandes de code reçoivent une réponse honnête au lieu d'une recherche.
+- Un fait appris de l'utilisateur est présenté comme tel (« Oui, d'après ce que tu m'as dit : … »). Les noms propres appris s'emploient sans article.
+
 ### Modifié
+- Une question de définition commence par la définition quand Axiome en a une (« Un algorithme, c'est une suite finie d'instructions… »).
 - Réponses mises en forme comme une bonne réponse humaine : phrase de tête qui résume (sujet en gras), détails en liste, une seule ligne de fiabilité, sources numérotées et citées [n]. Plus de « (plausible…) » répété dans chaque phrase.
 - Wikipédia : lecture de l'introduction complète des articles. La page qui porte le titre de la question fournit la définition ; les autres pages du même site vont dans « Voir aussi ».
 

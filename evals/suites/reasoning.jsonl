@@ -1,0 +1,11 @@
+{"lang": "fr", "turn": "le chat est-il un animal ?", "expect": {"starts_with": "Oui", "no_search": true}, "id": "reasoning-fr-001", "category": "reasoning"}
+{"lang": "fr", "turn": "le chat est-il un oiseau ?", "expect": {"starts_with": "Non", "contains": ["mammifère"], "no_search": true}, "id": "reasoning-fr-002", "category": "reasoning"}
+{"lang": "fr", "turn": "le manchot est-il un mammifère ?", "expect": {"starts_with": "Non", "no_search": true}, "id": "reasoning-fr-003", "category": "reasoning"}
+{"lang": "fr", "turn": "le tri fusion est-il stable ?", "expect": {"starts_with": "Oui", "no_search": true}, "id": "reasoning-fr-004", "category": "reasoning"}
+{"lang": "fr", "turn": "le tri rapide est-il stable ?", "expect": {"contains": ["Je ne sais pas"], "not_contains": ["Oui"], "no_search": true}, "id": "reasoning-fr-005", "category": "reasoning"}
+{"lang": "fr", "turn": "la recherche dichotomique marche-t-elle sur une liste non triée ?", "expect": {"any_of": ["Non", "triée"], "no_search": true}, "id": "reasoning-fr-006", "category": "reasoning"}
+{"lang": "fr", "turn": "Félix est-il un animal ?", "expect": {"starts_with": "Oui", "no_search": true}, "setup": ["Félix est un chat."], "id": "reasoning-fr-007", "category": "reasoning"}
+{"lang": "fr", "turn": "pourquoi le chat est-il un vertébré ?", "expect": {"contains": ["mammifère"], "no_search": true}, "id": "reasoning-fr-008", "category": "reasoning"}
+{"lang": "en", "turn": "is a penguin a bird?", "expect": {"starts_with": "Yes", "no_search": true}, "id": "reasoning-en-009", "category": "reasoning"}
+{"lang": "en", "turn": "is a whale a fish?", "expect": {"not_contains": ["Yes"], "no_search": true}, "id": "reasoning-en-010", "category": "reasoning"}
+{"lang": "en", "turn": "is merge sort stable?", "expect": {"starts_with": "Yes", "no_search": true}, "id": "reasoning-en-011", "category": "reasoning"}

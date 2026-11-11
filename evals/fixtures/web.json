@@ -1,0 +1,70 @@
+{
+  "photon": [
+    {
+      "title": "Photon",
+      "url": "https://fr.wikipedia.org/wiki/Photon",
+      "text": "Le photon est la particule élémentaire associée à la lumière et au rayonnement électromagnétique. Il n'a pas de masse et se déplace à la vitesse de la lumière dans le vide. Le terme photon est introduit en 1926."
+    },
+    {
+      "title": "Photonique",
+      "url": "https://fr.wikipedia.org/wiki/Photonique",
+      "text": "La photonique est la branche de la physique qui étudie la lumière et ses usages techniques."
+    }
+  ],
+  "trou noir": [
+    {
+      "title": "Trou noir",
+      "url": "https://fr.wikipedia.org/wiki/Trou_noir",
+      "text": "En astrophysique, un trou noir est un objet céleste si compact que l'intensité de son champ gravitationnel empêche toute forme de matière ou de rayonnement de s'en échapper. De tels objets ne peuvent ni émettre ni diffuser la lumière."
+    },
+    {
+      "title": "Le Trou noir",
+      "url": "https://fr.wikipedia.org/wiki/Le_Trou_noir",
+      "text": "Le Trou noir est un film de science-fiction américain sorti en 1979 et produit par Walt Disney Productions."
+    }
+  ],
+  "pourquoi le ciel est bleu": [
+    {
+      "title": "Diffusion Rayleigh",
+      "url": "https://fr.wikipedia.org/wiki/Diffusion_Rayleigh",
+      "text": "La diffusion Rayleigh est un mode de diffusion des ondes, par exemple électromagnétiques, dont la longueur d'onde est beaucoup plus grande que la taille des particules diffusantes. Elle explique la couleur bleue du ciel : la lumière bleue est davantage diffusée par les molécules de l'atmosphère que la lumière rouge."
+    }
+  ],
+  "ciel bleu": [
+    {
+      "title": "Diffusion Rayleigh",
+      "url": "https://fr.wikipedia.org/wiki/Diffusion_Rayleigh",
+      "text": "La diffusion Rayleigh est un mode de diffusion des ondes, par exemple électromagnétiques, dont la longueur d'onde est beaucoup plus grande que la taille des particules diffusantes. Elle explique la couleur bleue du ciel : la lumière bleue est davantage diffusée par les molécules de l'atmosphère que la lumière rouge."
+    }
+  ],
+  "marie curie": [
+    {
+      "title": "Marie Curie",
+      "url": "https://fr.wikipedia.org/wiki/Marie_Curie",
+      "text": "Marie Curie, née Maria Salomea Skłodowska le 7 novembre 1867 à Varsovie et morte le 4 juillet 1934, est une physicienne et chimiste polonaise, naturalisée française. Elle est la première femme à recevoir le prix Nobel."
+    }
+  ],
+  "adn": [
+    {
+      "title": "Acide désoxyribonucléique",
+      "url": "https://fr.wikipedia.org/wiki/Acide_d%C3%A9soxyribonucl%C3%A9ique",
+      "text": "L'acide désoxyribonucléique, ou ADN, est une macromolécule biologique présente dans presque toutes les cellules. L'ADN est une molécule qui contient l'information génétique permettant le développement et le fonctionnement des êtres vivants."
+    }
+  ],
+  "alan turing": [
+    {
+      "title": "Alan Turing",
+      "url": "https://en.wikipedia.org/wiki/Alan_Turing",
+      "name": "Wikipedia (en)",
+      "text": "Alan Mathison Turing was an English mathematician, computer scientist, logician, cryptanalyst, philosopher and theoretical biologist. He was highly influential in the development of theoretical computer science."
+    }
+  ],
+  "en:photon": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Photon",
+      "title": "Photon",
+      "name": "Wikipedia (en)",
+      "text": "A photon is an elementary particle that is a quantum of the electromagnetic field, including electromagnetic radiation such as light and radio waves. Photons are massless particles that always move at the speed of light measured in vacuum. The modern photon concept originated during the first two decades of the 20th century with the work of Albert Einstein."
+    }
+  ]
+}

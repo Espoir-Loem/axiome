@@ -19,7 +19,10 @@
     "they",
     "them",
     "this",
-    "that"
+    "that",
+    "its",
+    "their",
+    ""
   ],
   "stopwords": [
     "a",
@@ -91,11 +94,79 @@
     ],
     [
       "capabilities",
-      "(?:what can you do|what do you do)"
+      "(?:what can you do|what do you do|what are you for)"
     ],
     [
       "confusion",
       "^(?:i don'?t understand|i do not understand|i didn'?t understand|i didn'?t get it|not clear|that'?s not clear|unclear)\\b"
+    ],
+    [
+      "ask_user_name",
+      "(?:what'?s my name|what is my name|do you know my name)"
+    ],
+    [
+      "identity_ai",
+      "(?:are you (?:an? )?(?:ai|artificial intelligence|robot|bot|human|machine|program))"
+    ],
+    [
+      "help",
+      "^(?:can you help(?: me)?|could you help(?: me)?|help me|i need help|help)\\b"
+    ],
+    [
+      "date",
+      "(?:what day is it|what'?s the date|what is the date|today'?s date|what day is today)"
+    ],
+    [
+      "clock",
+      "(?:what time is it|what'?s the time|current time)"
+    ],
+    [
+      "forecast",
+      "(?:weather|will it rain|forecast)"
+    ],
+    [
+      "code_request",
+      "^(?:write|code|implement|generate|create|make)(?: me)? (?:an?|the|some) (?:\\w+ )?(?:function|program|script|class|code|method)\\b"
+    ],
+    [
+      "purpose",
+      "^(?:which|what) (?:design )?pattern (?:should i use |to use |do i need )?(?:to|for) (?P<x>.+?)\\??$"
+    ],
+    [
+      "compare",
+      "^(?:what'?s |what is )?the difference between (?:an? |the )?(?P<x>.+?) and (?P<y>.+?)\\??$"
+    ],
+    [
+      "why_is_a",
+      "^why (?:is|are) (?P<x>.+?) (?P<ya>an? )(?P<y>.+?)\\??$"
+    ],
+    [
+      "why_is_a",
+      "^why are (?P<x>[a-z]+) (?P<y>[a-z]+)\\??$"
+    ],
+    [
+      "why",
+      "^(?:why|how come) (?P<q>.+?)\\??$"
+    ],
+    [
+      "who",
+      "^(?:who (?:is|was|were|are)) (?P<x>.+?)\\??$"
+    ],
+    [
+      "check_property",
+      "^(?:is|are) (?P<x>.+?) (?P<p>[a-z]+)\\?$"
+    ],
+    [
+      "requirements",
+      "^(?:does|do|can) (?P<x>.+?) (?:work|run|apply) (?:on|with|for) (?P<y>.+?)\\??$"
+    ],
+    [
+      "requirements",
+      "^what does (?P<x>.+?) (?:need|require)\\??$"
+    ],
+    [
+      "properties",
+      "^(?:what are )?(?P<x>its|their) (?:properties|characteristics)\\??$"
     ],
     [
       "properties",
@@ -122,12 +193,20 @@
       "^(?:give (?:me )?|list )?(?:some )?examples? of (?P<x>.+?)\\??$"
     ],
     [
+      "members",
+      "^(?:give (?:me )?|show (?:me )?)(?:an |some )?examples?(?P<x>)\\??$"
+    ],
+    [
       "check_is_a",
       "^(?:is|are) (?P<x>.+?) (?P<ya>a |an )(?P<y>.+?)\\?$"
     ],
     [
       "definition",
-      "^(?:what is |what's |what are |define |explain |tell me about |describe )(?P<x>.+?)\\??$"
+      "^(?:explain |tell me )?what (?P<x>.+?) (?:is|are)\\??$"
+    ],
+    [
+      "definition",
+      "^(?:what is |what's |whats |what are |define |explain |tell me about |describe )(?P<x>.+?)\\??$"
     ],
     [
       "research",
@@ -153,5 +232,56 @@
     "me",
     "my",
     "mine"
+  ],
+  "greeting_prefix": "^(?:hello|hi|hey|good (?:morning|afternoon|evening))[ ,!.]+(?=\\S)",
+  "laughter": "^(?:lol|lmao|rofl|xd|(?:ha){2,}h?|hehe)[ !.]*$",
+  "filler": "^(?:hmm+|uh+|um+|meh|ah+|oh+)[ !.]*$",
+  "operators": {
+    "plus": "+",
+    "minus": "-",
+    "times": "*",
+    "multiplied by": "*",
+    "divided by": "/",
+    "over": "/",
+    "to the power of": "^",
+    "squared": "^2",
+    "mod": "%",
+    "modulo": "%"
+  },
+  "arith_prefix": "^(?:what(?:'s| is)|how much is|calculate|compute|what does)\\s*",
+  "weekdays": [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  ],
+  "months": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ],
+  "negations": [
+    "not",
+    "no",
+    "non",
+    "without",
+    "unsorted"
+  ],
+  "negative_prefixes": [
+    "un",
+    "non-",
+    "non"
   ]
 }

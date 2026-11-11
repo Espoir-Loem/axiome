@@ -49,6 +49,8 @@ class Lexeme:
     proper: bool = False  # named thing, used without article in English
     aliases: tuple[str, ...] = ()
     learned: bool = False  # acquired at run time, not curated
+    adj: str = ""  # adjective naming the property ("stable"), for yes/no questions
+    use: str = ""  # what the thing is used for (design patterns: "notify several objects")
 
 
 class Morphology(Protocol):
@@ -127,11 +129,23 @@ class Lexicon:
                 i += 1
         return found
 
-    def learn(self, form: str, concept: str, gender: str = "m") -> Lexeme:
+    def adjective(self, word: str) -> str | None:
+        """The property concept an adjective names ("stable" -> stable)."""
+        key = fold(word).strip()
+        for concept in sorted(self._by_concept):
+            lexeme = self._by_concept[concept]
+            if lexeme.adj and fold(lexeme.adj) == key:
+                return concept
+        return None
+
+    def uses(self) -> list[Lexeme]:
+        return [self._by_concept[c] for c in sorted(self._by_concept) if self._by_concept[c].use]
+
+    def learn(self, form: str, concept: str, gender: str = "m", *, proper: bool = False) -> Lexeme:
         """Record that ``form`` names ``concept`` (creating the lexeme if needed)."""
         current = self._by_concept.get(concept)
         if current is None:
-            lexeme = Lexeme(concept, form.strip(), gender=gender, learned=True)
+            lexeme = Lexeme(concept, form.strip(), gender=gender, proper=proper, learned=True)
         elif fold(form) in {fold(current.lemma), *map(fold, current.aliases)}:
             return current
         else:

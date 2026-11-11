@@ -1,0 +1,8 @@
+{"lang": "fr", "turn": "combien font 2 + 2 ?", "expect": {"contains": ["4"], "no_search": true}, "id": "arithmetic-fr-001", "category": "arithmetic"}
+{"lang": "fr", "turn": "calcule 12 * 7", "expect": {"contains": ["84"], "no_search": true}, "id": "arithmetic-fr-002", "category": "arithmetic"}
+{"lang": "fr", "turn": "2^10", "expect": {"contains": ["1024"], "no_search": true}, "id": "arithmetic-fr-003", "category": "arithmetic"}
+{"lang": "fr", "turn": "combien fait 10 / 4 ?", "expect": {"any_of": ["5/2", "2,5", "2.5"], "no_search": true}, "id": "arithmetic-fr-004", "category": "arithmetic"}
+{"lang": "fr", "turn": "(3 + 5) * 2 - 1", "expect": {"contains": ["15"], "no_search": true}, "id": "arithmetic-fr-005", "category": "arithmetic"}
+{"lang": "fr", "turn": "combien font 1 / 0 ?", "expect": {"any_of": ["impossible", "pas défini", "division par zéro"], "no_search": true}, "id": "arithmetic-fr-006", "category": "arithmetic"}
+{"lang": "en", "turn": "what is 6 times 7?", "expect": {"contains": ["42"], "no_search": true}, "id": "arithmetic-en-007", "category": "arithmetic"}
+{"lang": "en", "turn": "15 % 4", "expect": {"contains": ["3"], "no_search": true}, "id": "arithmetic-en-008", "category": "arithmetic"}

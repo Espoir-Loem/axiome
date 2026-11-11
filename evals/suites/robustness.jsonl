@@ -1,0 +1,16 @@
+{"lang": "fr", "turn": "h", "expect": {"contains": ["incomplet"], "no_search": true}, "id": "robustness-fr-001", "category": "robustness"}
+{"lang": "fr", "turn": "?", "expect": {"contains": ["incomplet"], "no_search": true}, "id": "robustness-fr-002", "category": "robustness"}
+{"lang": "fr", "turn": "....", "expect": {"contains": ["incomplet"], "no_search": true}, "id": "robustness-fr-003", "category": "robustness"}
+{"lang": "fr", "turn": "asdfghjkl", "expect": {"no_search": true, "not_contains": ["D'après"]}, "id": "robustness-fr-004", "category": "robustness"}
+{"lang": "fr", "turn": "c'est quoi l", "expect": {"contains": ["lettre"], "no_search": true}, "id": "robustness-fr-005", "category": "robustness"}
+{"lang": "fr", "turn": "qu'est-ce qu'un chta ?", "expect": {"contains": ["chat", "mammifère"], "no_search": true}, "id": "robustness-fr-006", "category": "robustness"}
+{"lang": "fr", "turn": "QU'EST-CE QU'UN CHAT ?", "expect": {"contains": ["mammifère"], "no_search": true}, "id": "robustness-fr-007", "category": "robustness"}
+{"lang": "fr", "turn": "quest ce quun chat", "expect": {"contains": ["mammifère"], "no_search": true}, "id": "robustness-fr-008", "category": "robustness"}
+{"lang": "fr", "turn": "proprietes du chat", "expect": {"contains": ["colonne vertébrale"], "no_search": true}, "id": "robustness-fr-009", "category": "robustness"}
+{"lang": "fr", "turn": "   c'est   quoi    une   pile   ", "expect": {"contains": ["structure de données"], "no_search": true}, "id": "robustness-fr-010", "category": "robustness"}
+{"lang": "fr", "turn": "chat 😺 ?", "expect": {"contains": ["mammifère"], "no_search": true}, "id": "robustness-fr-011", "category": "robustness"}
+{"lang": "fr", "turn": "bonjour, c'est quoi une pile ?", "expect": {"contains": ["structure de données"], "no_search": true}, "id": "robustness-fr-012", "category": "robustness"}
+{"lang": "fr", "turn": "qu'est ce qu'une tabel de hachage", "expect": {"contains": ["table de hachage"], "no_search": true}, "id": "robustness-fr-013", "category": "robustness"}
+{"lang": "en", "turn": "WHAT IS A STACK", "expect": {"contains": ["data structure"], "no_search": true}, "id": "robustness-en-014", "category": "robustness"}
+{"lang": "en", "turn": "whats a queue", "expect": {"contains": ["data structure"], "no_search": true}, "id": "robustness-en-015", "category": "robustness"}
+{"lang": "en", "turn": "x", "expect": {"contains": ["incomplete"], "no_search": true}, "id": "robustness-en-016", "category": "robustness"}
