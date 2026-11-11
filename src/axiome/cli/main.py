@@ -13,7 +13,7 @@ from axiome import __version__
 from axiome.core.clock import FixedClock
 from axiome.core.config import IN_MEMORY, Config
 from axiome.core.errors import AxiomeError
-from axiome.dialogue.events import Done, Say, Thinking
+from axiome.dialogue import layout
 from axiome.dialogue.session import Session
 from axiome.i18n import SUPPORTED, get_locale, set_locale, t
 from axiome.kernel import Kernel
@@ -23,7 +23,6 @@ from axiome.response import render
 QUIT = (":quit", ":q")
 # A logic statement starts with "?-" or with "predicate(" (fact or rule).
 _LOGIC = re.compile(r"^\s*(?:\?-|[a-z_][A-Za-z0-9_]*\()")
-DIM, RESET = "\x1b[2m", "\x1b[0m"
 
 
 def is_logic(line: str) -> bool:
@@ -32,17 +31,7 @@ def is_logic(line: str) -> bool:
 
 def converse(session: Session, line: str, *, color: bool = False) -> Iterator[str]:
     """Render the event stream of one turn as text chunks, as soon as they come."""
-    started = False
-    for event in session.respond(line):
-        if isinstance(event, Thinking):
-            text = f"  {event.text}"
-            yield ("\n" if started else "") + (f"{DIM}{text}{RESET}" if color else text) + "\n"
-            started = False
-        elif isinstance(event, Say):
-            yield (" " if started else "") + event.text
-            started = True
-        elif isinstance(event, Done) and started:
-            yield "\n"
+    return layout.chunks(session.respond(line), color=color)
 
 
 def _rules(k: Kernel) -> str:

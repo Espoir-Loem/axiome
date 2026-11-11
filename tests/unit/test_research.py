@@ -69,9 +69,13 @@ def test_provider_helpers() -> None:
 
 def test_wikipedia_provider() -> None:
     docs = Wikipedia(FakeFetcher(wikipedia_routes())).search("photon", "fr", 3)
-    assert len(docs) == 1  # the empty summary is skipped
-    assert docs[0].source.organization == "wikimedia" and docs[0].text == PHOTON_FR
+    assert [d.title for d in docs] == ["Photon", "Photonique"]  # the empty page is skipped
+    assert docs[0].source.organization == "wikipedia.org" and docs[0].text.startswith(PHOTON_FR)
     assert docs[0].source.url == "https://fr.wikipedia.org/wiki/Photon"
+    assert (
+        Wikipedia(FakeFetcher({"list=search": b'{"query": {"search": []}}'})).search("x", "fr", 3)
+        == []
+    )
 
 
 def test_google_and_searxng_providers() -> None:
@@ -118,8 +122,8 @@ def test_researcher_streams_in_provider_order_and_survives_failures() -> None:
             events.append(next(gen))
     except StopIteration as stop:
         docs = stop.value
-    assert [type(e) for e in events] == [Searching, Searching, SourceFound]
-    assert len(docs) == 1 and researcher.names == ["Boom", "Wikipedia"]
+    assert [type(e) for e in events] == [Searching, Searching, SourceFound, SourceFound]
+    assert len(docs) == 2 and researcher.names == ["Boom", "Wikipedia"]
     assert list(Researcher([]).search("x", "fr")) == []
 
 
@@ -140,33 +144,90 @@ def test_digest_agreement_and_status() -> None:
         "Einstein a reçu le prix Nobel pour le photon en 1921.",
     )
     found = digest("photon", [a, b, c], ["le", "est", "une", "de"])
-    assert found.summary is not None and found.assessment is not None
+    assert found.lead is not None and found.assessment is not None
     assert {s.organization for s in found.agreeing} == {"a.org", "b.org"}
-    assert [e.source.organization for e in found.others] == ["c.org"]
+    assert [found.documents[e.doc].source.organization for e in found.points] == ["c.org"]
     assert found.assessment.status is Status.PLAUSIBLE  # two medium sources (E7)
-    assert digest("photon", []).summary is None
+    assert found.cited == (0, 2)
+    assert digest("photon", []).lead is None
 
 
 def test_setup(tmp_path: Path) -> None:
     fetcher = FakeFetcher({})
-    full = Config("x", google_api_key="k", google_engine_id="c", searxng_url="http://s")
-    assert [p.name for p in providers(full, fetcher)] == ["Google", "SearXNG", "Wikipedia"]
+    full = Config(
+        "x", google_api_key="k", google_engine_id="c", searxng_url="http://s", brave_api_key="b"
+    )
+    names = [p.name for p in providers(full, fetcher)]
+    assert names == ["Brave", "Google", "SearXNG", "Wikipedia", "DuckDuckGo", "OpenAlex"]
     assert build_researcher(Config("x", offline=True)) is None
     built = build_researcher(Config("x", cache_dir=str(tmp_path)))
-    assert built is not None and built.names == ["Wikipedia"]
+    assert built is not None and [p.name for p in built.active(False)] == [
+        "Wikipedia",
+        "DuckDuckGo",
+    ]
+    assert [p.name for p in built.active(True)][-1] == "OpenAlex"
     assert build_researcher(Config("x"), fetcher) is not None
 
 
-def test_digest_prefers_the_page_named_like_the_question() -> None:
+def test_digest_uses_the_page_named_like_the_question() -> None:
     side = Document(
         web_source("https://a.org/x", "A"),
         "Interaction photon-photon",
         "L'interaction photon-photon est la diffusion d'un photon par un autre photon.",
     )
     main = Document(
-        web_source("https://b.org/p", "B"),
+        web_source("https://a.org/p", "B"),
         "Photon",
-        "Le photon est une particule élémentaire associée aux ondes électromagnétiques.",
+        "Il a été nommé en 1926. Le photon est une particule élémentaire de lumière. "
+        "Il n'a pas de masse et va à la vitesse de la lumière.",
     )
-    found = digest("photon", [side, main], ["le", "est", "une", "d", "l", "par", "un"])
-    assert found.summary is not None and found.summary.source.organization == "b.org"
+    found = digest("photon", [side, main], ["le", "est", "une", "d", "l", "par", "un", "de"])
+    assert found.lead is not None and found.lead.doc == 1
+    assert found.lead.text.startswith("Le photon est")  # the definition, not the first line
+    assert found.see_also == ("Interaction photon-photon",)
+    assert [p.text[:6] for p in found.points] == ["Il n'a"]  # too-short sentences are dropped
+
+
+def test_more_providers() -> None:
+    from axiome.research.providers.brave import BraveSearch  # noqa: PLC0415
+    from axiome.research.providers.duckduckgo import DuckDuckGo  # noqa: PLC0415
+    from axiome.research.providers.openalex import OpenAlex, abstract  # noqa: PLC0415
+
+    ddg = {
+        "AbstractText": "Le photon est une particule.",
+        "AbstractURL": "https://fr.wikipedia.org/wiki/Photon",
+        "AbstractSource": "Wikipédia",
+        "Heading": "Photon",
+    }
+    alex = {
+        "results": [
+            {
+                "id": "https://openalex.org/W1",
+                "doi": "https://doi.org/10.1/x",
+                "display_name": "On photons",
+                "abstract_inverted_index": {"Photons": [0], "are": [1], "quanta.": [2]},
+                "primary_location": {"source": {"display_name": "Nature"}},
+            },
+            {"id": "https://openalex.org/W2", "abstract_inverted_index": None},
+        ]
+    }
+    brave = {
+        "web": {
+            "results": [{"url": "https://phys.example.org/p", "title": "P", "description": "D."}]
+        }
+    }
+    fetcher = FakeFetcher(
+        {
+            "duckduckgo.com": json.dumps(ddg).encode(),
+            "openalex.org/works": json.dumps(alex).encode(),
+            "search.brave.com": json.dumps(brave).encode(),
+        }
+    )
+    d = DuckDuckGo(fetcher).search("photon", "fr", 3)
+    assert d[0].source.organization == "wikipedia.org" and d[0].source.name == "Wikipédia"
+    assert DuckDuckGo(FakeFetcher({"duckduckgo.com": b"{}"})).search("x", "fr", 1) == []
+    o = OpenAlex(fetcher).search("photon", "en", 3)
+    assert len(o) == 1 and o[0].text == "Photons are quanta." and o[0].source.name == "Nature"
+    assert abstract(None) == ""
+    b = BraveSearch(fetcher, "secret", read_pages=False).search("photon", "fr", 3)
+    assert b[0].text == "D." and {"X-Subscription-Token": "secret"} in fetcher.headers

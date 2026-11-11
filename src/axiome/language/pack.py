@@ -61,6 +61,7 @@ class LanguagePack:
     articles: tuple[str, ...]
     pronouns: frozenset[str]
     stopwords: frozenset[str]
+    personal_markers: frozenset[str]  # words showing the user talks to/about Axiome or self
     level_signals: Mapping[str, re.Pattern[str]]
     level_only: re.Pattern[str]  # what remains of a pure level request ("explique")
     style: StyleRules
@@ -109,6 +110,7 @@ def load_pack(code: str) -> LanguagePack:
         articles=tuple(sorted(intents["articles"], key=lambda a: (-len(a), a))),
         pronouns=frozenset(intents["pronouns"]),
         stopwords=frozenset(intents["stopwords"]),
+        personal_markers=frozenset(intents["personal_markers"]),
         level_signals={k: re.compile(v) for k, v in intents["level_signals"].items()},
         level_only=re.compile(intents["level_only"]),
         style=StyleRules(

@@ -159,11 +159,14 @@ class KnowledgeStore:
         return out
 
     def evidence_for(self, atom: Atom) -> list[Evidence]:
+        return self.evidence_for_text(str(atom))
+
+    def evidence_for_text(self, text: str) -> list[Evidence]:
         sources = {s.id: s for s in self.sources()}
         rows = self._db.execute(
             "SELECT e.source_id, e.stance, e.excerpt FROM evidence e "
             "JOIN facts f ON f.id = e.fact_id WHERE f.text = ? ORDER BY e.source_id, e.stance",
-            (str(atom),),
+            (text,),
         ).fetchall()
         return [Evidence(sources[sid], Stance(st), ex) for sid, st, ex in rows]
 

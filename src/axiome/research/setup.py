@@ -5,20 +5,25 @@ from __future__ import annotations
 from axiome.core.config import Config
 from axiome.research.fetch import CachedFetcher, Fetcher, HttpFetcher
 from axiome.research.providers.base import SearchProvider
+from axiome.research.providers.brave import BraveSearch
+from axiome.research.providers.duckduckgo import DuckDuckGo
 from axiome.research.providers.google import GoogleCSE
+from axiome.research.providers.openalex import OpenAlex
 from axiome.research.providers.searxng import SearXNG
 from axiome.research.providers.wikipedia import Wikipedia
 from axiome.team.researcher import Researcher
 
 
 def providers(config: Config, fetcher: Fetcher) -> list[SearchProvider]:
-    """Configured engines first, then keyless sources (always available)."""
+    """Whole-web engines first (when configured), then keyless sources (always available)."""
     found: list[SearchProvider] = []
+    if config.brave_api_key:
+        found.append(BraveSearch(fetcher, config.brave_api_key))
     if config.google_api_key and config.google_engine_id:
         found.append(GoogleCSE(fetcher, config.google_api_key, config.google_engine_id))
     if config.searxng_url:
         found.append(SearXNG(fetcher, config.searxng_url))
-    found.append(Wikipedia(fetcher))
+    found += [Wikipedia(fetcher), DuckDuckGo(fetcher), OpenAlex(fetcher)]
     return found
 
 

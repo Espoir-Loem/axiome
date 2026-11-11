@@ -66,6 +66,26 @@
       "^(?:bye|goodbye|see you|good night)\\b"
     ],
     [
+      "user_name",
+      "^(?:my name is|i'?m called|call me) (?P<n>[^ ,.!?]+(?: [^ ,.!?]+)?)[ .!]*$"
+    ],
+    [
+      "name",
+      "(?:what'?s your name|what is your name|who should i call you|your name)"
+    ],
+    [
+      "user_fine",
+      "^(?:(?:i'?m )?(?:fine|good|great|ok|okay|well|not bad|doing well)(?:,? thanks| thank you)?(?:,? and you\\??)?|me too)[ !.]*$"
+    ],
+    [
+      "how_are_you",
+      "^(?:and )?(?:how are you|how'?s it going|how do you do|how are things|are you ok|you ok|how have you been)"
+    ],
+    [
+      "ack",
+      "^(?:ok|okay|alright|i see|got it|cool|nice|yes|no|yeah|sure)[ !.]*$"
+    ],
+    [
       "identity",
       "(?:who are you|what are you|what is axiome)"
     ],
@@ -122,5 +142,16 @@
       "^(?!.*\\?)(?P<x>.+?) (?:is|are) (?P<ya>a |an )(?P<y>.+?)\\.?$"
     ]
   ],
-  "level_only": "^(?:(?:explain|say|rephrase|tell me|continue)(?: it| that| again| me)*)?[ .!?]*$"
+  "level_only": "^(?:(?:explain|say|rephrase|tell me|continue)(?: it| that| again| me)*)?[ .!?]*$",
+  "personal_markers": [
+    "you",
+    "your",
+    "yours",
+    "yourself",
+    "i",
+    "i'm",
+    "me",
+    "my",
+    "mine"
+  ]
 }

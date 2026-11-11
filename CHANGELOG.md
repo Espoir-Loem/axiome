@@ -3,7 +3,13 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Modifié
+- Réponses mises en forme comme une bonne réponse humaine : phrase de tête qui résume (sujet en gras), détails en liste, une seule ligne de fiabilité, sources numérotées et citées [n]. Plus de « (plausible…) » répété dans chaque phrase.
+- Wikipédia : lecture de l'introduction complète des articles. La page qui porte le titre de la question fournit la définition ; les autres pages du même site vont dans « Voir aussi ».
+
 ### Ajouté
+- Petite conversation : « comment vas-tu », « ça va ? », « tu t'appelles comment », « je m'appelle… » (prénom mémorisé), « ok ». Une phrase qui s'adresse à Axiome ne déclenche jamais de recherche.
+- Sources : DuckDuckGo (réponses instantanées), OpenAlex (recherche approfondie), Brave Search (`AXIOME_BRAVE_API_KEY`).
 - **Conversation en streaming** (ADR-0007) : texte libre dans la CLI, session à événements (`dialogue/`), équipe interne Analyste, Planificateur, Chercheur, Vérificateur, Rédacteur, Relecteur (`team/`).
 - **Paquets de langue FR/EN** (`data/lang/`) : lexique relié aux concepts, morphologie (articles, élisions, pluriels, contractions), gabarits de phrases, schémas d'intention. Les mots appris sont mémorisés (schéma de base v2).
 - **Niveau adaptatif** débutant, intermédiaire ou expert, par domaine. Le contenu pour débutant est un sous-ensemble du contenu pour expert.

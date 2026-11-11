@@ -87,6 +87,26 @@
       "^(?:au revoir|a bientot|bonne nuit|a plus|bye)\\b"
     ],
     [
+      "user_name",
+      "^(?:je m'appelle|mon (?:nom|prenom) est|moi c'est) (?P<n>[^ ,.!?]+(?: [^ ,.!?]+)?)[ .!]*$"
+    ],
+    [
+      "name",
+      "(?:comment (?:tu t'appelles|t'appelles[- ]tu|vous appelez[- ]vous)|tu t'appelles comment|quel est ton nom|c'est quoi ton nom|ton nom)"
+    ],
+    [
+      "user_fine",
+      "^(?:(?:ca va|tres bien|bien|pas mal|ca roule|nickel|tranquille|ca va bien)(?:,? merci)?(?: et toi\\??)?|moi aussi)[ !.]*$"
+    ],
+    [
+      "how_are_you",
+      "^(?:et )?(?:toi,? )?(?:comment (?:vas[- ]tu|allez[- ]vous|ca va|tu vas|va la vie)|ca va\\s*\\?|ca va bien\\s*\\?|tu vas bien|vous allez bien|comment tu te sens|la forme)"
+    ],
+    [
+      "ack",
+      "^(?:ok|okay|d'accord|je vois|ah bon|ah|cool|super|parfait|top|entendu|oui|non|ouais)[ !.]*$"
+    ],
+    [
       "identity",
       "(?:qui es[- ]tu|tu es qui|qui etes[- ]vous|c'est quoi axiome|qu'est[- ]ce qu'axiome)"
     ],
@@ -147,5 +167,24 @@
       "^(?!.*\\?)(?P<x>.+?) (?:est|sont) (?P<ya>un |une |des )(?P<y>.+?)\\.?$"
     ]
   ],
-  "level_only": "^(?:(?:re)?(?:explique|dis|redis|reformule|parle|continue)(?:[- ](?:moi|le|la|ca|nous))*)?[ .!?]*$"
+  "level_only": "^(?:(?:re)?(?:explique|dis|redis|reformule|parle|continue)(?:[- ](?:moi|le|la|ca|nous))*)?[ .!?]*$",
+  "personal_markers": [
+    "tu",
+    "toi",
+    "te",
+    "t'",
+    "vous",
+    "ton",
+    "ta",
+    "tes",
+    "votre",
+    "je",
+    "j'",
+    "moi",
+    "me",
+    "m'",
+    "mon",
+    "ma",
+    "mes"
+  ]
 }

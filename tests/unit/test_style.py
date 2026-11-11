@@ -25,7 +25,6 @@ EN = Reviewer(load_pack("en"))
         (FR, "Il est important de noter que le chat dort.", "Le chat dort.", "S4"),
         (FR, "Le chat dort 😺.", "Le chat dort.", "S5"),
         (FR, "Le chat — un félin — dort.", "Le chat, un félin, dort.", "S5"),
-        (FR, "**Le chat** dort.", "Le chat dort.", "S5"),
         (FR, "Le chat dort. Désolé pour la confusion.", "Le chat dort.", "S6"),
         (FR, "Le chat dort. Veux-tu un exemple ?", "Le chat dort.", "S7"),
         (EN, "Great question! A cat is a mammal.", "A cat is a mammal.", "S1"),
@@ -46,6 +45,7 @@ def test_self_reference_blocks_and_waivers_lift() -> None:
     assert FR.style("Le chat dort 😺.", frozenset({"S5"}))[0] == "Le chat dort 😺."
     assert FR.style("Le chat dort.") == ("Le chat dort.", [])
     assert FR.style("En résumé, le chat dort.")[0] == "En résumé, le chat dort."
+    assert FR.style("Le **chat** dort. [1]") == ("Le **chat** dort. [1]", [])  # structure is fine
 
 
 def test_substance_rules() -> None:
@@ -53,6 +53,7 @@ def test_substance_rules() -> None:
         [
             Claim("Fait sans source.", Status.PROVED),
             Claim("Fait faible.", Status.UNVERIFIED, ("a",)),
+            Claim("Fait couvert sans note.", Status.PLAUSIBLE, ("a",), covered=True),
             Claim("Fait réfuté.", Status.REFUTED, ("a",)),
             Claim("Non vérifié : fait faible.", Status.UNVERIFIED, ("a",), hedged=True),
             Claim("Fait solide.", Status.PROVED, ("a",)),
@@ -62,7 +63,14 @@ def test_substance_rules() -> None:
             Claim("Excellente question ! Bonjour.", factual=False),
         ]
     )
-    assert [rule for _, rule in review.blocked] == ["R1", "R2", "R3", "S2", "empty"]
+    assert [rule for _, rule in review.blocked] == ["R1", "R2", "R2", "R3", "S2", "empty"]
+    noted = FR.review(
+        [
+            Claim("Fait couvert.", Status.PLAUSIBLE, ("a",), covered=True),
+            Claim("Note.", role="note", factual=False),
+        ]
+    )
+    assert not noted.blocked
     assert [c.text for c in review.approved] == [
         "Non vérifié : fait faible.",
         "Fait solide.",

@@ -3,7 +3,8 @@
 Zero-error rules (a failing sentence is blocked, never "fixed" by guessing):
 
 R1  a factual sentence must cite at least one fact or source;
-R2  a fact below CONFIRMED must say so in the sentence (hedge);
+R2  a fact below CONFIRMED must say so, in the sentence (hedge) or through the
+    answer's reliability note (then the note must be present);
 R3  a refuted fact is only ever stated as refuted.
 
 Style gate (``docs/signes-ia.md``): AI tells are removed deterministically; an
@@ -19,7 +20,7 @@ from dataclasses import dataclass, field, replace
 
 from axiome.language.pack import LanguagePack
 from axiome.perception.normalize import fold
-from axiome.team.writer import Claim
+from axiome.team.writer import NOTE, Claim
 from axiome.verification.epistemic import Status
 
 BLOCKING_CATEGORY = "S2"
@@ -28,7 +29,6 @@ _EMOJI = re.compile(
     "[\U0001f000-\U0001faff☀-➿⬀-⯿️‍⃣]",
 )
 _DASH = re.compile(r"\s*[—–]\s*|\s+[→⇒➡]\s+|[→⇒➡]")
-_MARKUP = re.compile(r"\*\*|__|^#+\s*", re.MULTILINE)
 _SPACES = re.compile(r"\s{2,}")
 _SPACE_BEFORE_PUNCT = re.compile(r"\s+([,.])")
 
@@ -42,8 +42,7 @@ class Review:
 
 def _typography(text: str) -> str:
     text = _EMOJI.sub("", text)
-    text = _DASH.sub(", ", text)
-    return _MARKUP.sub("", text)
+    return _DASH.sub(", ", text)
 
 
 def _tidy(text: str) -> str:
@@ -81,22 +80,25 @@ class Reviewer:
         return (_tidy(text) if fired else text), sorted(set(fired))
 
     @staticmethod
-    def substance(claim: Claim) -> str | None:
-        """The violated zero-error rule, if any."""
+    def substance(claim: Claim, noted: bool = False) -> str | None:
+        """The violated zero-error rule, if any (``noted``: the answer has a reliability note)."""
         if not claim.factual:
             return None
         if not claim.support:
             return "R1"
         if claim.status is Status.REFUTED and not claim.hedged:
             return "R3"
-        if claim.status is not None and claim.status < Status.CONFIRMED and not claim.hedged:
+        stated = claim.hedged or (claim.covered and noted)
+        if claim.status is not None and claim.status < Status.CONFIRMED and not stated:
             return "R2"
         return None
 
     def review(self, claims: Iterable[Claim], waivers: frozenset[str] = frozenset()) -> Review:
         out = Review()
-        for claim in claims:
-            rule = self.substance(claim)
+        batch = list(claims)
+        noted = any(c.role == NOTE for c in batch)
+        for claim in batch:
+            rule = self.substance(claim, noted)
             if rule is not None:
                 out.blocked.append((claim, rule))
                 continue

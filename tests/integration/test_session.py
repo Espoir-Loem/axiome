@@ -47,7 +47,7 @@ def test_definition_by_level_keeps_the_same_truth() -> None:
     m_low = measure(" ".join(e.text for e in low), lexicon)
     m_high = measure(" ".join(e.text for e in high), lexicon)
     assert m_low.undefined_terms == 0 < m_high.undefined_terms
-    assert "[PROUVÉ]" in " ".join(e.text for e in high)
+    assert "Statut : PROUVÉ" in " ".join(e.text for e in high)
     assert "Classification" in " ".join(e.text for e in high)
     assert "c'est un animal" in " ".join(e.text for e in low)
 
@@ -59,7 +59,7 @@ def test_level_requests_rephrase_the_topic() -> None:
     assert simple.startswith("D'accord, je reprends plus simplement.")
     assert "ensemble de points" in simple
     expert = s.answer_text("niveau expert")
-    assert "[PROUVÉ]" in expert
+    assert "Statut : PROUVÉ" in expert and "\n- Classification" in expert
     assert s.answer_text("je n'ai pas compris").startswith("D'accord")
     assert s.profile.level("computing") is Level.INTERMEDIATE  # one step down from expert
 
@@ -128,14 +128,24 @@ def test_web_research_streams_cites_and_learns() -> None:
     kinds = [type(e) for e in events]
     assert kinds.index(Searching) < kinds.index(SourceFound) < kinds.index(Say)
     says = [e for e in events if isinstance(e, Say)]
-    assert says[0].text.startswith("D'après Wikipedia (fr), en résumé : Le photon est la particule")
-    assert "(plausible : une seule source fiable)" in says[0].text
+    assert says[0].role == "lead"
+    assert says[0].text.startswith("Le **photon** est la particule élémentaire")
+    assert says[0].text.endswith("[1]")
+    assert [e.role for e in says[1:]].count("point") >= 1
     assert all(e.support for e in says if e.status is not None)
-    assert any(e.text.startswith("Source : Wikipedia (fr) https://") for e in says)
     assert isinstance(events[-1], Done) and events[-1].blocked == 0
+    answer = fresh(researcher=web()).answer_text("qu'est-ce qu'un photon ?")
+    assert "\n\n- " in answer
+    assert "Voir aussi : Photonique." in answer
+    assert "Fiabilité : une seule source fiable pour l'instant, à recouper." in answer
+    assert answer.endswith(
+        "Sources :\n[1] Wikipedia (fr), « Photon » : https://fr.wikipedia.org/wiki/Photon"
+    )
+    assert "(plausible" not in answer  # one reliability note, not a hedge in every sentence
     offline = Session(s.kernel, "fr")  # no researcher: answers from what it learned
     replay = offline.answer_text("qu'est-ce qu'un photon ?")
-    assert replay.startswith("D'après Wikipedia (fr) : « Le photon est la particule")
+    assert replay.startswith("Le photon est la particule élémentaire")
+    assert "Sources :\n[1] Wikipedia (fr) : https://fr.wikipedia.org/wiki/Photon" in replay
 
 
 def test_web_research_failure_and_english() -> None:
@@ -144,7 +154,24 @@ def test_web_research_failure_and_english() -> None:
         "Je n'ai trouvé aucune source exploitable sur « photon »."
     )
     en = fresh("en", web("en")).answer_text("what is a photon?")
-    assert en.startswith("According to Wikipedia (en), in short: A photon is")
+    assert en.startswith("A **photon** is an elementary particle")
+
+
+def test_small_talk_is_never_searched() -> None:
+    s = fresh(researcher=web())
+    assert s.answer_text("comment vas tu") == "Ça va bien, merci. Et toi ?"
+    assert s.answer_text("bien et toi") == "Tant mieux."
+    assert s.answer_text("tu t'appelles comment ?") == "Je m'appelle Axiome."
+    assert s.answer_text("je m'appelle espoir") == "Enchanté, Espoir."
+    assert s.answer_text("salut") == "Bonjour, Espoir."
+    assert s.answer_text("ok") == "D'accord."
+    events = list(s.respond("tu aimes la musique ?"))
+    assert not any(isinstance(e, Searching) for e in events)
+    assert "Je ne sais pas encore bien répondre" in s.answer_text("tu aimes la musique ?")
+    en = fresh("en", web("en"))
+    assert en.answer_text("how are you") == "I'm doing well, thanks. And you?"
+    assert en.answer_text("what's your name?") == "My name is Axiome."
+    assert en.answer_text("do you like music?").startswith("I can't really answer that yet.")
 
 
 @pytest.mark.parametrize("lang", ["fr", "en"])

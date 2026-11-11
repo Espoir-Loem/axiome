@@ -9,8 +9,10 @@ review, so the first words appear before the whole answer is ready.
 from __future__ import annotations
 
 from collections.abc import Generator, Iterator
+from dataclasses import replace
 
 from axiome.dialogue.events import Done, Event, Say, Thinking
+from axiome.dialogue.layout import render
 from axiome.dialogue.level import ANY_DOMAIN, Level, LevelProfile
 from axiome.i18n import get_locale
 from axiome.kernel import Kernel
@@ -20,11 +22,19 @@ from axiome.perception.normalize import slug
 from axiome.reasoning.terms import Atom
 from axiome.team.analyst import TOPICAL, Analysis, Analyst, Context, Intent, Mention
 from axiome.team.planner import make_plan
-from axiome.team.researcher import Researcher, digest
+from axiome.team.researcher import Researcher, WebFindings, digest
 from axiome.team.reviewer import Reviewer
 from axiome.team.verifier import Findings, verify
-from axiome.team.writer import EXPLICIT_MEMBER_CAP, Claim, Writer
-from axiome.verification.epistemic import Evidence, Source, Stance, Status, assess
+from axiome.team.writer import (
+    CORROBORATIONS,
+    DETAILS,
+    EXPLICIT_MEMBER_CAP,
+    LEAD,
+    POINT,
+    Claim,
+    Writer,
+)
+from axiome.verification.epistemic import Status
 
 Step = Generator[Event | Claim, None, None]
 SOCIAL = {
@@ -33,9 +43,14 @@ SOCIAL = {
     Intent.FAREWELL: "farewell",
     Intent.IDENTITY: "identity",
     Intent.CAPABILITIES: "capabilities",
+    Intent.HOW_ARE_YOU: "how_are_you",
+    Intent.USER_FINE: "user_fine",
+    Intent.NAME: "name",
+    Intent.ACK: "ack",
+    Intent.CHAT: "chat_fallback",
 }
+USER_NAME_KEY = "user:name"
 FEMININE_ARTICLES = frozenset({"une", "la", "cette"})
-OTHER_SOURCES = (0, 1, 3)  # extra sources quoted per level
 LEVEL_ACK = {
     Level.BEGINNER: "level_beginner",
     Level.INTERMEDIATE: "level_intermediate",
@@ -66,23 +81,33 @@ class Session:
     def respond(self, text: str) -> Iterator[Event]:
         analysis = self.analyst.analyze(text, self.context)
         level = self._update_level(analysis)
-        approved = blocked = corrected = 0
+        counts = [0, 0, 0]  # approved, blocked, corrected
+        pending: list[Claim] = []
         for item in self._answer(analysis, level):
-            if not isinstance(item, Claim):
-                yield item
+            if isinstance(item, Claim):
+                pending.append(item)
                 continue
-            review = self.reviewer.review([item], analysis.waivers)
-            blocked += len(review.blocked)
-            corrected += review.corrected
-            for claim in review.approved:
-                approved += 1
-                yield Say(claim.text, claim.status, claim.support)
+            yield from self._flush(pending, analysis, counts)
+            yield item
+        yield from self._flush(pending, analysis, counts)
         self._remember(analysis)
-        yield Done(approved, blocked, corrected)
+        yield Done(*counts)
+
+    def _flush(self, pending: list[Claim], analysis: Analysis, counts: list[int]) -> Iterator[Say]:
+        """Review a whole answer at once (the reliability note covers its sentences)."""
+        if not pending:
+            return
+        review = self.reviewer.review(_with_lead(pending), analysis.waivers)
+        pending.clear()
+        counts[1] += len(review.blocked)
+        counts[2] += review.corrected
+        for claim in review.approved:
+            counts[0] += 1
+            yield Say(claim.text, claim.status, claim.support, claim.role)
 
     def answer_text(self, text: str) -> str:
-        """The whole answer as one string (non-streaming convenience)."""
-        return " ".join(e.text for e in self.respond(text) if isinstance(e, Say))
+        """The whole formatted answer, without the progress lines (non-streaming)."""
+        return render(e for e in self.respond(text) if not isinstance(e, Thinking))
 
     # -- state -----------------------------------------------------------------
     def _domain(self, analysis: Analysis) -> str:
@@ -111,7 +136,15 @@ class Session:
     # -- answering ---------------------------------------------------------------
     def _answer(self, analysis: Analysis, level: Level) -> Step:
         intent = analysis.intent
-        if intent in SOCIAL:
+        name = self.kernel.store.get_meta(USER_NAME_KEY)
+        if intent is Intent.GREETING and name:
+            yield self.writer.social("greeting_named", name=name)
+        elif intent is Intent.USER_NAME and analysis.subject is not None:
+            given = analysis.subject.text.strip()
+            given = given[:1].upper() + given[1:]
+            self.kernel.store.set_meta(USER_NAME_KEY, given)
+            yield self.writer.social("nice_to_meet", name=given)
+        elif intent in SOCIAL:
             yield self.writer.social(SOCIAL[intent])
         elif intent in (Intent.LEVEL, Intent.CONFUSION):
             yield self.writer.social(LEVEL_ACK[level])
@@ -151,7 +184,8 @@ class Session:
                 if claims:
                     yield from claims
                     return
-        yield from self._research(mention, concept, level)
+        deep = analysis.intent is Intent.RESEARCH or level is Level.EXPERT
+        yield from self._research(mention, concept, level, deep)
 
     def writer_for(
         self, analysis: Analysis, concept: str, findings: Findings, level: Level
@@ -169,52 +203,45 @@ class Session:
             return w.complexity(concept, findings, level)
         return w.definition(concept, findings, level)
 
-    def _research(self, mention: Mention, concept: str | None, level: Level) -> Step:
+    def _research(self, mention: Mention, concept: str | None, level: Level, deep: bool) -> Step:
         researcher = self.researcher
-        if researcher is None or not researcher.providers:
+        if researcher is None or not researcher.active(deep):
             yield self.writer.social("unknown_topic", x=mention.text)
             yield self.writer.social("offline")
             return
-        yield Thinking(self.pack.say("think_search", providers=self.pack.join(researcher.names)))
-        docs = yield from researcher.search(mention.text, self.pack.code)
-        if docs:
-            yield Thinking(self.pack.say("think_verify", count=len(docs)))
-        found = digest(mention.text, docs, self.pack.stopwords)
-        if found.summary is None or found.assessment is None:
+        names = [p.name for p in researcher.active(deep)]
+        yield Thinking(self.pack.say("think_search", providers=self.pack.join(names)))
+        docs = yield from researcher.search(mention.text, self.pack.code, deep)
+        found = digest(
+            mention.text,
+            docs,
+            self.pack.stopwords,
+            details=DETAILS[level],
+            corroborations=CORROBORATIONS[level],
+        )
+        claims = self.writer.web_answer(mention.text, found)
+        if not claims:
             yield self.writer.social("search_failed", x=mention.text)
             return
-        status = found.assessment.status
-        names = self.pack.join(list(dict.fromkeys(s.name for s in found.agreeing)))
-        text, hedged = self.writer.hedge(
-            self.pack.say("summary", sources=names, excerpt=found.summary.text), status, level
-        )
-        yield Claim(text, status, tuple(s.id for s in found.agreeing), hedged=hedged)
-        shown = list(found.agreeing)
-        for other in found.others[: OTHER_SOURCES[level]]:
-            single = assess([Evidence(other.source, Stance.SUPPORTS, other.text)]).status
-            text, hedged = self.writer.hedge(
-                self.pack.say("according_to", source=other.source.name, excerpt=other.text),
-                single,
-                level,
-            )
-            yield Claim(text, single, (other.source.id,), hedged=hedged)
-            shown.append(other.source)
-        for source in dict.fromkeys(shown):
-            yield self.writer.social("source_line", name=source.name, url=source.url)
-        self._learn(mention, concept, found.summary.text, found.agreeing)
+        yield from claims
+        self._learn(mention, concept, found)
 
-    def _learn(
-        self, mention: Mention, concept: str | None, excerpt: str, sources: tuple[Source, ...]
-    ) -> None:
+    def _learn(self, mention: Mention, concept: str | None, found: WebFindings) -> None:
+        """Keep what was found (with provenance) so the next answer works offline."""
         concept = concept or slug(mention.text)
-        if not concept:
+        if not concept or found.lead is None:
             return
-        atom = Atom("defined_as", (concept, excerpt))
-        for source in sources:
-            self.kernel.record(atom, source, excerpt)
+        for excerpt in (found.lead, *found.points):
+            predicate = "defined_as" if excerpt is found.lead else "described_as"
+            atom = Atom(predicate, (concept, excerpt.text))
+            sources = (
+                found.agreeing if excerpt is found.lead else (found.documents[excerpt.doc].source,)
+            )
+            for source in sources:
+                self.kernel.record(atom, source, excerpt.text)
         self.pack.lexicon.learn(mention.text, concept)
         self.kernel.store.add_word(
-            self.pack.code, mention.text, concept, sources[0].id, self.kernel.clock.now()
+            self.pack.code, mention.text, concept, found.agreeing[0].id, self.kernel.clock.now()
         )
 
     def _check(self, analysis: Analysis, level: Level) -> Step:
@@ -263,3 +290,15 @@ class Session:
 
 def _established(assessment: object) -> bool:
     return getattr(assessment, "status", Status.UNVERIFIED) > Status.UNVERIFIED
+
+
+def _with_lead(claims: list[Claim]) -> list[Claim]:
+    """Make sure an answer opens with a lead sentence (the summary)."""
+    if any(c.role == LEAD for c in claims):
+        return claims
+    out = list(claims)
+    for i, claim in enumerate(out):
+        if claim.role == POINT:
+            out[i] = replace(claim, role=LEAD)
+            break
+    return out

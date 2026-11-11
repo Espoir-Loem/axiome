@@ -22,12 +22,17 @@ class Document:
 
 class SearchProvider(Protocol):
     name: str
+    deep: bool  # only queried in deep research
 
     def search(self, query: str, language: str, limit: int) -> list[Document]: ...
 
 
 def load_json(fetcher: Fetcher, url: str) -> Any:
-    raw = fetcher.get(url)
+    return load_json_with(fetcher, url, None)
+
+
+def load_json_with(fetcher: Fetcher, url: str, headers: dict[str, str] | None) -> Any:
+    raw = fetcher.get(url, headers)
     try:
         return json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -52,9 +57,13 @@ def web_source(url: str, name: str) -> Source:
     )
 
 
-def page_document(fetcher: Fetcher, url: str, title: str, snippet: str) -> Document:
+def page_document(
+    fetcher: Fetcher, url: str, title: str, snippet: str, *, read: bool = True
+) -> Document:
     """Snippet plus the page's main text when it can be read (failures keep the snippet)."""
     text = snippet
+    if not read:
+        return Document(web_source(url, ""), title, snippet)
     try:
         html = fetcher.get(url).decode("utf-8", errors="replace")
         body = main_text(html)

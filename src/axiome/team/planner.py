@@ -37,6 +37,7 @@ class Aspect(Enum):
     PREREQUISITE = "prerequisite"
     DISJOINT = "disjoint"
     WEB_DEFINITION = "web_definition"
+    WEB_DETAIL = "web_detail"
     CHECK = "check"
 
 
@@ -61,6 +62,8 @@ def query_for(aspect: Aspect, subject: str, obj: str | None = None) -> Atom:
         return Atom("disjoint", (subject, X))
     if aspect is Aspect.WEB_DEFINITION:
         return Atom("defined_as", (subject, X))
+    if aspect is Aspect.WEB_DETAIL:
+        return Atom("described_as", (subject, X))
     return Atom("is_a", (subject, obj or subject))
 
 
@@ -76,12 +79,13 @@ ASPECTS: dict[Intent, tuple[Aspect, ...]] = {
         Aspect.PREREQUISITE,
         Aspect.DISJOINT,
         Aspect.WEB_DEFINITION,
+        Aspect.WEB_DETAIL,
     ),
     Intent.PROPERTIES: (Aspect.PROPERTY,),
     Intent.UNIT: (Aspect.UNIT, Aspect.DIMENSION),
     Intent.COMPLEXITY: (Aspect.WORST_TIME, Aspect.AVERAGE_TIME, Aspect.PREREQUISITE),
     Intent.MEMBERS: (Aspect.MEMBERS,),
-    Intent.RESEARCH: (Aspect.WEB_DEFINITION,),
+    Intent.RESEARCH: (Aspect.WEB_DEFINITION, Aspect.WEB_DETAIL),
     Intent.CHECK_IS_A: (Aspect.CHECK,),
 }
 

@@ -65,7 +65,11 @@ def test_conversation_in_command_mode(capsys: pytest.CaptureFixture[str]) -> Non
     )
     out = capsys.readouterr().out
     assert code == 0
-    assert out.startswith("Bonjour. Je t'écoute.\nLa pile est une structure de données.")
+    assert out == (
+        "Bonjour. Je t'écoute.\n"
+        "La **pile** est une structure de données.\n\n"
+        "- La pile suit le principe LIFO : le dernier élément entré est le premier sorti.\n"
+    )
 
 
 def test_converse_renders_thinking_on_its_own_line() -> None:
@@ -84,6 +88,7 @@ def test_converse_renders_thinking_on_its_own_line() -> None:
     )
     chunks = list(converse(session, "qu'est-ce qu'un photon ?", color=True))
     assert chunks[0].startswith("\x1b[2m  Je ne le sais pas encore.")
+    assert "\x1b[1mphoton\x1b[0m" in chunks[1]  # bold rendered for the terminal
     assert chunks[-1] == "\n"
     session.answer_text("salut")
     assert list(converse(session, "salut")) == ["Bonjour. Je t'écoute.", "\n"]

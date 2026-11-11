@@ -37,6 +37,12 @@ class Intent(Enum):
     RESEARCH = "research"
     FOLLOW_UP = "follow_up"
     TEACH_IS_A = "teach_is_a"
+    HOW_ARE_YOU = "how_are_you"
+    USER_FINE = "user_fine"
+    NAME = "name"
+    USER_NAME = "user_name"
+    ACK = "ack"
+    CHAT = "chat"  # addressed to Axiome but not understood: never a web search
     UNKNOWN = "unknown"
 
 
@@ -137,9 +143,34 @@ class Analyst:
             m = pattern.search(folded)
             if m:
                 return Intent(name), m
-        if folded.strip(" ?.!") and len(words(folded)) <= SHORT_PHRASE:
+        tokens = words(folded)
+        if self.pack.personal_markers.intersection(tokens):
+            return Intent.CHAT, None
+        if folded.strip(" ?.!") and len(tokens) <= SHORT_PHRASE:
             return Intent.DEFINITION, None
         return Intent.UNKNOWN, None
+
+    def _mentions(
+        self,
+        intent: Intent,
+        match: re.Match[str] | None,
+        orig: str,
+        folded: str,
+        context: Context,
+    ) -> tuple[Mention | None, Mention | None]:
+        groups = match.groupdict() if match is not None else {}
+        subject = obj = None
+        if match is not None and groups.get("n"):
+            subject = Mention(orig[match.start("n") : match.end("n")], ())
+        elif match is not None and "x" in groups:
+            subject = self.resolve(orig[match.start("x") : match.end("x")], match["x"], context)
+        elif intent is Intent.DEFINITION:
+            subject = self.resolve(orig, folded, context)
+        if match is not None and groups.get("y"):
+            obj = self.resolve(orig[match.start("y") : match.end("y")], match["y"], context)
+            if groups.get("ya") and not obj.article:
+                obj = Mention(obj.text, obj.concepts, obj.pronoun, match["ya"].strip())
+        return subject, obj
 
     def analyze(self, text: str, context: Context) -> Analysis:
         orig = squash(text)
@@ -160,15 +191,7 @@ class Analyst:
                 orig, folded = orig[cut:], folded[cut:]
                 intent, match = self._match(folded)
 
-        subject = obj = None
-        if match is not None and "x" in match.groupdict():
-            subject = self.resolve(orig[match.start("x") : match.end("x")], match["x"], context)
-        elif intent is Intent.DEFINITION:
-            subject = self.resolve(orig, folded, context)
-        if match is not None and match.groupdict().get("y"):
-            obj = self.resolve(orig[match.start("y") : match.end("y")], match["y"], context)
-            if match.groupdict().get("ya") and not obj.article:
-                obj = Mention(obj.text, obj.concepts, obj.pronoun, match["ya"].strip())
+        subject, obj = self._mentions(intent, match, orig, folded, context)
         if intent is Intent.FOLLOW_UP:
             intent = context.intent if context.intent in TOPICAL else Intent.DEFINITION
 

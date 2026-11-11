@@ -24,7 +24,7 @@ USER_AGENT = f"axiome/{__version__} (offline-first research assistant)"
 
 
 class Fetcher(Protocol):
-    def get(self, url: str) -> bytes: ...
+    def get(self, url: str, headers: Mapping[str, str] | None = None) -> bytes: ...
 
 
 def build_url(base: str, params: Mapping[str, str | int]) -> str:
@@ -37,10 +37,12 @@ class HttpFetcher:
     def __init__(self, timeout_s: float = DEFAULT_TIMEOUT_S) -> None:
         self.timeout_s = timeout_s
 
-    def get(self, url: str) -> bytes:
+    def get(self, url: str, headers: Mapping[str, str] | None = None) -> bytes:
         if not url.startswith(("https://", "http://")):
             raise ResearchError("research.bad_url", url=url)
-        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        sent = {"User-Agent": USER_AGENT, "Accept": "application/json, text/html;q=0.9"}
+        sent.update(headers or {})
+        request = urllib.request.Request(url, headers=sent)
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                 data: bytes = response.read(MAX_BYTES)
@@ -59,11 +61,12 @@ class CachedFetcher:
     def _path(self, url: str) -> Path:
         return self.directory / (hashlib.sha256(url.encode()).hexdigest() + ".bin")
 
-    def get(self, url: str) -> bytes:
+    def get(self, url: str, headers: Mapping[str, str] | None = None) -> bytes:
+        """Headers (API keys) are not part of the cache key and are never stored."""
         path = self._path(url)
         if path.exists():
             return path.read_bytes()
-        data = self.inner.get(url)
+        data = self.inner.get(url, headers)
         self.directory.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
         tmp.write_bytes(data)

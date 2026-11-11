@@ -7,13 +7,14 @@ API is the supported way to query Google.
 from __future__ import annotations
 
 from axiome.research.fetch import Fetcher, build_url
-from axiome.research.providers.base import Document, load_json, page_document, web_source
+from axiome.research.providers.base import Document, load_json, page_document
 
 ENDPOINT = "https://www.googleapis.com/customsearch/v1"
 
 
 class GoogleCSE:
     name = "Google"
+    deep = False
 
     def __init__(
         self, fetcher: Fetcher, api_key: str, engine_id: str, read_pages: bool = True
@@ -39,8 +40,5 @@ class GoogleCSE:
                 str(item.get("title", "")),
                 str(item.get("snippet", "")),
             )
-            if self.read_pages:
-                docs.append(page_document(self.fetcher, url, title, snippet))
-            else:
-                docs.append(Document(web_source(url, ""), title, snippet))
+            docs.append(page_document(self.fetcher, url, title, snippet, read=self.read_pages))
         return docs

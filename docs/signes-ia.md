@@ -14,7 +14,7 @@ Le même principe s'applique à la documentation du dépôt : pas d'emoji de sta
 | `S2` | Auto-référence d'assistant | « En tant qu'IA… », « en tant que modèle de langage », « je ne suis qu'une IA » | phrase bloquée |
 | `S3` | Clôture stéréotypée | « N'hésitez pas à… », « J'espère que cela vous aide », « Si vous avez d'autres questions… », « Feel free to… » | supprimée |
 | `S4` | Remplissage et emphase vide | « Il est important de noter que », « il convient de souligner », « plongeons dans », « dans un monde en constante évolution », « delve », « tapestry » | formule retirée, le contenu est gardé |
-| `S5` | Typographie décorative | emojis, tiret cadratin « — » employé comme liaison, flèches « → » dans la prose, gras ou titres dans une réponse courte | caractère normalisé |
+| `S5` | Typographie décorative | emojis, tiret cadratin « — » employé comme liaison, flèches « → » dans la prose | caractère normalisé |
 | `S6` | Excuses et précautions en excès | « Je m'excuse pour la confusion », empilement de « peut-être, il semblerait, éventuellement » | supprimées |
 | `S7` | Offre systématique en fin de réponse | « Veux-tu que je… ? », « Souhaitez-vous un exemple ? » ajoutés par réflexe | supprimée, sauf si une clarification est réellement nécessaire (rôle Analyste) |
 
@@ -22,7 +22,14 @@ Le même principe s'applique à la documentation du dépôt : pas d'emoji de sta
 - « D'après X et Y, en résumé… » : l'attribution des sources est un devoir, pas un tic.
 - « Je ne sais pas » suivi d'un raisonnement ou d'une recherche : l'honnêteté prime.
 - Une question de clarification quand la demande est réellement ambiguë. Elle est produite par l'Analyste, jamais ajoutée par réflexe.
-- Les listes et tableaux quand le contenu est intrinsèquement énumératif (par exemple les sept unités de base du SI).
+- **La mise en forme d'une bonne réponse humaine**, à la manière de Claude :
+  - une phrase de tête qui répond et résume, avec le sujet en gras ;
+  - les détails en liste ;
+  - une seule ligne de fiabilité ;
+  - les sources numérotées, citées [1] dans le texte.
+  
+  La structure aide à lire. Ce qui est interdit, c'est la décoration et le remplissage.
+- Les réponses courtes de conversation (« Ça va bien, merci. Et toi ? ») restent de simples phrases, sans mise en forme.
 
 ## Mécanique
 1. Le Rédacteur n'emploie aucun gabarit contenant ces formules. Un test vérifie tous les gabarits des paquets de langue.

@@ -1,8 +1,12 @@
 """Writer: turns verified facts into sentences adapted to the reader's level.
 
 Checklist: every factual sentence carries its support (facts or sources); a
-status below CONFIRMED is announced in the sentence itself (hedge); the content
-for a beginner is a subset of the content for an expert, never a different truth.
+status below CONFIRMED is announced, either in the sentence itself or by one
+reliability note covering the whole answer; the content for a beginner is a
+subset of the content for an expert, never a different truth.
+
+An answer is shaped like a good human one: a lead that answers the question
+(the summary), details as a list, then a reliability note and numbered sources.
 
 What changes with the level:
 
@@ -10,25 +14,44 @@ What changes with the level:
 beginner   one idea per sentence, everyday words first, technical words are
            defined (gloss) at first use, few examples
 intermediate  domain vocabulary, more properties and examples, measures
-expert     everything verified: full classification, constraints, status tags
+expert     everything verified: full classification, constraints, status note
 ========== ==================================================================
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from axiome.dialogue.level import Level
 from axiome.i18n import t_in
 from axiome.kernel import Kernel
 from axiome.language.pack import LanguagePack
+from axiome.perception.normalize import fold
 from axiome.reasoning.terms import Atom
+from axiome.research.providers.base import Document
 from axiome.team.planner import Aspect
+from axiome.team.researcher import WebFindings
 from axiome.team.verifier import Fact, Findings, ancestry, disjointness
-from axiome.verification.epistemic import Status
+from axiome.verification.epistemic import Evidence, Source, Stance, Status, assess
 
 LEXICON_SOURCE = "lexicon"
+
+# Roles of a sentence in the answer layout.
+LEAD = "lead"  # answers the question; together the leads are the summary
+POINT = "point"  # a detail, shown as a list item
+NOTE = "note"  # reliability / status note
+SEE_ALSO = "see_also"
+SOURCE = "source"  # a numbered reference
+SOCIAL = "social"  # conversation, not knowledge
+NOTE_KEY = {
+    Status.CONFIRMED: "note_confirmed",
+    Status.PLAUSIBLE: "note_plausible",
+    Status.UNVERIFIED: "note_unverified",
+    Status.CONTESTED: "note_contested",
+}
+DETAILS = (2, 4, 6)  # details taken from the main page per level
+CORROBORATIONS = (0, 2, 4)  # details taken from other organizations per level
 
 # (beginner, intermediate, expert) caps on how many items of a kind are given.
 PROPERTY_CAP = (1, 3, 99)
@@ -43,6 +66,18 @@ class Claim:
     support: tuple[str, ...] = ()
     factual: bool = True
     hedged: bool = False  # the sentence itself states its uncertainty / refutation
+    role: str = LEAD
+    covered: bool = False  # uncertainty stated by the answer's reliability note
+
+
+def emphasize(text: str, phrase: str) -> str:
+    """Bold the first occurrence of ``phrase`` (accent and case insensitive)."""
+    if not phrase:
+        return text
+    i = fold(text).find(fold(phrase))
+    if i < 0:
+        return text
+    return f"{text[:i]}**{text[i : i + len(phrase)]}**{text[i + len(phrase) :]}"
 
 
 def _weakest(facts: Sequence[Fact]) -> Status:
@@ -67,15 +102,13 @@ class Writer:
         return "; ".join(r.render(self.pack.code) for r in found)
 
     def social(self, key: str, **slots: object) -> Claim:
-        return Claim(self.pack.say(key, **slots), factual=False)
+        return Claim(self.pack.say(key, **slots), factual=False, role=SOCIAL)
 
     def np(self, concept: str) -> object:
         return self.pack.lexicon.phrase(concept)
 
     def hedge(self, text: str, status: Status, level: Level) -> tuple[str, bool]:
         if status >= Status.CONFIRMED:
-            if level is Level.EXPERT:
-                return f"{text} {self.pack.say('status_tag', status=self.label(status))}", False
             return text, False
         body = text.rstrip(".")
         if status is Status.PLAUSIBLE:
@@ -85,10 +118,12 @@ class Writer:
         key = "hedge_contested" if status is Status.CONTESTED else "hedge_unverified"
         return self.pack.say(key, claim=body) + ".", True
 
-    def fact_claim(self, key: str, facts: Sequence[Fact], level: Level, **slots: object) -> Claim:
+    def fact_claim(
+        self, key: str, facts: Sequence[Fact], level: Level, role: str = POINT, **slots: object
+    ) -> Claim:
         status = _weakest(facts)
         text, hedged = self.hedge(self.pack.say(key, **slots), status, level)
-        return Claim(text, status, tuple(str(f.atom) for f in facts), hedged=hedged)
+        return Claim(text, status, tuple(str(f.atom) for f in facts), hedged=hedged, role=role)
 
     def gloss(self, concept: str) -> Claim | None:
         lexeme = self.pack.lexicon.get(concept)
@@ -116,7 +151,7 @@ class Writer:
         for fact in direct:
             parent = _arg(fact.atom, 1)
             out.append(
-                self.fact_claim("is_a", [fact], level, s=self.np(subject), o=self.np(parent))
+                self.fact_claim("is_a", [fact], level, LEAD, s=self.np(subject), o=self.np(parent))
             )
             if self._needs_gloss(parent, level) and (g := self.gloss(parent)) is not None:
                 out.append(g)
@@ -131,7 +166,7 @@ class Writer:
         facts = sorted(findings.of(Aspect.PROPERTY), key=lambda f: (not f.base, str(f.atom)))
         return [
             self.fact_claim(
-                "has_property", [f], level, s=self.np(subject), p=self.np(_arg(f.atom, 1))
+                "has_property", [f], level, POINT, s=self.np(subject), p=self.np(_arg(f.atom, 1))
             )
             for f in facts[:cap]
         ]
@@ -188,26 +223,92 @@ class Writer:
         ]
 
     def learned_definitions(self, findings: Findings, level: Level) -> list[Claim]:
-        facts = findings.of(Aspect.WEB_DEFINITION)
-        if level is Level.BEGINNER:
-            facts = facts[:1]
+        """Answer from what earlier web research taught (offline replay)."""
+        leads = list(findings.of(Aspect.WEB_DEFINITION))
+        if not leads:
+            return []
+        facts = leads[:1] + list(findings.of(Aspect.WEB_DETAIL))[: DETAILS[level]]
+        refs: dict[str, tuple[int, Source]] = {}
         out: list[Claim] = []
-        for fact in facts:
+        for i, fact in enumerate(facts):
             evidence = self.kernel.evidence(fact.atom)
-            names = self.pack.join(sorted({e.source.name for e in evidence}))
-            text, hedged = self.hedge(
-                self.pack.say("according_to", source=names, excerpt=_arg(fact.atom, 1)),
-                fact.status,
-                level,
-            )
+            for e in evidence:
+                refs.setdefault(e.source.id, (len(refs) + 1, e.source))
+            marks = " ".join(f"[{refs[e.source.id][0]}]" for e in evidence)
+            text = f"{_arg(fact.atom, 1)} {marks}".strip()
+            role = LEAD if i == 0 else POINT
             support = tuple(sorted({e.source.id for e in evidence}))
-            out.append(Claim(text, fact.status, support, hedged=hedged))
+            out.append(Claim(text, fact.status, support, role=role, covered=True))
+        out += self.reliability(_weakest(facts))
+        out += self.references([(src, "") for _, src in sorted(refs.values(), key=lambda r: r[0])])
         return out
+
+    def reliability(self, status: Status) -> list[Claim]:
+        key = NOTE_KEY.get(status)
+        if key is None:
+            return []
+        return [Claim(self.pack.say(key), factual=False, role=NOTE)]
+
+    def references(self, sources: Sequence[tuple[Source, str]]) -> list[Claim]:
+        out: list[Claim] = []
+        if sources:
+            out.append(Claim(self.pack.say("sources_header"), factual=False, role=SOURCE))
+        for n, (source, title) in enumerate(sources, start=1):
+            key = "source_ref" if title else "source_ref_untitled"
+            text = self.pack.say(key, n=n, name=source.name, title=title, url=source.url)
+            out.append(Claim(text, factual=False, role=SOURCE))
+        return out
+
+    def web_answer(self, query: str, found: WebFindings) -> list[Claim]:
+        """Lead (summary) + details + see also + reliability + numbered sources."""
+        if found.lead is None or found.assessment is None:
+            return []
+        status = found.assessment.status
+        numbers = {d: n for n, d in enumerate(found.cited, start=1)}
+        docs: tuple[Document, ...] = found.documents
+        out: list[Claim] = []
+        for excerpt in (found.lead, *found.points):
+            n = numbers[excerpt.doc]
+            source = docs[excerpt.doc].source
+            text = f"{excerpt.text} [{n}]"
+            if excerpt is found.lead:
+                text = emphasize(text, query)
+                support = tuple(s.id for s in found.agreeing)
+                out.append(Claim(text, status, support, role=LEAD, covered=True))
+            else:
+                alone = assess([Evidence(source, Stance.SUPPORTS, excerpt.text)]).status
+                if source.organization in {s.organization for s in found.agreeing}:
+                    alone = status  # same organization as the lead's corroborated source
+                out.append(Claim(text, alone, (source.id,), role=POINT, covered=True))
+        if found.see_also:
+            items = self.pack.join(list(found.see_also[:4]))
+            out.append(
+                Claim(self.pack.say("other_meanings", items=items), factual=False, role=SEE_ALSO)
+            )
+        out += self.reliability(min(c.status for c in out if c.status is not None))
+        out += self.references([(docs[d].source, docs[d].title) for d in found.cited])
+        return out
+
+    def expert_note(self, claims: list[Claim]) -> list[Claim]:
+        """At expert level, one line giving the status and origin of the facts used."""
+        statuses = [c.status for c in claims if c.status is not None and c.factual]
+        if not statuses:
+            return []
+        atoms = sorted({a for c in claims if c.factual for a in c.support if "(" in a})
+        names: set[str] = set()
+        for text in atoms:
+            for e in self.kernel.store.evidence_for_text(text):
+                names.add(e.source.name)
+        if not names:
+            return []
+        label = self.label(min(statuses))
+        note = self.pack.say("note_status", status=label, sources=self.pack.join(sorted(names)))
+        return [Claim(note, factual=False, role=NOTE)]
 
     # -- whole answers ---------------------------------------------------------
     def definition(self, subject: str, findings: Findings, level: Level) -> list[Claim]:
         own = self.gloss(subject) if self._needs_gloss(subject, level) else None
-        return [
+        claims = [
             *([own] if own is not None else []),
             *self.categories(subject, findings, level),
             *self.properties(subject, findings, level, PROPERTY_CAP[level]),
@@ -215,8 +316,14 @@ class Writer:
             *self.measures(subject, findings, level),
             *self.complexity(subject, findings, level),
             *self.constraints(subject, findings, level),
-            *self.learned_definitions(findings, level),
         ]
+        if claims:
+            lemma = self.pack.lexicon.lexeme(subject).lemma
+            first = claims[0]
+            claims[0] = replace(first, text=emphasize(first.text, lemma))
+            if level is Level.EXPERT:
+                claims += self.expert_note(claims)
+        return claims + self.learned_definitions(findings, level)
 
     def check(self, subject: str, obj: str, findings: Findings, level: Level) -> list[Claim]:
         if findings.refuted:

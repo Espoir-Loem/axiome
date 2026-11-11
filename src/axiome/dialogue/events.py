@@ -37,6 +37,7 @@ class Say:
     text: str
     status: Status | None = None  # None for conversational (non-factual) sentences
     support: tuple[str, ...] = ()  # facts or source ids backing the sentence
+    role: str = "lead"  # layout: lead, point, note, see_also, source, social
 
 
 @dataclass(frozen=True, slots=True)

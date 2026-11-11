@@ -5,16 +5,22 @@
 Axiome est un assistant de conversation qui raisonne au lieu de deviner. Il explique un sujet à ton niveau, du débutant au professeur. Il vérifie une affirmation, apprend ce que tu lui enseignes et cherche sur le web quand il ne sait pas. Chaque phrase qu'il affiche repose sur un fait de sa base ou sur une source citée.
 
 ```text
-axiome> qu'est-ce qu'un graphe ?
-Le graphe est une structure de données. Exemples de graphes : l'arbre.
-axiome> explique plus simplement
-D'accord, je reprends plus simplement. Un graphe, c'est un ensemble de points reliés par des liens. Le graphe est une structure de données. Une structure de données, c'est une façon d'organiser des données en mémoire pour les retrouver et les modifier efficacement. Exemples de graphes : l'arbre.
+axiome> comment vas-tu ?
+Ça va bien, merci. Et toi ?
+axiome> qu'est-ce qu'un trou noir ?
+  Je ne le sais pas encore. Je cherche dans : Wikipedia et DuckDuckGo.
+En astrophysique, un **trou noir** est un objet céleste si compact que l'intensité de son champ gravitationnel empêche toute forme de matière ou de rayonnement de s'en échapper. [1]
+
+- De tels objets ne peuvent ni émettre, ni diffuser la lumière et sont donc noirs, ce qui revient à dire qu'ils sont invisibles. [1]
+- Toutefois, plusieurs techniques d'observation indirecte dans différentes longueurs d'onde ont été mises au point et permettent d'étudier de nombreux phénomènes qu'ils induisent. [1]
+
+Voir aussi : Le Trou noir et Trou noir supermassif.
+Fiabilité : une seule source fiable pour l'instant, à recouper.
+
+Sources :
+[1] Wikipedia (fr), « Trou noir » : https://fr.wikipedia.org/wiki/Trou_noir
 axiome> le chat est-il un oiseau ?
 Non. Le chat est un mammifère, et rien ne peut être à la fois un mammifère et un oiseau.
-axiome> qu'est-ce qu'un photon ?
-  Je ne le sais pas encore. Je cherche dans : Wikipedia.
-  Je recoupe 1 source(s).
-D'après Wikipedia (fr), en résumé : Le photon est … (plausible : une seule source fiable). Source : Wikipedia (fr) https://fr.wikipedia.org/wiki/Photon
 ```
 
 Sous la conversation, le noyau logique reste accessible. Chaque réponse y est accompagnée :
@@ -42,9 +48,14 @@ axiome --lang en      # interface en anglais (défaut : français, ou $AXIOME_LA
 axiome --offline      # sans réseau : répond uniquement avec ce qu'il sait
 ```
 
-Recherche web : Wikipédia est toujours disponible, sans clé. On peut ajouter d'autres moteurs par variables d'environnement :
+Recherche web, sans clé : Wikipédia et DuckDuckGo, plus OpenAlex (articles scientifiques) en recherche approfondie (« fais des recherches sur… » ou niveau expert).
+
+Pour chercher dans tout le web, il faut ajouter un moteur :
+- Brave Search : `AXIOME_BRAVE_API_KEY`. C'est un index indépendant de tout le web, avec une offre gratuite ;
 - Google : `AXIOME_GOOGLE_API_KEY` et `AXIOME_GOOGLE_CX` (Programmable Search, l'API officielle) ;
-- SearXNG auto-hébergé : `AXIOME_SEARXNG_URL`.
+- SearXNG auto-hébergé : `AXIOME_SEARXNG_URL`. Il agrège Google, Bing, DuckDuckGo et d'autres. Par exemple : `docker run -p 8888:8080 searxng/searxng`, puis activer le format JSON dans sa configuration.
+
+Avec un moteur web, Axiome lit les pages trouvées. Il recoupe ce qu'elles disent entre organisations différentes : une information devient « confirmée » quand des sources indépendantes la confirment.
 
 Les réponses web sont mises en cache dans `$XDG_CACHE_HOME/axiome/web`.
 
