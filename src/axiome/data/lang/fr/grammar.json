@@ -55,6 +55,9 @@
     "note_confirmed": "Fiabilité : confirmé par plusieurs sources indépendantes.",
     "note_status": "Statut : {status}, d'après {sources}.",
     "other_meanings": "Voir aussi : {items}.",
-    "source_ref_untitled": "[{n}] {name} : {url}"
+    "source_ref_untitled": "[{n}] {name} : {url}",
+    "incomplete": "Ton message semble incomplet. Que voulais-tu demander ?",
+    "single_letter": "Tu parles de la lettre « {x} », ou ta question a été coupée ?",
+    "assume_meant": "Je pense que tu parles de « {x} »."
   }
 }

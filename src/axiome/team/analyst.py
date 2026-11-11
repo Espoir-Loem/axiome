@@ -18,6 +18,11 @@ from axiome.language.pack import LanguagePack
 from axiome.perception.normalize import fold, squash, words
 
 SHORT_PHRASE = 4  # an unmatched message of at most this many words is read as a topic
+MEANINGFUL_WORD = 2  # a message with no word of at least this many letters is incomplete
+
+
+def _letters(text: str) -> int:
+    return sum(c.isalnum() for c in text)
 
 
 class Intent(Enum):
@@ -43,6 +48,8 @@ class Intent(Enum):
     USER_NAME = "user_name"
     ACK = "ack"
     CHAT = "chat"  # addressed to Axiome but not understood: never a web search
+    INCOMPLETE = "incomplete"  # nothing meaningful to work on ("h", "?")
+    SINGLE_LETTER = "single_letter"  # topic is one letter: the letter itself, or a cut question
     UNKNOWN = "unknown"
 
 
@@ -64,6 +71,7 @@ class Mention:
     concepts: tuple[str, ...]  # candidates; empty when unknown
     pronoun: bool = False
     article: str = ""  # article the user put before the word (gives its gender)
+    corrected: bool = False  # resolved through a typo correction
 
     @property
     def concept(self) -> str | None:
@@ -136,7 +144,11 @@ class Analyst:
                 return context.topic
             return Mention(orig, (), pronoun=True)
         orig, folded, article = self._strip_article(orig, folded)
-        return Mention(orig, self.pack.lexicon.lookup(folded), article=article)
+        found = self.pack.lexicon.lookup(folded)
+        if found:
+            return Mention(orig, found, article=article)
+        guess = self.pack.lexicon.closest(folded)
+        return Mention(orig, guess, article=article, corrected=bool(guess))
 
     def _match(self, folded: str) -> tuple[Intent, re.Match[str] | None]:
         for name, pattern in self.pack.intents:
@@ -192,6 +204,12 @@ class Analyst:
                 intent, match = self._match(folded)
 
         subject, obj = self._mentions(intent, match, orig, folded, context)
+        if intent is not Intent.LEVEL and not any(
+            len(w) >= MEANINGFUL_WORD for w in words(fold(text))
+        ):
+            intent, subject, obj = Intent.INCOMPLETE, None, None
+        elif intent in TOPICAL and subject is not None and _letters(subject.text) == 1:
+            intent = Intent.SINGLE_LETTER
         if intent is Intent.FOLLOW_UP:
             intent = context.intent if context.intent in TOPICAL else Intent.DEFINITION
 

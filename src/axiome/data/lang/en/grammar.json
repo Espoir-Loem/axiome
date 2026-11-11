@@ -55,6 +55,9 @@
     "note_confirmed": "Reliability: confirmed by several independent sources.",
     "note_status": "Status: {status}, according to {sources}.",
     "other_meanings": "See also: {items}.",
-    "source_ref_untitled": "[{n}] {name}: {url}"
+    "source_ref_untitled": "[{n}] {name}: {url}",
+    "incomplete": "Your message looks incomplete. What did you want to ask?",
+    "single_letter": "Do you mean the letter \"{x}\", or was your question cut off?",
+    "assume_meant": "I think you mean \"{x}\"."
   }
 }

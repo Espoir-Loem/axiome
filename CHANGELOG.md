@@ -8,6 +8,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 - Wikipédia : lecture de l'introduction complète des articles. La page qui porte le titre de la question fournit la définition ; les autres pages du même site vont dans « Voir aussi ».
 
 ### Ajouté
+- Messages incomplets (« h », « ? ») et questions coupées (« c'est quoi l ») : Axiome demande une précision au lieu de lancer une recherche.
+- Correction des fautes de frappe sur le vocabulaire connu (« chta » → chat), annoncée dans la réponse.
 - Petite conversation : « comment vas-tu », « ça va ? », « tu t'appelles comment », « je m'appelle… » (prénom mémorisé), « ok ». Une phrase qui s'adresse à Axiome ne déclenche jamais de recherche.
 - Sources : DuckDuckGo (réponses instantanées), OpenAlex (recherche approfondie), Brave Search (`AXIOME_BRAVE_API_KEY`).
 - **Conversation en streaming** (ADR-0007) : texte libre dans la CLI, session à événements (`dialogue/`), équipe interne Analyste, Planificateur, Chercheur, Vérificateur, Rédacteur, Relecteur (`team/`).

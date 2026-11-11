@@ -185,3 +185,19 @@ def test_answers_carry_no_ai_tells(lang: str) -> None:
         for event in s.respond(q):
             if isinstance(event, Say):
                 assert s.reviewer.style(event.text)[1] == [], event.text
+
+
+def test_incomplete_input_is_clarified_not_searched() -> None:
+    s = fresh(researcher=web())
+    for text in ("h", "?", "..."):
+        events = list(s.respond(text))
+        assert not any(isinstance(e, Searching) for e in events)
+        assert s.answer_text(text) == "Ton message semble incomplet. Que voulais-tu demander ?"
+    assert s.answer_text("c'est quoi l") == (
+        "Tu parles de la lettre « L », ou ta question a été coupée ?"
+    )
+    typo = s.answer_text("qu'est-ce qu'un chta ?")
+    assert typo.startswith("Je pense que tu parles de « chat ».\n\nLe **chat** est un mammifère.")
+    assert fresh("en").answer_text("h") == (
+        "Your message looks incomplete. What did you want to ask?"
+    )

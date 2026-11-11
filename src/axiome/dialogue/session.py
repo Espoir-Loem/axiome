@@ -48,6 +48,7 @@ SOCIAL = {
     Intent.NAME: "name",
     Intent.ACK: "ack",
     Intent.CHAT: "chat_fallback",
+    Intent.INCOMPLETE: "incomplete",
 }
 USER_NAME_KEY = "user:name"
 FEMININE_ARTICLES = frozenset({"une", "la", "cette"})
@@ -144,6 +145,8 @@ class Session:
             given = given[:1].upper() + given[1:]
             self.kernel.store.set_meta(USER_NAME_KEY, given)
             yield self.writer.social("nice_to_meet", name=given)
+        elif intent is Intent.SINGLE_LETTER and analysis.subject is not None:
+            yield self.writer.social("single_letter", x=analysis.subject.text.strip(" ?.!").upper())
         elif intent in SOCIAL:
             yield self.writer.social(SOCIAL[intent])
         elif intent in (Intent.LEVEL, Intent.CONFUSION):
@@ -177,6 +180,8 @@ class Session:
             yield problem or self.writer.social("not_understood")
             return
         concept = mention.concept
+        if concept is not None and mention.corrected:
+            yield self.writer.social("assume_meant", x=self.pack.lexicon.lexeme(concept).lemma)
         if concept is not None and analysis.intent is not Intent.RESEARCH:
             plan = make_plan(analysis)
             if plan is not None:

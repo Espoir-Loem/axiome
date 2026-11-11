@@ -143,3 +143,16 @@ def test_every_seed_concept_has_words() -> None:
         lexicon = load_pack(code).lexicon
         missing = sorted(c for c in concepts if lexicon.get(c) is None)
         assert not missing, (code, missing)
+
+
+def test_typo_correction() -> None:
+    from axiome.language.lexicon import edit_distance  # noqa: PLC0415
+
+    assert edit_distance("chta", "chat", 2) == 1  # adjacent swap
+    assert edit_distance("abc", "xyz", 1) == 2  # stops past the limit
+    lexicon = load_pack("fr").lexicon
+    assert lexicon.closest("chta") == ("cat",)
+    assert lexicon.closest("tabel de hachage") == ("hash_table",)
+    assert lexicon.closest("tas") == ()  # too short to correct
+    assert lexicon.closest("zzzzzzzz") == ()
+    assert lexicon.closest("pila") == ("stack",)  # "pile"

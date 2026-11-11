@@ -15,6 +15,24 @@ from typing import Protocol
 from axiome.perception.normalize import fold, words
 
 GENERAL_DOMAIN = "general"
+MIN_FUZZY_LENGTH = 4  # shorter words are too ambiguous to correct
+LONG_WORD = 8  # from this length, two typos are tolerated
+
+
+def edit_distance(a: str, b: str, limit: int) -> int:
+    """Damerau-Levenshtein distance (adjacent swaps count as one), stopping past ``limit``."""
+    prev2: list[int] = []
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, start=1):
+        cur = [i] + [0] * len(b)
+        for j, cb in enumerate(b, start=1):
+            cur[j] = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb))
+            if i > 1 and j > 1 and ca == b[j - 2] and a[i - 2] == cb:
+                cur[j] = min(cur[j], prev2[j - 2] + 1)
+        if min(cur) > limit:
+            return limit + 1
+        prev2, prev = prev, cur
+    return prev[-1]
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +92,24 @@ class Lexicon:
         """Concepts a phrase may denote, sorted (empty if unknown)."""
         key = " ".join(words(fold(form)))
         return tuple(sorted(self._forms.get(key, ())))
+
+    def closest(self, form: str) -> tuple[str, ...]:
+        """Concepts whose name is one typo away (two for long words); empty if none or tied."""
+        key = " ".join(words(fold(form)))
+        if len(key) < MIN_FUZZY_LENGTH:
+            return ()
+        limit = 1 if len(key) < LONG_WORD else 2
+        best: dict[int, set[str]] = {}
+        for known, concepts in self._forms.items():
+            if abs(len(known) - len(key)) > limit:
+                continue
+            d = edit_distance(key, known, limit)
+            if d <= limit:
+                best.setdefault(d, set()).update(concepts)
+        if not best:
+            return ()
+        found = best[min(best)]
+        return tuple(sorted(found)) if len(found) == 1 else ()
 
     def scan(self, text: str) -> list[str]:
         """Known concepts mentioned in ``text``, longest match first, in reading order."""
