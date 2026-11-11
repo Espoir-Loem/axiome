@@ -70,7 +70,7 @@
     ],
     [
       "user_name",
-      "^(?:my name is|i'?m called|call me) (?P<n>[^ ,.!?]+(?: [^ ,.!?]+)?)[ .!]*$"
+      "^(?:my name is|my name'?s|i'?m called|call me|you can call me) (?P<n>[^ ,.!?]+(?: [^ ,.!?]+)?)[ .!]*$"
     ],
     [
       "name",
@@ -87,6 +87,10 @@
     [
       "ack",
       "^(?:ok|okay|alright|i see|got it|cool|nice|yes|no|yeah|sure)[ !.]*$"
+    ],
+    [
+      "limits",
+      "(?:what are your (?:limits|limitations|weaknesses)|your limitations|what can'?t you do|what are you bad at)"
     ],
     [
       "identity",
@@ -283,5 +287,6 @@
     "un",
     "non-",
     "non"
-  ]
+  ],
+  "disambiguation": "(?:may (?:also )?refer to|can refer to|may stand for|is the name of several|(?:several|different|multiple) meanings)"
 }

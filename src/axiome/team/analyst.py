@@ -72,6 +72,7 @@ class Intent(Enum):
     LAUGHTER = "laughter"
     FILLER = "filler"
     GIBBERISH = "gibberish"
+    LIMITS = "limits"
     UNKNOWN = "unknown"
 
 
@@ -125,6 +126,7 @@ class Context:
     topic: Mention | None = None
     intent: Intent | None = None
     history: list[str] = field(default_factory=list)
+    expect: str = ""  # what Axiome just asked for ("user_name"), valid for one turn
 
 
 def _cut(orig: str, folded: str, pattern: re.Pattern[str]) -> tuple[str, str]:
@@ -267,6 +269,9 @@ class Analyst:
             cut = folded.rindex(", ") + 2
             orig, folded = orig[cut:], folded[cut:]
             intent, match = self._match(folded, context)
+        if match is None and context.expect == "user_name" and 0 < len(words(folded)) <= 2:
+            name = orig.strip(" ?.!")  # the answer to "what's your name?"
+            return Intent.USER_NAME, re.match(r"(?P<n>.+)", name), name, name
         return intent, match, orig, folded
 
     def analyze(self, text: str, context: Context) -> Analysis:

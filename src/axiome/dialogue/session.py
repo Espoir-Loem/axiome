@@ -24,7 +24,7 @@ from axiome.reasoning.terms import Atom
 from axiome.team.analyst import TOPICAL, Analysis, Analyst, Context, Intent, Mention
 from axiome.team.calculator import CalculationError, DivisionByZeroError, calculate, decimal, exact
 from axiome.team.planner import make_plan
-from axiome.team.researcher import Researcher, WebFindings, digest
+from axiome.team.researcher import Researcher, WebFindings, digest, is_ambiguous
 from axiome.team.reviewer import Reviewer
 from axiome.team.verifier import Findings, is_a_path, verify
 from axiome.team.writer import (
@@ -62,6 +62,7 @@ SOCIAL = {
     Intent.CODE_REQUEST: "code_not_yet",
     Intent.LAUGHTER: "laughter",
     Intent.FILLER: "filler",
+    Intent.LIMITS: "limits",
 }
 USER_NAME_KEY = "user:name"
 FEMININE_ARTICLES = frozenset({"une", "la", "cette"})
@@ -114,6 +115,7 @@ class Session:
     # -- public ----------------------------------------------------------------
     def respond(self, text: str) -> Iterator[Event]:
         analysis = self.analyst.analyze(text, self.context)
+        self.context.expect = ""  # an expectation lasts one turn
         level = self._update_level(analysis)
         counts = [0, 0, 0]  # approved, blocked, corrected
         pending: list[Claim] = []
@@ -198,6 +200,7 @@ class Session:
         if name:
             yield self.writer.social("user_name_known", name=name)
         else:
+            self.context.expect = "user_name"
             yield self.writer.social("user_name_unknown")
 
     def _single_letter(self, analysis: Analysis, level: Level) -> Step:
@@ -312,7 +315,15 @@ class Session:
             self.pack.stopwords,
             details=DETAILS[level],
             corroborations=CORROBORATIONS[level],
+            ambiguous=self.pack.disambiguation,
         )
+        if found.lead is None and found.see_also:
+            items = self.pack.join(list(found.see_also[:4]))
+            yield self.writer.social("ambiguous_topic", x=mention.text, items=items)
+            return
+        if found.lead is None and any(is_ambiguous(d, self.pack.disambiguation) for d in docs):
+            yield self.writer.social("ambiguous_topic_bare", x=mention.text)
+            return
         claims = self.writer.web_answer(mention.text, found)
         if not claims:
             yield self.writer.social("search_failed", x=mention.text)

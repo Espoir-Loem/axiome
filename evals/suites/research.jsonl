@@ -6,3 +6,4 @@
 {"lang": "fr", "turn": "qu'est-ce que l'ADN ?", "expect": {"searches": true, "contains": ["molécule"]}, "id": "research-fr-006", "category": "research"}
 {"lang": "en", "turn": "what is a photon?", "expect": {"searches": true, "contains": ["particle", "Sources"]}, "id": "research-en-007", "category": "research"}
 {"lang": "en", "turn": "who was Alan Turing?", "expect": {"searches": true, "contains": ["mathematician"]}, "id": "research-en-008", "category": "research"}
+{"lang": "fr", "turn": "espoir", "expect": {"contains": ["plusieurs sens"], "not_contains": ["parti politique"], "searches": true}, "id": "research-fr-009", "category": "research"}

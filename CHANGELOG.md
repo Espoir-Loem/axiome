@@ -17,6 +17,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 - Le bruit clavier (« asdfghjkl ») et les demandes de code reçoivent une réponse honnête au lieu d'une recherche.
 - Un fait appris de l'utilisateur est présenté comme tel (« Oui, d'après ce que tu m'as dit : … »). Les noms propres appris s'emploient sans article.
 
+- Axiome retient qu'il vient de demander le prénom : « Espoir » seul est compris comme la réponse. Nouvelles formulations : « mon nom c'est… », « appelle-moi… », « my name's… ».
+- « Quelles sont tes limites ? » : réponse honnête sur ce qu'Axiome ne sait pas faire.
+- Pages d'homonymie : si la page qui porte le nom de la question est une page d'homonymie (« Le mot espoir peut désigner : »), Axiome dit que le mot a plusieurs sens et demande lequel. Il ne se rabat plus sur une page voisine sans rapport.
+
 ### Modifié
 - Une question de définition commence par la définition quand Axiome en a une (« Un algorithme, c'est une suite finie d'instructions… »).
 - Réponses mises en forme comme une bonne réponse humaine : phrase de tête qui résume (sujet en gras), détails en liste, une seule ligne de fiabilité, sources numérotées et citées [n]. Plus de « (plausible…) » répété dans chaque phrase.

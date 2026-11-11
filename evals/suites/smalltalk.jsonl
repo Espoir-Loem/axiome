@@ -22,3 +22,8 @@
 {"lang": "en", "turn": "can you help me?", "expect": {"any_of": ["Yes", "Sure", "explain", "Tell me"], "no_search": true}, "id": "smalltalk-en-022", "category": "smalltalk"}
 {"lang": "en", "turn": "what's my name?", "expect": {"contains": ["Espoir"], "no_search": true}, "setup": ["my name is Espoir"], "id": "smalltalk-en-023", "category": "smalltalk"}
 {"lang": "en", "turn": "lol", "expect": {"no_search": true}, "id": "smalltalk-en-024", "category": "smalltalk"}
+{"lang": "fr", "turn": "Espoir", "expect": {"contains": ["Espoir"], "no_search": true}, "id": "smalltalk-fr-025", "category": "smalltalk", "setup": ["c'est quoi mon nom"]}
+{"lang": "fr", "turn": "mon nom c'est Espoir", "expect": {"contains": ["Espoir"], "no_search": true}, "id": "smalltalk-fr-026", "category": "smalltalk"}
+{"lang": "fr", "turn": "quelle sont tes limites", "expect": {"contains": ["code"], "no_search": true}, "id": "smalltalk-fr-027", "category": "smalltalk"}
+{"lang": "en", "turn": "what are your limits?", "expect": {"contains": ["code"], "no_search": true}, "id": "smalltalk-en-028", "category": "smalltalk"}
+{"lang": "en", "turn": "Bob", "expect": {"contains": ["Bob"], "no_search": true}, "id": "smalltalk-en-029", "category": "smalltalk", "setup": ["what's my name?"]}

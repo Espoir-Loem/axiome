@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -19,7 +20,7 @@ from axiome.research.providers.wikipedia import Wikipedia
 from axiome.research.rank import bm25, overlap, terms
 from axiome.research.setup import build_researcher, providers
 from axiome.team.researcher import Researcher, digest
-from axiome.verification.epistemic import Status
+from axiome.verification.epistemic import Reliability, Source, SourceKind, Status
 from tests.fakes import PAGE, PHOTON_FR, FakeFetcher, wikipedia_routes
 
 
@@ -231,3 +232,25 @@ def test_more_providers() -> None:
     assert abstract(None) == ""
     b = BraveSearch(fetcher, "secret", read_pages=False).search("photon", "fr", 3)
     assert b[0].text == "D." and {"X-Subscription-Token": "secret"} in fetcher.headers
+
+
+def test_disambiguation_page_makes_the_question_ambiguous() -> None:
+    def doc(title: str, text: str) -> Document:
+        src = Source(f"w:{title}", "W", SourceKind.REFERENCE, Reliability.HIGH, "w.org", "u")
+        return Document(src, title, text)
+
+    pattern = re.compile(r"peut designer")
+    docs = [
+        doc("Espoir", "Le mot espoir peut désigner plusieurs choses très différentes."),
+        doc(
+            "Nouvel Espoir", "Nouvel Espoir est un ancien parti politique israélien fondé en 2020."
+        ),
+    ]
+    found = digest("espoir", docs, ambiguous=pattern)
+    assert found.lead is None and found.see_also == ("Nouvel Espoir",)
+    other = [
+        docs[0],
+        doc("Mercure", "Mercure est la planète la plus proche du Soleil, très chaude."),
+    ]
+    found = digest("mercure", other, ambiguous=pattern)
+    assert found.lead is not None and found.lead.doc == 1  # the listing page is skipped

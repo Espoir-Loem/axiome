@@ -66,5 +66,22 @@
       "name": "Wikipedia (en)",
       "text": "A photon is an elementary particle that is a quantum of the electromagnetic field, including electromagnetic radiation such as light and radio waves. Photons are massless particles that always move at the speed of light measured in vacuum. The modern photon concept originated during the first two decades of the 20th century with the work of Albert Einstein."
     }
+  ],
+  "espoir": [
+    {
+      "url": "https://fr.wikipedia.org/wiki/Espoir",
+      "title": "Espoir",
+      "text": "Le mot espoir peut désigner : un sentiment, plusieurs œuvres et plusieurs organisations portant ce nom dans différents pays du monde."
+    },
+    {
+      "url": "https://fr.wikipedia.org/wiki/Nouvel_Espoir",
+      "title": "Nouvel Espoir",
+      "text": "Nouvel Espoir est un ancien parti politique israélien, fondé par Gideon Sa'ar en décembre 2020."
+    },
+    {
+      "url": "https://fr.wikipedia.org/wiki/L%27Espoir",
+      "title": "L'Espoir",
+      "text": "L'Espoir est un roman d'André Malraux publié en 1937 sur la guerre d'Espagne."
+    }
   ]
 }

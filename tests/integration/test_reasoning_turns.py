@@ -7,7 +7,8 @@ from datetime import timezone
 import pytest
 
 from axiome.core.clock import FixedClock
-from axiome.dialogue.events import Searching
+from axiome.dialogue.events import Searching, Thinking
+from axiome.dialogue.layout import render
 from axiome.dialogue.session import Session
 from axiome.kernel import Kernel
 from axiome.research.providers.wikipedia import Wikipedia
@@ -23,9 +24,10 @@ def session(lang: str = "fr") -> Session:
 
 
 def answer(s: Session, text: str) -> str:
+    """Play one turn; it must not search the web."""
     events = list(s.respond(text))
     assert not any(isinstance(e, Searching) for e in events), text
-    return s.answer_text(text)
+    return render(e for e in events if not isinstance(e, Thinking))
 
 
 @pytest.mark.parametrize(
@@ -55,7 +57,7 @@ def test_clock_and_date() -> None:
 
 def test_small_talk_variants() -> None:
     s = session()
-    assert answer(s, "comment je m'appelle ?") == "Tu ne me l'as pas encore dit."
+    assert answer(s, "comment je m'appelle ?").startswith("Tu ne me l'as pas encore dit.")
     answer(s, "je m'appelle Espoir")
     assert answer(s, "comment je m'appelle ?") == "Tu t'appelles Espoir."
     assert "Ça va" in answer(s, "salut, ça va ?")
@@ -134,3 +136,19 @@ def test_compare_with_an_unknown_side_searches() -> None:
     s = session()
     events = list(s.respond("quelle est la différence entre une pile et un photon ?"))
     assert any(isinstance(e, Searching) for e in events)
+
+
+def test_name_given_as_an_answer() -> None:
+    s = session()
+    assert answer(s, "c'est quoi mon nom").endswith("Comment t'appelles-tu ?")
+    assert answer(s, "Espoir") == "Enchanté, Espoir."
+    assert answer(s, "c'est quoi mon nom") == "Tu t'appelles Espoir."
+    other = session()
+    answer(other, "c'est quoi mon nom")
+    answer(other, "merci")  # the expectation lasts one turn only
+    assert "Enchanté" not in "".join(str(e) for e in other.respond("Paul"))
+
+
+def test_limits_are_stated() -> None:
+    assert "code" in answer(session("fr"), "quelles sont tes limites ?")
+    assert "code" in answer(session("en"), "what are your limitations?")

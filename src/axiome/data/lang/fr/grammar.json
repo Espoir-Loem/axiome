@@ -78,13 +78,16 @@
     "help": "Oui. Dis-moi ce que tu veux savoir : je peux expliquer un sujet, vérifier une affirmation, faire un calcul ou chercher une information.",
     "identity_ai": "Oui, je suis un programme : Axiome, une IA construite de zéro. Je raisonne à partir de faits vérifiés et je dis quand je ne sais pas.",
     "user_name_known": "Tu t'appelles {name}.",
-    "user_name_unknown": "Tu ne me l'as pas encore dit.",
+    "user_name_unknown": "Tu ne me l'as pas encore dit. Comment t'appelles-tu ?",
     "laughter": "Content que ça te fasse rire.",
     "filler": "Je t'écoute.",
     "not_a_word": "Je ne reconnais pas « {x} ». Tu peux reformuler ?",
     "is_a_general": "{s:def_pl} sont des {o:pl}",
     "requirements_no": "Non. {s:def} exige {p:indef}.",
     "requirements_yes": "Oui, à condition de respecter ses prérequis.",
-    "day_first": "1er"
+    "day_first": "1er",
+    "limits": "Je ne connais en profondeur que quelques domaines : biologie, structures de données, algorithmes, patrons de conception et grandeurs physiques. Je n'écris pas encore de code, je ne comprends que les tournures que j'ai apprises, et je n'ai accès ni à la météo ni à l'actualité. Quand je ne sais pas, je le dis ou je cherche sur le web.",
+    "ambiguous_topic": "« {x} » a plusieurs sens : {items}. Lequel t'intéresse ?",
+    "ambiguous_topic_bare": "« {x} » a plusieurs sens. Lequel t'intéresse ?"
   }
 }

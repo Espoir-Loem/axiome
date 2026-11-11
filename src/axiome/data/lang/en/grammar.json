@@ -78,13 +78,16 @@
     "help": "Yes. Tell me what you want to know: I can explain a topic, check a claim, do a calculation or look something up.",
     "identity_ai": "Yes, I am a program: Axiome, an AI built from scratch. I reason from verified facts and I say when I don't know.",
     "user_name_known": "Your name is {name}.",
-    "user_name_unknown": "You haven't told me yet.",
+    "user_name_unknown": "You haven't told me yet. What's your name?",
     "laughter": "Glad that made you laugh.",
     "filler": "I'm listening.",
     "not_a_word": "I don't recognize \"{x}\". Could you rephrase?",
     "is_a_general": "{s:pl} are {o:pl}",
     "requirements_no": "No. {s:def} requires {p:indef}.",
     "requirements_yes": "Yes, as long as its requirements are met.",
-    "day_first": "1"
+    "day_first": "1",
+    "limits": "I only know a few fields in depth: biology, data structures, algorithms, design patterns and physical quantities. I can't write code yet, I only understand the phrasings I have learned, and I have no access to weather or news. When I don't know, I say so or search the web.",
+    "ambiguous_topic": "\"{x}\" has several meanings: {items}. Which one do you mean?",
+    "ambiguous_topic_bare": "\"{x}\" has several meanings. Which one do you mean?"
   }
 }

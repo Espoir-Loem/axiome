@@ -94,7 +94,7 @@
     ],
     [
       "user_name",
-      "^(?:je m'appelle|mon (?:nom|prenom) est|moi c'est) (?P<n>[^ ,.!?]+(?: [^ ,.!?]+)?)[ .!]*$"
+      "^(?:je m'appelle|mon (?:nom|prenom) (?:est|c'est|c est)|moi c'est|appelle[- ]moi|tu peux m'appeler) (?P<n>[^ ,.!?]+(?: [^ ,.!?]+)?)[ .!]*$"
     ],
     [
       "name",
@@ -111,6 +111,10 @@
     [
       "ack",
       "^(?:ok|okay|d'accord|je vois|ah bon|ah|cool|super|parfait|top|entendu|oui|non|ouais)[ !.]*$"
+    ],
+    [
+      "limits",
+      "(?:(?:quelles? sont|c'est quoi) (?:tes|vos) (?:limites|faiblesses)|tes limites|qu'est[- ]ce que tu ne sais pas faire|que ne sais[- ]tu pas faire|tu ne sais pas faire quoi)"
     ],
     [
       "identity",
@@ -312,5 +316,6 @@
   ],
   "negative_prefixes": [
     "non-"
-  ]
+  ],
+  "disambiguation": "(?:peut (?:designer|faire reference a|renvoyer a|se referer a)|est un homonyme|(?:differentes|plusieurs) (?:significations|sens|acceptions)|^(?:le mot|le terme|le nom) \\S+ (?:peut|est))"
 }

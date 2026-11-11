@@ -9,6 +9,7 @@ a verbatim sentence of a source.
 from __future__ import annotations
 
 import concurrent.futures as cf
+import re
 import time
 from collections.abc import Generator, Iterable, Sequence
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ RESULTS_PER_PROVIDER = 3
 SENTENCES_PER_DOCUMENT = 25
 BUDGET_S = 10.0
 AGREEMENT_PERCENT = 50  # content-word overlap for two sentences to say the same thing
+AMBIGUITY_WINDOW = 300  # a disambiguation page says so in its first words
 LEAD_BONUS = 0.5  # the opening sentence of a summary is usually the definition
 
 
@@ -128,6 +130,28 @@ def _novel(text: str, chosen: Iterable[Excerpt], stop: Sequence[str]) -> bool:
     return all(overlap(text, c.text, stop) < AGREEMENT_PERCENT for c in chosen)
 
 
+def is_ambiguous(doc: Document, pattern: re.Pattern[str]) -> bool:
+    """A disambiguation page ("X may refer to:") lists meanings and defines nothing."""
+    return bool(pattern.search(fold(doc.text[:AMBIGUITY_WINDOW])))
+
+
+def _drop_ambiguous(
+    wanted: list[str],
+    docs: Sequence[Document],
+    best: dict[int, Excerpt],
+    pattern: re.Pattern[str] | None,
+) -> tuple[dict[int, Excerpt], tuple[str, ...]]:
+    """Remove disambiguation pages. If the page named like the question is one, the
+    question itself is ambiguous: the other titles are returned as its meanings."""
+    if pattern is None:
+        return best, ()
+    named = [d for d, doc in enumerate(docs) if words(fold(doc.title)) == wanted]
+    if any(is_ambiguous(docs[d], pattern) for d in named):
+        others = (d.title for d in docs if d.title and words(fold(d.title)) != wanted)
+        return {}, tuple(dict.fromkeys(others))
+    return {d: e for d, e in best.items() if not is_ambiguous(docs[d], pattern)}, ()
+
+
 def digest(
     query: str,
     docs: Sequence[Document],
@@ -135,6 +159,7 @@ def digest(
     *,
     details: int = 3,
     corroborations: int = 2,
+    ambiguous: re.Pattern[str] | None = None,
 ) -> WebFindings:
     """Choose the main page, its key sentence, the details and the agreeing sources.
 
@@ -147,9 +172,10 @@ def digest(
     docs = tuple(docs)
     split = [sentences(d.text)[:SENTENCES_PER_DOCUMENT] for d in docs]
     best = _best_per_document(query, split, stop)
-    if not best:
-        return WebFindings(docs, None, (), (), (), None)
     wanted = words(fold(query))
+    best, meanings = _drop_ambiguous(wanted, docs, best, ambiguous)
+    if meanings or not best:
+        return WebFindings(docs, None, (), (), meanings, None)
     titled = [d for d in best if words(fold(docs[d].title)) == wanted]
     main = min(titled) if titled else max(best, key=lambda d: (best[d].score, -d))
     definition = _definition(query, split[main], stop) if titled else None

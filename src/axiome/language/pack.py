@@ -73,6 +73,7 @@ class LanguagePack:
     weekdays: tuple[str, ...]
     months: tuple[str, ...]
     negations: frozenset[str]
+    disambiguation: re.Pattern[str]  # a web page listing meanings, not defining one
     negative_prefixes: tuple[str, ...]  # "unsorted" -> sorted, negated
 
     def say(self, key: str, **slots: object) -> str:
@@ -139,4 +140,5 @@ def load_pack(code: str) -> LanguagePack:
         months=tuple(intents["months"]),
         negations=frozenset(intents["negations"]),
         negative_prefixes=tuple(intents["negative_prefixes"]),
+        disambiguation=re.compile(intents["disambiguation"]),
     )
