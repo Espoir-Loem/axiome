@@ -153,9 +153,7 @@ class _Facts:
         self.lines: dict[str, str] = {
             str(fact.args[0]): str(fact.args[1]) for fact in index.of("ligne")
         }
-        self.defines: dict[str, Atom] = {
-            str(fact.args[1]): fact for fact in index.of("defines")
-        }
+        self.defines: dict[str, Atom] = {str(fact.args[1]): fact for fact in index.of("defines")}
         self.module_paths: dict[str, str] = {}
         for position in self.lines:
             path = Position.parse(position).path
@@ -346,9 +344,7 @@ def _comparaison_a_none(facts: _Facts, rule: Rule, _config: AnalysisConfig) -> l
     ]
 
 
-def _complexite_cyclomatique(
-    facts: _Facts, rule: Rule, config: AnalysisConfig
-) -> list[Diagnostic]:
+def _complexite_cyclomatique(facts: _Facts, rule: Rule, config: AnalysisConfig) -> list[Diagnostic]:
     out: list[Diagnostic] = []
     for fact in facts.index.of("complexite"):
         name, raw = str(fact.args[0]), fact.args[1]

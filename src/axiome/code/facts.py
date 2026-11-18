@@ -162,9 +162,7 @@ def _record_import(node: ast.Import, module: str, path: str, out: list[Atom]) ->
         out.append(_fact("importe_sous", module, bound, alias.name, position))
 
 
-def _record_import_from(
-    node: ast.ImportFrom, module: str, path: str, out: list[Atom]
-) -> None:
+def _record_import_from(node: ast.ImportFrom, module: str, path: str, out: list[Atom]) -> None:
     prefix = "." * node.level + (node.module or "")
     separator = "." if node.module else ""
     position = _position(path, node.lineno)
@@ -200,8 +198,17 @@ def _cyclomatic(node: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
             continue
         if isinstance(
             child,
-            (ast.If, ast.For, ast.AsyncFor, ast.While, ast.IfExp, ast.ExceptHandler, ast.With,
-             ast.AsyncWith, ast.Assert),
+            (
+                ast.If,
+                ast.For,
+                ast.AsyncFor,
+                ast.While,
+                ast.IfExp,
+                ast.ExceptHandler,
+                ast.With,
+                ast.AsyncWith,
+                ast.Assert,
+            ),
         ):
             score += 1
         elif isinstance(child, ast.BoolOp):
@@ -212,9 +219,7 @@ def _cyclomatic(node: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
     return score
 
 
-def _returns(
-    node: ast.FunctionDef | ast.AsyncFunctionDef, path: str, name: str
-) -> tuple[str, ...]:
+def _returns(node: ast.FunctionDef | ast.AsyncFunctionDef, path: str, name: str) -> tuple[str, ...]:
     """Positions of the ``return`` statements of one function, nested scopes excluded."""
     found: list[str] = []
     pending: list[ast.AST] = list(node.body)

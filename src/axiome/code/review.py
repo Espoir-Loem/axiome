@@ -130,9 +130,7 @@ def _apply_patch(
     return result
 
 
-def _apply_body(
-    result: list[str], start: int, body: tuple[tuple[str, str], ...]
-) -> int:
+def _apply_body(result: list[str], start: int, body: tuple[tuple[str, str], ...]) -> int:
     cursor = start
     for kind, text in body:
         if kind == " ":
