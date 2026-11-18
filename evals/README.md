@@ -55,7 +55,7 @@ python -m pytest tests/integration/test_code_bench.py
 - `review.jsonl` : 5 changements étiquetés à la main. Le score est donné **par règle** (précision et rappel) : une règle qui crie au loup ne peut pas être masquée par une moyenne.
 - `generation.jsonl` : petites tâches avec tests, notées en `pass@1`. Le taux d'échecs *silencieux* (patch annoncé correct alors que les tests échouent) doit rester à zéro ; il l'est par construction, puisque l'acceptation dépend de l'exécution réelle.
 
-Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 2/2, 0 échec silencieux.
+Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 14/14, 0 échec silencieux.
 
 ## Limites
 

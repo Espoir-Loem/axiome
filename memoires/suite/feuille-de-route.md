@@ -29,7 +29,7 @@ Règles d'import :
 - **Article des noms propres non humains** (« le Soleil ») à revérifier.
 - **Lenteur de Wikidata sans `AXIOME_CONTACT`.** Ajouter un cache local, puis faire basculer le gros de la taxonomie sur YAGO.
 - **M4** : petit modèle de langue maison (NumPy, 20 à 60 M de paramètres, int8). Il reformule et n'invente jamais de fait.
-- **M5** maths et physique, **M6** méta-cognition. **M7** outils de code est fait (M7.0 à M7.3, RFC-0002) : analyse, revue de diff, bac à sable et génération vérifiée par les tests. Reste à élargir la génération (plus de patrons, autres langages) et à mesurer sur des tâches réelles.
+- **M5** maths et physique, **M6** méta-cognition. **M7** outils de code est fait (M7.0 à M7.4, RFC-0002) : analyse, revue de diff, bac à sable et génération vérifiée par les tests. M7.4 a ajouté quatre familles de mutation et un banc de 14 tâches. Reste à couvrir d'autres langages et des correctifs multi-fichiers.
 
 ## Actions du mainteneur en attente
 

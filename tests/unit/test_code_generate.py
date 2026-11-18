@@ -69,6 +69,54 @@ def test_unparsable_target_is_reported(tmp_path: Path) -> None:
         generate(tmp_path, "bad.py", isolate_network=False)
 
 
+@pytest.mark.parametrize(
+    "case",
+    [
+        (
+            "binary",
+            "counter.py",
+            "def add_one(n):\n    return n - 1\n",
+            "from counter import add_one\n\n\ndef test_add_one():\n    assert add_one(2) == 3\n",
+            "+    return n + 1",
+        ),
+        (
+            "boolean",
+            "logic.py",
+            "def either(a, b):\n    return a and b\n",
+            "from logic import either\n\n\ndef test_either():\n"
+            "    assert either(True, False) is True\n",
+            "+    return a or b",
+        ),
+        (
+            "condition",
+            "label.py",
+            'def label(flag):\n    if flag:\n        return "on"\n    return "off"\n',
+            'from label import label\n\n\ndef test_label():\n    assert label(False) == "on"\n',
+            "+    if not flag:",
+        ),
+        (
+            "ifexp",
+            "ternary.py",
+            'def label(flag):\n    return "on" if flag else "off"\n',
+            'from ternary import label\n\n\ndef test_label():\n    assert label(True) == "off"\n',
+            '+    return "on" if not flag else "off"',
+        ),
+    ],
+    ids=["binary", "boolean", "condition", "ifexp"],
+)
+def test_new_mutation_families_are_searched(
+    tmp_path: Path, case: tuple[str, str, str, str, str]
+) -> None:
+    name, target, source, test, expected = case
+    root = tmp_path / name
+    root.mkdir()
+    (root / target).write_text(source, encoding="utf-8")
+    (root / f"test_{target}").write_text(test, encoding="utf-8")
+    result = generate(root, target, budget=8, isolate_network=False)
+    assert result.accepted, result.attempts
+    assert expected in result.patch
+
+
 def test_comparison_and_not_mutations_are_searched(tmp_path: Path) -> None:
     compared_root = tmp_path / "compared"
     compared_root.mkdir()
