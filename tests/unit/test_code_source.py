@@ -45,8 +45,9 @@ def test_normalize_newlines() -> None:
 def test_read_repository_is_sorted_and_filtered(tmp_path: Path) -> None:
     (tmp_path / "src" / "pkg").mkdir(parents=True)
     (tmp_path / "src" / "pkg" / "__init__.py").write_text("", encoding="utf-8")
-    (tmp_path / "src" / "pkg" / "b.py").write_text("x = 1\r\n", encoding="utf-8")
-    (tmp_path / "a.py").write_text("y = 2\r", encoding="utf-8")
+    # Bytes, not text: text mode would turn ``\r\n`` into ``\r\r\n`` on Windows.
+    (tmp_path / "src" / "pkg" / "b.py").write_bytes(b"x = 1\r\n")
+    (tmp_path / "a.py").write_bytes(b"y = 2\r")
     for ignored in (".venv", "__pycache__", "pkg.egg-info", "build"):
         (tmp_path / ignored).mkdir()
         (tmp_path / ignored / "noise.py").write_text("z = 3\n", encoding="utf-8")

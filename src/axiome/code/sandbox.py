@@ -156,9 +156,23 @@ def _decode(data: bytes | None, cap: int) -> tuple[str, bool]:
     return raw[:cap].decode("utf-8", errors="replace"), truncated
 
 
+#: Windows needs these to start a process at all; none of them carries a
+#: secret. SystemRoot is required by subprocess (side-by-side assemblies).
+_WINDOWS_ESSENTIALS = (
+    "SYSTEMROOT",
+    "SYSTEMDRIVE",
+    "WINDIR",
+    "COMSPEC",
+    "PATHEXT",
+    "USERPROFILE",
+    "APPDATA",
+    "LOCALAPPDATA",
+)
+
+
 def _environment(work: Path) -> dict[str, str]:
     """A clean environment: no AXIOME_*, no proxy, no secret, fixed seeds."""
-    return {
+    environment = {
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
         "HOME": str(work),
         "TMPDIR": str(work),
@@ -169,6 +183,14 @@ def _environment(work: Path) -> dict[str, str]:
         "LANG": "C.UTF-8",
         "SOURCE_DATE_EPOCH": "0",
     }
+    if os.name == "nt":
+        for name in _WINDOWS_ESSENTIALS:
+            value = os.environ.get(name)
+            if value:
+                environment[name] = value
+        environment["TEMP"] = str(work)
+        environment["TMP"] = str(work)
+    return environment
 
 
 def _limiter(limits: SandboxLimits) -> Callable[[], None]:
