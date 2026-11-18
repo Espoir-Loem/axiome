@@ -1,6 +1,7 @@
-# État actuel (au 2026-11-11)
+# État actuel (au 2026-11-18)
 
-Dernier commit : `11789d2`. La branche locale `main` a divergé de `origin/main`. Le push doit être fait par le mainteneur :
+Dernier commit : `b156887`. Le travail M7.0 à M7.3 de cette session n'est pas encore commité : le mainteneur valide et pousse.
+La branche locale `main` a divergé de `origin/main`. Le push doit être fait par le mainteneur :
 `git push --force-with-lease origin main`.
 
 ## Ce qui fonctionne
@@ -15,6 +16,11 @@ Dernier commit : `11789d2`. La branche locale `main` a divergé de `origin/main`
 - **Calcul exact** sur des fractions, enchaîné (« et fois 3 ? »). Date et heure.
 - **Suivi du fil :** relances (« et le tri rapide ? »), questions sans sujet (« est-il un mammifère ? »), « pourquoi ? » seul, corrections, « développe », traduction FR↔EN, réponses aux questions qu'Axiome a posées (prénom, « la lettre L ? »).
 - **Petite conversation :** salutations, « ça va », prénom mémorisé, limites, rires, hésitations, bruit clavier.
+- **Outils de code (M7.0 à M7.3) :** lecture déterministe d'un dépôt, extraction en faits Datalog, index interrogeable (`?- defines(Pos, Nom).`), 10 000 lignes indexées en 303 ms.
+  - **Analyse :** 8 règles nommées, chacune adossée à des faits et à une position ; seuil et règles réglés dans `[tool.axiome.code]`.
+  - **Revue :** un diff est appliqué en mémoire, seuls les constats nouveaux sont retenus et passent par le `Reviewer` existant. `axiome --analyze` et `axiome --review`.
+  - **Bac à sable :** copie temporaire, délai, limites `resource`, sortie plafonnée, environnement vidé, réseau coupé si `unshare -n` est disponible (sinon signalé comme dégradé).
+  - **Génération :** recherche bornée de mutations, chaque candidat jugé par les tests du projet ; `pass@1` 2/2 sur le banc, 0 échec silencieux.
 
 ## Scores
 
@@ -22,7 +28,7 @@ Dernier commit : `11789d2`. La branche locale `main` a divergé de `origin/main`
 |---|---|---|
 | `evals/suites/` (travail, 138 cas) | 138/138 | Ces cas ont servi à corriger : ce score surestime le niveau réel. |
 | `evals/heldout/` (réservé, 62 cas) | 62/62 | Mesures honnêtes, prises avant correction : 38/42 (90 %), puis 19/20 (95 %) pour les conversations. |
-| Tests | tous verts, couverture 97 % | ruff et mypy strict propres |
+| Tests | 334 verts, couverture 95,9 % | ruff et mypy strict propres ; couche `code/` de 89 à 100 % |
 
 L'historique détaillé des scores est dans `evals/README.md`.
 
@@ -33,4 +39,8 @@ L'historique détaillé des scores est dans `evals/README.md`.
 - **Qualité de Wikidata.** Certaines classes sont surprenantes (« l'étoile est un fuseur »). Ces faits restent PLAUSIBLES.
 - **Article des noms propres non humains.** « le Soleil » doit être revérifié depuis la restriction du nom propre sans article aux personnes.
 - **Suivi du fil limité.** Il couvre les formes de relance prévues. Une tournure inédite peut encore égarer Axiome. Il ne remonte pas au-delà de la dernière question.
-- **Pas de génération de code** (M7). La conversation libre reste limitée aux schémas connus (M4 pour l'aisance).
+- **Génération de code volontairement étroite.** Elle ne cherche que de petites mutations déterministes (littéraux, booléens, comparaisons, `not`) sur un fichier cible ; sans test exécutable, elle refuse. Ce n'est pas encore un assistant de programmation généraliste.
+- **Isolation réseau non portable.** `unshare -n` n'existe pas partout ; sans lui le rapport dit « réseau non isolé » au lieu de prétendre le contraire.
+- **Analyse Python seulement.** Les autres langages demanderont un analyseur externe déclaré (RFC-0002, question ouverte 1).
+- **Faux positifs possibles de `code_mort`/`nom_non_utilise`** sur une API publique sans `__all__` ni import interne ; ce sont des remarques, jamais des blocages.
+- La conversation libre reste limitée aux schémas connus (M4 pour l'aisance).

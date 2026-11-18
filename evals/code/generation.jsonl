@@ -1,0 +1,2 @@
+{"id": "multiplier", "target": "mod.py", "files": {"mod.py": "def triple(n):\n    return n * 4\n", "test_mod.py": "from mod import triple\n\n\ndef test_triple():\n    assert triple(2) == 6\n"}}
+{"id": "negation", "target": "flag.py", "files": {"flag.py": "def ok(flag):\n    return not flag\n", "test_flag.py": "from flag import ok\n\n\ndef test_ok():\n    assert ok(False) is False\n"}}

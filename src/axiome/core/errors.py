@@ -48,3 +48,16 @@ class KnowledgeError(AxiomeError):
 
 class ResearchError(AxiomeError):
     """Web research failure (network, malformed response); never fatal to a turn."""
+
+
+class CodeError(AxiomeError):
+    """Code tooling failure (unreadable repository, unsupported query)."""
+
+
+class CodeSyntaxError(CodeError):
+    """Unparsable source file, with its location."""
+
+    def __init__(self, key: str, *, path: str, line: int, **params: object) -> None:
+        super().__init__(key, path=path, line=line, **params)
+        self.path = path
+        self.line = line

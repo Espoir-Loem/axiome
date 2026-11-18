@@ -20,6 +20,7 @@ Les couches basses ne connaissent jamais les couches hautes.
 ```
 core ◄ reasoning ◄ verification ◄ knowledge ◄ kernel ◄ team ◄ dialogue ◄ cli
                   perception ◄ language ◄ team          research ◄ team
+                  code ◄ team
 ```
 
 - `core` : erreurs, configuration, horloge. Ne dépend de rien.
@@ -29,6 +30,7 @@ core ◄ reasoning ◄ verification ◄ knowledge ◄ kernel ◄ team ◄ dialog
 - `kernel` : façade du noyau logique.
 - `perception`, `language` : texte → formes normalisées, mots ↔ concepts, concepts → phrases.
 - `research` : accès web (stdlib uniquement), aucun raisonnement.
+- `code` : lecture d'un dépôt, faits de code, index interrogeable, analyse et revue de diff (M7.0-M7.1). `code.sandbox` est le seul module à exécuter un sous-processus ; `code.generate` s'en sert pour juger les correctifs (M7.3). Aucun raisonnement propre : la couche utilise la syntaxe et les termes du noyau. `team.code_review` traduit les constats en phrases soumises au `Reviewer`.
 - `team` : les six rôles ; `dialogue` : session, niveau, événements.
 - `response`, `cli` : présentation uniquement.
 

@@ -3,6 +3,21 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (outils de code, M7.1 à M7.3)
+- **Analyse (M7.1)** : huit règles nommées (`import_inutilise`, `nom_non_utilise`, `code_mort`, `appel_inconnu`, `exception_avalee`, `comparaison_a_none`, `complexite_cyclomatique`, `cycle_import`). Chaque constat porte une règle, une position, la ligne citée et les faits qui le soutiennent. Les règles activées et le seuil de complexité se règlent dans `[tool.axiome.code]`.
+- **Revue de diff (M7.1)** : le diff est appliqué en mémoire (le dépôt de l'utilisateur n'est jamais modifié), seuls les diagnostics nouveaux sont retenus, puis passés au `Reviewer` existant via `team.code_review`. Commandes `axiome --analyze CHEMIN` et `axiome --review DIFF`.
+- **Bac à sable (M7.2)** : copie temporaire, délai mural, limites `resource` (CPU, mémoire, fichier, cœur), sortie plafonnée, environnement vidé (`AXIOME_*` et secrets absents, `PYTHONHASHSEED=0`, `TZ=UTC`). Le réseau est coupé par `unshare -n` quand c'est possible ; sinon le rapport le dit (`degraded_network`).
+- **Génération vérifiée (M7.3)** : recherche bornée et déterministe de petits correctifs (littéraux, booléens, opérateurs de comparaison, `not`), chaque candidat exécuté par les tests du projet. Un patch n'est accepté que si les tests passent réellement ; budget épuisé → « je n'ai pas trouvé », avec le journal des rejets. `pass@1` 2/2 sur le banc, 0 échec silencieux.
+- **Bancs de code** (`evals/code/`) : revue étiquetée notée par règle (précision et rappel) et génération avec tests.
+- Faits d'analyse ajoutés : `importe_sous`, `appel_simple`, `retourne`, `complexite`, `except_vide`, `compare_a_none`.
+- RFC-0002 passée à « Implémenté ».
+
+### Ajouté (outils de code, M7.0)
+- Nouvelle couche `code`, en bibliothèque standard seule : lecture déterministe d'un dépôt (`source.py`), extraction du code en faits Datalog (`facts.py`) et index interrogeable (`index.py`).
+- Prédicats `defines`, `references`, `imports`, `calls`, `parametre` et `ligne`. Les noms sont qualifiés par le module et par la définition englobante (`pkg.mod.Cls.method`) ; les positions s'écrivent `chemin:ligne` et sont citables.
+- Requêtes `?-` sur l'index : `?- defines(Pos, Nom).`, avec réponses triées de façon canonique. Un fichier qui ne se parse pas est signalé avec sa ligne, jamais ignoré.
+- RFC-0002 (jalon M7), 33 tests unitaires et de propriétés. Indexation mesurée : 10 000 lignes (60 fichiers, 45 000 faits) en 303 ms.
+
 ### Ajouté (mémoire du projet)
 - Dossier `memoires/` : vision, état, architecture, journal des décisions, méthode d'évaluation, leçons, journal de session et feuille de route, pour qu'une autre session reprenne le travail avec le raisonnement suivi.
 

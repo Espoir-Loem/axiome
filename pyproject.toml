@@ -55,3 +55,17 @@ python_version = "3.10"
 strict = true
 mypy_path = "src"
 packages = ["axiome"]
+
+[tool.axiome.code]
+# Code analysis rules run by ``axiome --analyze`` (RFC-0002).
+rules = [
+  "import_inutilise",
+  "nom_non_utilise",
+  "code_mort",
+  "appel_inconnu",
+  "exception_avalee",
+  "comparaison_a_none",
+  "complexite_cyclomatique",
+  "cycle_import",
+]
+complexity_threshold = 10

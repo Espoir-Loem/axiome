@@ -1,6 +1,6 @@
 # Feuille de route
 
-À mettre à jour à chaque fin de session. État au 2026-11-11.
+À mettre à jour à chaque fin de session. État au 2026-11-18.
 
 ## Prochaine étape conseillée : des connaissances locales
 
@@ -25,11 +25,11 @@ Règles d'import :
 ## Ensuite
 
 - **Contexte.** Il ne couvre que les formes prévues et la seule dernière question. Prochaine étape : une pile de sujets et les références à plus de deux tours.
-- **Nouveau banc réservé**, sur des domaines non couverts : l'actuel a servi aux corrections.
+- **Nouveau banc réservé**, sur des domaines non couverts : l'actuel a servi aux corrections. Pour le code, les bancs `evals/code/` sont volontairement petits ; les étendre avant de publier un `pass@1` plus large.
 - **Article des noms propres non humains** (« le Soleil ») à revérifier.
 - **Lenteur de Wikidata sans `AXIOME_CONTACT`.** Ajouter un cache local, puis faire basculer le gros de la taxonomie sur YAGO.
 - **M4** : petit modèle de langue maison (NumPy, 20 à 60 M de paramètres, int8). Il reformule et n'invente jamais de fait.
-- **M5** maths et physique, **M6** méta-cognition, **M7** outils de code.
+- **M5** maths et physique, **M6** méta-cognition. **M7** outils de code est fait (M7.0 à M7.3, RFC-0002) : analyse, revue de diff, bac à sable et génération vérifiée par les tests. Reste à élargir la génération (plus de patrons, autres langages) et à mesurer sur des tâches réelles.
 
 ## Actions du mainteneur en attente
 

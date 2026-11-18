@@ -90,7 +90,7 @@ Wikimedia limite le débit des clients qui ne donnent pas de contact. Pour un ap
 | M4 | Réseaux maison (NumPy) : tokeniseur BPE, plongements, petit modèle de reformulation | à venir |
 | M5 | Maths et physique : algèbre symbolique, analyse dimensionnelle | à venir |
 | M6 | Méta-cognition : profil des types de questions, pré-recherche | à venir |
-| M7 | Outils de code : analyse, revue, génération vérifiée | à venir |
+| M7 | Outils de code : analyse, revue, génération vérifiée | fait (M7.0 à M7.3) |
 
 ## Documentation
 

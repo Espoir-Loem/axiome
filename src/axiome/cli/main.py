@@ -8,8 +8,11 @@ import re
 import sys
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import replace
+from pathlib import Path
 
 from axiome import __version__
+from axiome.code import CodeIndex, analyze, load_config, review_diff
+from axiome.code.analyze import Diagnostic
 from axiome.core.clock import FixedClock
 from axiome.core.config import IN_MEMORY, Config
 from axiome.core.errors import AxiomeError, ResearchError
@@ -77,6 +80,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--lang", choices=SUPPORTED, default=None, help=t("cli.opt_lang"))
     p.add_argument("-c", "--command", action="append", default=[], help=t("cli.opt_command"))
     p.add_argument("--learn", action="append", default=[], help=t("cli.opt_learn"))
+    p.add_argument("--analyze", metavar="PATH", help=t("cli.opt_analyze"))
+    p.add_argument("--review", metavar="DIFF", help=t("cli.opt_review"))
     return p
 
 
@@ -161,6 +166,41 @@ def _learn(librarian: Librarian | None, topics: Sequence[str], language: str) ->
     return 1 if failed else 0
 
 
+def _print_findings(findings: Sequence[Diagnostic]) -> None:
+    if not findings:
+        print(t("code.cli.no_findings"))
+        return
+    for diagnostic in findings:
+        print(
+            t(
+                "code.cli.finding",
+                severity=t(f"code.severity.{diagnostic.severity}"),
+                position=diagnostic.position,
+                message=diagnostic.message,
+                line=diagnostic.line,
+            )
+        )
+
+
+def _code_report(root: str, diff_path: str | None) -> int:
+    """``--analyze`` / ``--review``: report findings; exit 1 when there are any."""
+    if diff_path is not None:
+        diff = sys.stdin.read() if diff_path == "-" else Path(diff_path).read_text("utf-8")
+        findings = review_diff(root, diff, load_config(Path(root) / "pyproject.toml"))
+        _print_findings(findings)
+        return 1 if findings else 0
+    index = CodeIndex.from_repository(root)
+    problems = index.problems
+    for problem in problems:
+        print(
+            t("code.cli.problem", path=problem.path, line=problem.line, message=problem.message),
+            file=sys.stderr,
+        )
+    findings = analyze(index, load_config(Path(root) / "pyproject.toml"))
+    _print_findings(findings)
+    return 1 if findings or problems else 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     previous = get_locale()
@@ -169,6 +209,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if isinstance(sys.stdout, io.TextIOWrapper):  # Windows consoles (cp1252): force UTF-8
         sys.stdout.reconfigure(encoding="utf-8")
     try:
+        if args.analyze or args.review:
+            try:
+                return _code_report(args.analyze or ".", args.review)
+            except AxiomeError as exc:
+                print(t("cli.error", message=exc))
+                return 1
         # In command mode the clock is frozen, so output is byte-for-byte reproducible.
         config = _config(args)
         kernel = Kernel.open(config, FixedClock() if args.command else None)

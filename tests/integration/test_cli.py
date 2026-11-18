@@ -47,6 +47,15 @@ def test_main_db_option(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> N
     assert "Yes" in capsys.readouterr().out
 
 
+def test_code_analysis_from_the_command_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "m.py").write_text("import os\n", encoding="utf-8")
+    assert main(["--analyze", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert "unused import" in out and "m.py:1" in out
+
+
 def test_repl(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     feed = iter(["?- is_a(cat, animal).", "p(", ":quit"])
     monkeypatch.setattr(builtins, "input", lambda _prompt: next(feed))

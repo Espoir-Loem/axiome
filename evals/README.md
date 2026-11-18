@@ -44,8 +44,21 @@ Catégories : arithmétique, code, contexte (conversations à plusieurs tours), 
 
 Le chiffre honnête est celui du banc réservé à sa **première** mesure : 90 %. Une fois ses échecs corrigés, il ne mesure plus la généralisation. Il faut alors écrire un nouveau banc réservé.
 
+## Bancs de code (`evals/code/`)
+
+Séparés des bancs de conversation, ils mesurent les outils de code de la RFC-0002.
+
+```
+python -m pytest tests/integration/test_code_bench.py
+```
+
+- `review.jsonl` : 5 changements étiquetés à la main. Le score est donné **par règle** (précision et rappel) : une règle qui crie au loup ne peut pas être masquée par une moyenne.
+- `generation.jsonl` : petites tâches avec tests, notées en `pass@1`. Le taux d'échecs *silencieux* (patch annoncé correct alors que les tests échouent) doit rester à zéro ; il l'est par construction, puisque l'acceptation dépend de l'exécution réelle.
+
+Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 2/2, 0 échec silencieux.
+
 ## Limites
 
-Ces bancs mesurent ce qu'Axiome sait déjà faire, dans les domaines de sa base (biologie, structures de données, algorithmes, patrons de conception, grandeurs physiques). Ils ne le comparent pas à un grand modèle de langue. Axiome ne génère pas encore de code (jalon M7), et sa conversation libre reste limitée aux schémas connus (jalon M4 pour la fluidité).
+Ces bancs mesurent ce qu'Axiome sait déjà faire, dans les domaines de sa base (biologie, structures de données, algorithmes, patrons de conception, grandeurs physiques). Ils ne le comparent pas à un grand modèle de langue. La génération de code est volontairement étroite (petites mutations d'un fichier, Python seulement), et la conversation libre reste limitée aux schémas connus (jalon M4 pour la fluidité).
 
 `golden/` contient les sorties de référence attendues (tests de non-régression octet pour octet).
