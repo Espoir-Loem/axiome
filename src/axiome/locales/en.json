@@ -33,6 +33,8 @@
   "code.diag.nom_non_utilise": "name defined but never read: '{name}'",
   "code.diff_unknown_path": "the diff changes a file missing from the repository: {path}",
   "code.finding": "{severity}: {message} ({position}: {line})",
+  "code.heldout_history": "cannot read the repository history: {detail}",
+  "code.heldout_not_failing": "the held-out task '{id}' already passes before any mutation",
   "code.not_a_directory": "not a directory: {path}",
   "code.query_expected": "a query is expected, e.g. ?- defines(Pos, Nom)",
   "code.query_shape": "one positive literal is supported, e.g. ?- defines(Pos, Nom)",

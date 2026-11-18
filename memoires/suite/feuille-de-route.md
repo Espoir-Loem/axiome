@@ -25,11 +25,12 @@ Règles d'import :
 ## Ensuite
 
 - **Contexte.** Il ne couvre que les formes prévues et la seule dernière question. Prochaine étape : une pile de sujets et les références à plus de deux tours.
-- **Nouveau banc réservé**, sur des domaines non couverts : l'actuel a servi aux corrections. Pour le code, les bancs `evals/code/` sont volontairement petits ; les étendre avant de publier un `pass@1` plus large.
+- **Nouveau banc réservé**, sur des domaines non couverts : l'actuel a servi aux corrections.
+- **Corpus du banc tenu à l'écart (code).** Le harnais existe (`evals/code/heldout.jsonl`) mais l'historique du dépôt ne fournit qu'une tâche propre : 19 commits touchent `src/`, un seul est un correctif mono-fichier dont les tests échouent avant. Prochaine étape : alimenter le corpus avec de vrais commits de petits projets Python publics (licence et provenance notées), ou construire des tâches de rejeu à partir des commits récents appliqués à l'arbre courant.
 - **Article des noms propres non humains** (« le Soleil ») à revérifier.
 - **Lenteur de Wikidata sans `AXIOME_CONTACT`.** Ajouter un cache local, puis faire basculer le gros de la taxonomie sur YAGO.
 - **M4** : petit modèle de langue maison (NumPy, 20 à 60 M de paramètres, int8). Il reformule et n'invente jamais de fait.
-- **M5** maths et physique, **M6** méta-cognition. **M7** outils de code est fait (M7.0 à M7.4, RFC-0002) : analyse, revue de diff, bac à sable et génération vérifiée par les tests. M7.4 a ajouté quatre familles de mutation et un banc de 14 tâches. Reste à couvrir d'autres langages et des correctifs multi-fichiers.
+- **M5** maths et physique, **M6** méta-cognition. **M7** outils de code est fait (M7.0 à M7.5, RFC-0002) : analyse, revue de diff, bac à sable et génération vérifiée par les tests. M7.4 a ajouté quatre familles de mutation et un banc de 14 tâches. Reste à couvrir d'autres langages et des correctifs multi-fichiers.
 
 ## Actions du mainteneur en attente
 

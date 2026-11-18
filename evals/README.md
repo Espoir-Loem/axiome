@@ -54,8 +54,11 @@ python -m pytest tests/integration/test_code_bench.py
 
 - `review.jsonl` : 5 changements étiquetés à la main. Le score est donné **par règle** (précision et rappel) : une règle qui crie au loup ne peut pas être masquée par une moyenne.
 - `generation.jsonl` : petites tâches avec tests, notées en `pass@1`. Le taux d'échecs *silencieux* (patch annoncé correct alors que les tests échouent) doit rester à zéro ; il l'est par construction, puisque l'acceptation dépend de l'exécution réelle.
+- `heldout.jsonl` : rejeu de **vrais commits** de ce dépôt. La recherche part de l'arbre parent, ne reçoit que les tests du commit correctif et doit les faire passer ; le patch attendu n'est jamais lu. Une tâche dont les tests passent déjà est une erreur d'intégrité, pas un succès gratuit.
 
-Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 14/14, 0 échec silencieux.
+Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 14/14, 0 échec silencieux ; rejeu de commits réels **0/1**.
+
+Le banc `heldout.jsonl` ne compte qu'une tâche, et c'est un résultat en soi : sur les 19 commits qui touchent `src/`, un seul modifie un fichier unique tout en faisant échouer ses tests sur l'arbre parent (`dc11b2b`). Les autres correctifs sont soit propres à une plateforme (verts sur Linux avant correction), soit étalés sur plusieurs fichiers. `0/1` ne dit donc pas « la recherche est mauvaise », il dit qu'elle ne sait pas encore traiter un correctif réel, et que le corpus manque. Ajouter une tâche ne demande qu'une ligne : `commit`, `parent`, `target`, `tests`, `changed`, `summary`.
 
 ## Limites
 

@@ -1,0 +1,1 @@
+{"id": "research-title-preference", "commit": "dc11b2b3a9d2c1f172e2e8ea5c0e54fce6c8dcaf", "parent": "bad29e5ae4af02dff57952398bb139d218ce8262", "target": "src/axiome/team/researcher.py", "tests": ["tests/unit/test_research.py"], "changed": ["src/axiome/team/researcher.py"], "summary": "prefer the page titled like the question when summarising research"}
