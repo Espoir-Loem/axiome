@@ -1,6 +1,6 @@
 # RFC-0002 : Outils de code (analyse, revue, génération vérifiée)
 
-- **Statut** : Implémenté (M7.0 à M7.3, 2026-11-18)
+- **Statut** : Implémenté (M7.0 à M7.4, 2026-11-18)
 - **Jalon** : M7
 
 ## Objectif
@@ -44,7 +44,7 @@ code/
   analyze.py   requêtes de diagnostic sur l'index (M7.1)
   review.py    diff → constats, chacun adossé à des faits (M7.1)
   sandbox.py   exécution confinée (sous-processus, limites, délai) (M7.2)
-  generate.py  recherche bornée de correctifs, jugés par les tests (M7.3)
+  generate.py  recherche bornée de correctifs, jugés par les tests (M7.3-M7.4)
 ```
 
 ## 1. Le code comme faits
@@ -145,7 +145,9 @@ Bancs (`evals/code/`, séparés des bancs de conversation) :
 - **déterminisme** : deux exécutions, même empreinte.
 
 Lancement : `python -m pytest tests/integration/test_code_bench.py` (les cas sont dans
-`evals/code/review.jsonl` et `evals/code/generation.jsonl`).
+`evals/code/review.jsonl` et `evals/code/generation.jsonl`). Le banc de génération
+compte 14 petites tâches (arithmétique, comparaisons, appartenance, booléens,
+inversion de condition, index, bornes de `range`) ; chacune échoue avant mutation.
 
 ## Implémentation
 
@@ -158,6 +160,11 @@ nom, position), `retourne`, `complexite` (1 + points de décision), `except_vide
 La CLI expose `axiome --analyze CHEMIN` et `axiome --review DIFF` (code de sortie 1
 dès qu'un constat existe). La revue passe les constats au `Reviewer` de l'équipe via
 `team/code_review.py` : le paquet `code` continue de ne pas connaître `team`.
+
+M7.4 étend la recherche à quatre familles de plus : opérateurs binaires (`+`, `-`,
+`*`, `/`, `//`, `%`), opérateurs booléens (`and`/`or`), négation d'une condition de
+`if`/`elif`/`while` et d'une `if` expression. Chaque famille reste une mutation
+locale d'un nœud AST ; le verdict vient toujours de l'exécution des tests.
 
 Aucun score n'est publié sans la commande et le commit qui l'ont produit (`evals/README.md`).
 
@@ -173,6 +180,7 @@ Voir `SECURITY.md`. Un dépôt analysé est une entrée **non fiable** : l'analy
 | M7.1 | règles d'analyse + revue de diff intégrée à l'équipe | **fait** : 8 règles, aucun diagnostic sans position ni preuve ; banc de revue étiqueté, précision et rappel 1,0 par règle |
 | M7.2 | bac à sable + exécution des tests | **fait** : copie temporaire, délai, limites `resource`, sortie plafonnée, environnement vidé ; isolation réseau annoncée dégradée quand `unshare -n` manque |
 | M7.3 | génération bornée sur tâches à tests | **fait** : `pass@1` 2/2 sur le banc, 0 échec silencieux, même graine → même patch |
+| M7.4 | plus de patrons de mutation et un banc réaliste | **fait** : opérateurs binaires, `and`/`or`, condition et `if` expression négation ; banc de 14 tâches, `pass@1` 14/14, 0 échec silencieux |
 
 ## Questions ouvertes
 

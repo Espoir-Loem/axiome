@@ -22,7 +22,7 @@ fusionnée en squash (voir `CONTRIBUTING.md`).
   - **Analyse :** 8 règles nommées, chacune adossée à des faits et à une position ; seuil et règles réglés dans `[tool.axiome.code]`.
   - **Revue :** un diff est appliqué en mémoire, seuls les constats nouveaux sont retenus et passent par le `Reviewer` existant. `axiome --analyze` et `axiome --review`.
   - **Bac à sable :** copie temporaire, délai, limites `resource`, sortie plafonnée, environnement vidé, réseau coupé si `unshare -n` est disponible (sinon signalé comme dégradé).
-  - **Génération :** recherche bornée de mutations, chaque candidat jugé par les tests du projet ; `pass@1` 2/2 sur le banc, 0 échec silencieux.
+  - **Génération :** recherche bornée de mutations (littéraux, booléens, comparaisons, `not`, opérateurs binaires, `and`/`or`, négation de condition), chaque candidat jugé par les tests du projet ; `pass@1` 14/14 sur le banc, 0 échec silencieux.
 
 ## Scores
 
@@ -30,7 +30,7 @@ fusionnée en squash (voir `CONTRIBUTING.md`).
 |---|---|---|
 | `evals/suites/` (travail, 138 cas) | 138/138 | Ces cas ont servi à corriger : ce score surestime le niveau réel. |
 | `evals/heldout/` (réservé, 62 cas) | 62/62 | Mesures honnêtes, prises avant correction : 38/42 (90 %), puis 19/20 (95 %) pour les conversations. |
-| Tests | 334 verts, couverture 95,9 % | ruff et mypy strict propres ; couche `code/` de 89 à 100 % |
+| Tests | 340 verts, couverture 95,6 % | ruff et mypy strict propres ; couche `code/` de 89 à 100 % |
 
 L'historique détaillé des scores est dans `evals/README.md`.
 

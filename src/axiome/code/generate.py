@@ -1,8 +1,9 @@
 """Bounded, execution-verified repair search (M7.3).
 
 No pre-trained model: candidates are small, deterministic mutations of the
-target file (literals, boolean constants, comparison operators, ``not``).
-Each candidate runs the project's tests in the sandbox, on a temporary copy.
+target file (literals, boolean constants, comparison and binary operators,
+boolean operators, ``not``, and negated conditions). Each candidate runs the
+project's tests in the sandbox, on a temporary copy.
 A patch is accepted only when the tests really pass; otherwise the search
 reports the rejected candidates and their outcome. Nothing is ever presented
 as correct on the strength of its shape (RFC-0002).
@@ -142,6 +143,12 @@ def _node_edits(lines: list[str], node: ast.AST) -> list[_Edit]:
         return _not_edit(lines, node)
     if isinstance(node, ast.Compare) and len(node.ops) == 1 and _single_line(node):
         return _comparison_edit(lines, node)
+    if isinstance(node, ast.BinOp):
+        return _binary_edit(lines, node)
+    if isinstance(node, ast.BoolOp):
+        return _boolean_edit(lines, node)
+    if isinstance(node, (ast.If, ast.IfExp)):
+        return _condition_edit(lines, node.test)
     return []
 
 
@@ -186,6 +193,47 @@ def _comparison_edit(lines: list[str], node: ast.Compare) -> list[_Edit]:
             start = left.end_col_offset + segment.index(symbol)
             return [_Edit(node.lineno, start, start + len(symbol), _OPPOSITE[symbol])]
     return []
+
+
+def _binary_edit(lines: list[str], node: ast.BinOp) -> list[_Edit]:
+    left, right = node.left, node.right
+    if left.end_lineno != right.lineno or left.end_col_offset is None:
+        return []
+    line = lines[node.lineno - 1]
+    segment = line[left.end_col_offset : right.col_offset]
+    symbol = segment.strip()
+    replacements = _OPPOSITE_OPERATORS.get(symbol)
+    if replacements is None:
+        return []
+    start = left.end_col_offset + segment.index(symbol)
+    return [
+        _Edit(node.lineno, start, start + len(symbol), replacement) for replacement in replacements
+    ]
+
+
+def _boolean_edit(lines: list[str], node: ast.BoolOp) -> list[_Edit]:
+    first, second = node.values[0], node.values[1]
+    if first.end_lineno != second.lineno or first.end_col_offset is None:
+        return []
+    line = lines[node.lineno - 1]
+    segment = line[first.end_col_offset : second.col_offset]
+    symbol = segment.strip()
+    replacement = _OPPOSITE_BOOLEANS.get(symbol)
+    if replacement is None:
+        return []
+    start = first.end_col_offset + segment.index(symbol)
+    return [_Edit(node.lineno, start, start + len(symbol), replacement)]
+
+
+def _condition_edit(lines: list[str], test: ast.expr) -> list[_Edit]:
+    """Insert ``not`` before a condition, unless it is already negated."""
+    if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+        return []
+    line = lines[test.lineno - 1]
+    before = line[: test.col_offset]
+    if not before.rstrip().endswith(("if", "elif", "while")):
+        return []
+    return [_Edit(test.lineno, test.col_offset, test.col_offset, "not ")]
 
 
 def _single_line(node: ast.expr) -> bool:
@@ -242,3 +290,12 @@ _OPPOSITE = {
     "is": "is not",
     "is not": "is",
 }
+_OPPOSITE_OPERATORS: dict[str, tuple[str, ...]] = {
+    "+": ("-",),
+    "-": ("+",),
+    "*": ("//",),
+    "/": ("//",),
+    "//": ("*",),
+    "%": ("//",),
+}
+_OPPOSITE_BOOLEANS = {"and": "or", "or": "and"}

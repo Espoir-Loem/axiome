@@ -23,6 +23,6 @@ def test_review_bench_per_rule() -> None:
 def test_generation_bench_has_no_silent_failure() -> None:
     cases = load_generation(BENCH / "generation.jsonl")
     report = run_generation(cases)
-    assert report.cases == 2
+    assert report.cases == 14
     assert report.pass_at_1 == 1.0
     assert report.silent_failures == 0
