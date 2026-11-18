@@ -5,7 +5,8 @@ Ce fichier complète [CONTRIBUTING.md](CONTRIBUTING.md), qui fait foi en cas de 
 ## Branches et pull requests
 
 - **Jamais de commit direct sur `main`.** Toute modification part d'une branche :
-  `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`.
+  `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. Après le clone, activer le
+  garde-fou local avec `make hooks` : il refuse les pushes directs vers `main`.
 - Une branche porte **un seul sujet**, puis une PR vers `main`, fusionnée en
   *squash merge* après revue et CI verte.
 - Petites PR : moins de 400 lignes modifiées, hors données et tests.
