@@ -1,0 +1,17 @@
+{
+  "id": "incomplete-input",
+  "commit": "1e193e29eb38852ba4d8d0ab83ebecb65e408c50",
+  "target": "src/axiome/team/analyst.py",
+  "tests": [
+    "tests/integration/test_session.py",
+    "tests/unit/test_language.py"
+  ],
+  "changed": [
+    "src/axiome/data/lang/en/grammar.json",
+    "src/axiome/data/lang/fr/grammar.json",
+    "src/axiome/dialogue/session.py",
+    "src/axiome/language/lexicon.py",
+    "src/axiome/team/analyst.py"
+  ],
+  "summary": "answer incomplete input and announce typo corrections"
+}

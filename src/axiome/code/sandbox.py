@@ -174,6 +174,9 @@ def _environment(work: Path) -> dict[str, str]:
     """A clean environment: no AXIOME_*, no proxy, no secret, fixed seeds."""
     environment = {
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        # The copy must shadow an editable install of this very package, otherwise
+        # the project's tests would measure the working tree instead of the copy.
+        "PYTHONPATH": os.pathsep.join((str(work / "src"), str(work))),
         "HOME": str(work),
         "TMPDIR": str(work),
         "PYTHONHASHSEED": "0",

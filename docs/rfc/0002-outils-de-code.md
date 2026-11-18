@@ -1,6 +1,6 @@
 # RFC-0002 : Outils de code (analyse, revue, génération vérifiée)
 
-- **Statut** : Implémenté (M7.0 à M7.5, 2026-11-18)
+- **Statut** : Implémenté (M7.0 à M7.6, 2026-11-18)
 - **Jalon** : M7
 
 ## Objectif
@@ -146,13 +146,15 @@ Bancs (`evals/code/`, séparés des bancs de conversation) :
 
 Lancement : `python -m pytest tests/integration/test_code_bench.py` (les cas sont dans
 `evals/code/review.jsonl` et `evals/code/generation.jsonl`), et
-`tests/integration/test_code_heldout.py` pour le rejeu de vrais commits hébergé par
-`evals/code/heldout.jsonl` : l'arbre parent est extrait, seuls les tests du commit
-correctif sont ajoutés, et le patch attendu n'est jamais lu. Le banc de génération
+`tests/integration/test_code_replay.py` pour le banc par rejeu hébergé par
+`evals/code/replay/` : l'arbre du commit correctif est extrait, ses fichiers source
+sont ramenés à leur version parente, et le patch attendu n'est jamais lu. Le banc de génération
 compte 14 petites tâches (arithmétique, comparaisons, appartenance, booléens,
 inversion de condition, index, bornes de `range`) ; chacune échoue avant mutation.
-Le banc tenu à l'écart rejoue en plus un commit réel du dépôt, sans révéler son
-correctif ; une tâche qui passe déjà est une erreur d'intégrité.
+Le banc par rejeu rejoue en plus trois commits réels du dépôt, sans révéler leur
+correctif ; une tâche qui passe déjà est une erreur d'intégrité. Il révèle aussi
+l'infrastructure : c'est lui qui a montré que la copie du bac à sable devait primer
+sur une installation éditable du paquet.
 
 ## Implémentation
 
@@ -186,7 +188,8 @@ Voir `SECURITY.md`. Un dépôt analysé est une entrée **non fiable** : l'analy
 | M7.2 | bac à sable + exécution des tests | **fait** : copie temporaire, délai, limites `resource`, sortie plafonnée, environnement vidé ; isolation réseau annoncée dégradée quand `unshare -n` manque |
 | M7.3 | génération bornée sur tâches à tests | **fait** : `pass@1` 2/2 sur le banc, 0 échec silencieux, même graine → même patch |
 | M7.4 | plus de patrons de mutation et un banc réaliste | **fait** : opérateurs binaires, `and`/`or`, condition et `if` expression négation ; banc de 14 tâches, `pass@1` 14/14, 0 échec silencieux |
-| M7.5 | banc tenu à l'écart sur de vrais commits | **fait** : rejeu de l'arbre parent, tests du commit correctif seuls révélés, patch attendu jamais lu ; `pass@1` 0/1 sur la seule tâche réelle de l'historique ; une tâche déjà verte est rejetée comme erreur d'intégrité |
+| M7.5 | banc tenu à l'écart sur de vrais commits | **fait** : l'arbre d'un commit réel est extrait, seuls ses tests sont révélés, le patch attendu n'est jamais lu ; une tâche déjà verte est rejetée comme erreur d'intégrité. La première mesure (`0/1`) a été invalidée par le défaut de bac à sable corrigé en M7.6. |
+| M7.6 | corpus par rejeu inversé | **fait** : arbre du commit correctif, fichiers source ramenés à leur version parente, tests du commit rejoués ; trois tâches dont une multi-fichiers, `pass@1` 0/3. `PYTHONPATH` du bac à sable pointe vers la copie, plus vers le paquet installé. |
 
 ## Questions ouvertes
 

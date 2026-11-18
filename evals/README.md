@@ -50,15 +50,18 @@ Séparés des bancs de conversation, ils mesurent les outils de code de la RFC-0
 
 ```
 python -m pytest tests/integration/test_code_bench.py
+python -m pytest tests/integration/test_code_replay.py
 ```
 
 - `review.jsonl` : 5 changements étiquetés à la main. Le score est donné **par règle** (précision et rappel) : une règle qui crie au loup ne peut pas être masquée par une moyenne.
 - `generation.jsonl` : petites tâches avec tests, notées en `pass@1`. Le taux d'échecs *silencieux* (patch annoncé correct alors que les tests échouent) doit rester à zéro ; il l'est par construction, puisque l'acceptation dépend de l'exécution réelle.
-- `heldout.jsonl` : rejeu de **vrais commits** de ce dépôt. La recherche part de l'arbre parent, ne reçoit que les tests du commit correctif et doit les faire passer ; le patch attendu n'est jamais lu. Une tâche dont les tests passent déjà est une erreur d'intégrité, pas un succès gratuit.
+- `replay/` : rejeu de **vrais commits** de ce dépôt, à l'envers. L'arbre du commit correctif est extrait, les fichiers source qu'il a modifiés sont ramenés à leur version parente, puis ses tests sont lancés : ils doivent échouer. La recherche peut alors modifier un fichier cible et est jugée par ces mêmes tests. Le patch attendu n'est jamais lu ; une tâche déjà verte est une erreur d'intégrité, pas un succès gratuit.
 
-Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 14/14, 0 échec silencieux ; rejeu de commits réels **0/1**.
+Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 14/14, 0 échec silencieux ; rejeu de commits réels **0/3**.
 
-Le banc `heldout.jsonl` ne compte qu'une tâche, et c'est un résultat en soi : sur les 19 commits qui touchent `src/`, un seul modifie un fichier unique tout en faisant échouer ses tests sur l'arbre parent (`dc11b2b`). Les autres correctifs sont soit propres à une plateforme (verts sur Linux avant correction), soit étalés sur plusieurs fichiers. `0/1` ne dit donc pas « la recherche est mauvaise », il dit qu'elle ne sait pas encore traiter un correctif réel, et que le corpus manque. Ajouter une tâche ne demande qu'une ligne : `commit`, `parent`, `target`, `tests`, `changed`, `summary`.
+Les trois tâches sont `dc11b2b` (préférence pour la page homonyme), `b2ce7c6` (familles de mutation) et `1e193e2` (entrée incomplète, cinq fichiers). `0/3` ne dit pas que la recherche est mauvaise : il dit qu'elle ne sait pas encore traiter un correctif réel, qui demande plusieurs éditions et parfois plusieurs fichiers. Ajouter une tâche ne demande aucune ligne de code : un dossier dans `evals/code/replay/`, un `manifest.json` (`id`, `commit`, `target`, `tests`, `changed`, `summary`) et les versions parentes des fichiers reversés.
+
+Attention au sens de lecture : ce banc rejoue des commits **du dépôt courant**, donc il mesure aussi sa propre infrastructure. La première version donnait `0/1` pour une mauvaise raison — le bac à sable laissait `import axiome` résoudre le paquet installé (`-e .`) au lieu de l'arbre copié. `PYTHONPATH` pointe désormais vers la copie, et un test dédié verrouille ce comportement.
 
 ## Limites
 

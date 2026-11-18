@@ -41,6 +41,18 @@ def test_environment_is_scrubbed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert "do-not-leak" not in result.stdout + result.stderr
 
 
+def test_the_copied_tree_shadows_the_installed_package(tmp_path: Path) -> None:
+    package = tmp_path / "src" / "axiome"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("MARK = 'copied-tree'\n", encoding="utf-8")
+    result = run(
+        tmp_path,
+        [sys.executable, "-c", "import axiome; print(axiome.MARK)"],
+        isolate_network=False,
+    )
+    assert result.stdout.strip() == "copied-tree"
+
+
 def test_timeout_is_reported(tmp_path: Path) -> None:
     result = run(
         tmp_path,
