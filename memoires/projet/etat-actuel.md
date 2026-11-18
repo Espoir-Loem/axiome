@@ -1,8 +1,10 @@
 # État actuel (au 2026-11-18)
 
-Dernier commit : `b156887`. Le travail M7.0 à M7.3 de cette session n'est pas encore commité : le mainteneur valide et pousse.
-La branche locale `main` a divergé de `origin/main`. Le push doit être fait par le mainteneur :
-`git push --force-with-lease origin main`.
+Dernier commit : `2390c39` (outils de code, M7.0 à M7.3), poussé sur `origin/main`.
+
+**Flux de travail :** aucun commit direct sur `main`. Chaque changement part d'une
+branche (`feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`), puis d'une PR relue et
+fusionnée en squash (voir `CONTRIBUTING.md`).
 
 ## Ce qui fonctionne
 
