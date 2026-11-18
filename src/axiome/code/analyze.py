@@ -31,6 +31,7 @@ Enabled rules and the complexity threshold are declared in
 from __future__ import annotations
 
 import builtins
+import re
 import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -119,11 +120,50 @@ def load_config(path: str | Path = "pyproject.toml") -> AnalysisConfig:
 
 
 def _read_toml(path: Path) -> dict[str, Any]:
-    if sys.version_info < (3, 11):  # pragma: no cover - the project supports 3.10
+    if sys.version_info >= (3, 11):
+        toml = cast("Any", import_module("tomllib"))
+        with path.open("rb") as handle:
+            return cast("dict[str, Any]", toml.load(handle))
+    return _read_code_section(path)
+
+
+def _read_code_section(path: Path) -> dict[str, Any]:
+    """Read ``[tool.axiome.code]`` on Python 3.10, which has no ``tomllib``.
+
+    Only the two documented keys are understood; the rest of the file is
+    ignored. This keeps the standard-library-only promise instead of adding
+    a TOML dependency for one section.
+    """
+    section: dict[str, Any] = {}
+    inside = False
+    lines = path.read_text(encoding="utf-8").splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
+        index += 1
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("["):
+            inside = line == "[tool.axiome.code]"
+            continue
+        if not inside or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip()
+        if key == "rules":
+            while "]" not in value and index < len(lines):
+                value += " " + lines[index].strip()
+                index += 1
+            section[key] = re.findall(r'"([^"]*)"', value)
+        elif key == "complexity_threshold":
+            number = value.split("#", 1)[0].strip()
+            try:
+                section[key] = int(number)
+            except ValueError:
+                section[key] = number
+    if not section:
         return {}
-    toml = cast("Any", import_module("tomllib"))
-    with path.open("rb") as handle:
-        return cast("dict[str, Any]", toml.load(handle))
+    return {"tool": {"axiome": {"code": section}}}
 
 
 def analyze(index: CodeIndex, config: AnalysisConfig | None = None) -> tuple[Diagnostic, ...]:
@@ -153,9 +193,7 @@ class _Facts:
         self.lines: dict[str, str] = {
             str(fact.args[0]): str(fact.args[1]) for fact in index.of("ligne")
         }
-        self.defines: dict[str, Atom] = {
-            str(fact.args[1]): fact for fact in index.of("defines")
-        }
+        self.defines: dict[str, Atom] = {str(fact.args[1]): fact for fact in index.of("defines")}
         self.module_paths: dict[str, str] = {}
         for position in self.lines:
             path = Position.parse(position).path
@@ -346,9 +384,7 @@ def _comparaison_a_none(facts: _Facts, rule: Rule, _config: AnalysisConfig) -> l
     ]
 
 
-def _complexite_cyclomatique(
-    facts: _Facts, rule: Rule, config: AnalysisConfig
-) -> list[Diagnostic]:
+def _complexite_cyclomatique(facts: _Facts, rule: Rule, config: AnalysisConfig) -> list[Diagnostic]:
     out: list[Diagnostic] = []
     for fact in facts.index.of("complexite"):
         name, raw = str(fact.args[0]), fact.args[1]

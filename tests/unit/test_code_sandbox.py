@@ -65,9 +65,7 @@ def test_output_is_capped(tmp_path: Path) -> None:
 
 
 def test_network_state_is_never_claimed_without_check(tmp_path: Path) -> None:
-    result = run(
-        tmp_path, [sys.executable, "-c", "print(1)"], isolate_network=False
-    )
+    result = run(tmp_path, [sys.executable, "-c", "print(1)"], isolate_network=False)
     assert not result.network_isolated
     assert not result.degraded_network
     requested = run(tmp_path, [sys.executable, "-c", "print(1)"], isolate_network=True)

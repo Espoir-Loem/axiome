@@ -13,13 +13,7 @@ from axiome.team.code_review import claims_for, review_findings
 
 BEFORE = "m.py", "import os\n\nprint(os.getcwd())\n"
 ADD_UNUSED = (
-    "--- a/m.py\n"
-    "+++ b/m.py\n"
-    "@@ -1,3 +1,4 @@\n"
-    " import os\n"
-    "+import math\n"
-    " \n"
-    " print(os.getcwd())\n"
+    "--- a/m.py\n+++ b/m.py\n@@ -1,3 +1,4 @@\n import os\n+import math\n \n print(os.getcwd())\n"
 )
 ADD_USED = (
     "--- a/m.py\n"

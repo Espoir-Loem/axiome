@@ -25,7 +25,9 @@ import tempfile
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
+from importlib import import_module
 from pathlib import Path
+from typing import Any
 
 from axiome.code.source import IGNORED_DIRECTORIES
 from axiome.core.errors import CodeError
@@ -154,9 +156,23 @@ def _decode(data: bytes | None, cap: int) -> tuple[str, bool]:
     return raw[:cap].decode("utf-8", errors="replace"), truncated
 
 
+#: Windows needs these to start a process at all; none of them carries a
+#: secret. SystemRoot is required by subprocess (side-by-side assemblies).
+_WINDOWS_ESSENTIALS = (
+    "SYSTEMROOT",
+    "SYSTEMDRIVE",
+    "WINDIR",
+    "COMSPEC",
+    "PATHEXT",
+    "USERPROFILE",
+    "APPDATA",
+    "LOCALAPPDATA",
+)
+
+
 def _environment(work: Path) -> dict[str, str]:
     """A clean environment: no AXIOME_*, no proxy, no secret, fixed seeds."""
-    return {
+    environment = {
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
         "HOME": str(work),
         "TMPDIR": str(work),
@@ -167,13 +183,23 @@ def _environment(work: Path) -> dict[str, str]:
         "LANG": "C.UTF-8",
         "SOURCE_DATE_EPOCH": "0",
     }
+    if os.name == "nt":
+        for name in _WINDOWS_ESSENTIALS:
+            value = os.environ.get(name)
+            if value:
+                environment[name] = value
+        environment["TEMP"] = str(work)
+        environment["TMP"] = str(work)
+    return environment
 
 
 def _limiter(limits: SandboxLimits) -> Callable[[], None]:
     """Return a ``preexec_fn`` applying POSIX resource limits in the child."""
 
     def apply() -> None:
-        import resource  # noqa: PLC0415 - POSIX only, absent on Windows
+        # Imported dynamically: typeshed describes ``resource`` as POSIX-only,
+        # so a direct import fails mypy on Windows even inside a guarded call.
+        resource: Any = import_module("resource")
 
         for kind, value in (
             (resource.RLIMIT_CPU, limits.cpu_seconds),
@@ -181,9 +207,14 @@ def _limiter(limits: SandboxLimits) -> Callable[[], None]:
             (resource.RLIMIT_FSIZE, limits.file_bytes),
             (resource.RLIMIT_CORE, 0),
         ):
-            _soft, hard = resource.getrlimit(kind)
-            ceiling = value if hard == resource.RLIM_INFINITY else min(value, hard)
-            resource.setrlimit(kind, (ceiling, ceiling))
+            try:
+                _soft, hard = resource.getrlimit(kind)
+                ceiling = value if hard == resource.RLIM_INFINITY else min(value, hard)
+                resource.setrlimit(kind, (ceiling, ceiling))
+            except (OSError, ValueError):
+                # Some limits, notably RLIMIT_AS on macOS, are unsupported.
+                # Skipping one must not abort a run that is otherwise confined.
+                continue
 
     return apply
 

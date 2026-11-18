@@ -84,9 +84,7 @@ def test_comparison_and_not_mutations_are_searched(tmp_path: Path) -> None:
 
     negated_root = tmp_path / "negated"
     negated_root.mkdir()
-    (negated_root / "flag.py").write_text(
-        "def ok(flag):\n    return not flag\n", encoding="utf-8"
-    )
+    (negated_root / "flag.py").write_text("def ok(flag):\n    return not flag\n", encoding="utf-8")
     (negated_root / "test_flag.py").write_text(
         "from flag import ok\n\n\ndef test_ok():\n    assert ok(False) is False\n",
         encoding="utf-8",
