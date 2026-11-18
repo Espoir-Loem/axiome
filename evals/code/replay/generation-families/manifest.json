@@ -1,0 +1,12 @@
+{
+  "id": "generation-families",
+  "commit": "b2ce7c63283a57bcc6a736d8260e077eb19e2dd7",
+  "target": "src/axiome/code/generate.py",
+  "tests": [
+    "tests/unit/test_code_generate.py"
+  ],
+  "changed": [
+    "src/axiome/code/generate.py"
+  ],
+  "summary": "search binary, boolean and conditional mutations"
+}
