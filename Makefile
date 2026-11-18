@@ -1,12 +1,15 @@
 PY ?= .venv/bin/python
 
-.PHONY: help venv lint format typecheck test cov determinism check run clean
+.PHONY: help venv hooks lint format typecheck test cov determinism check run clean
 
 help:  ## Affiche cette aide
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*## "}{printf "  %-12s %s\n", $$1, $$2}'
 
 venv:  ## Crée l'environnement de développement
 	uv venv .venv && uv pip install --python $(PY) -e '.[dev]'
+
+hooks:  ## Refuse les pushes directs vers main (une fois par clone)
+	git config core.hooksPath .githooks
 
 lint:  ## Analyse statique (ruff)
 	$(PY) -m ruff check src tests
