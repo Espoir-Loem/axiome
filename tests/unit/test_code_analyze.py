@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -15,6 +17,8 @@ from axiome.code.analyze import (
 from axiome.code.index import CodeIndex
 from axiome.code.source import Position, SourceFile
 from axiome.core.errors import CodeError
+
+analyze_module = importlib.import_module("axiome.code.analyze")
 
 
 def run(rule: str, source: str, threshold: int = 10) -> tuple[Diagnostic, ...]:
@@ -136,3 +140,25 @@ def test_load_config(tmp_path: Path) -> None:
     pyproject.write_text("[tool.axiome.code]\ncomplexity_threshold = 0\n", encoding="utf-8")
     with pytest.raises(CodeError, match="invalid complexity threshold"):
         load_config(pyproject)
+
+
+def test_load_config_on_python_310(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Python 3.10 has no tomllib; the section must still be read, not ignored."""
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.axiome.code]\nrules = ["code_mort"]\ncomplexity_threshold = 4\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(analyze_module, "sys", SimpleNamespace(version_info=(3, 10)))
+    config = load_config(pyproject)
+    assert config.enabled == frozenset({"code_mort"})
+    assert config.complexity_threshold == 4
+
+
+def test_load_config_on_python_310_without_section(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[project]\nname = "x"\n', encoding="utf-8")
+    monkeypatch.setattr(analyze_module, "sys", SimpleNamespace(version_info=(3, 10)))
+    assert load_config(pyproject) == AnalysisConfig()

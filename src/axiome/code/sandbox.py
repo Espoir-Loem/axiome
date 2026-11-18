@@ -25,7 +25,9 @@ import tempfile
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
+from importlib import import_module
 from pathlib import Path
+from typing import Any
 
 from axiome.code.source import IGNORED_DIRECTORIES
 from axiome.core.errors import CodeError
@@ -173,7 +175,9 @@ def _limiter(limits: SandboxLimits) -> Callable[[], None]:
     """Return a ``preexec_fn`` applying POSIX resource limits in the child."""
 
     def apply() -> None:
-        import resource  # noqa: PLC0415 - POSIX only, absent on Windows
+        # Imported dynamically: typeshed describes ``resource`` as POSIX-only,
+        # so a direct import fails mypy on Windows even inside a guarded call.
+        resource: Any = import_module("resource")
 
         for kind, value in (
             (resource.RLIMIT_CPU, limits.cpu_seconds),
@@ -181,9 +185,14 @@ def _limiter(limits: SandboxLimits) -> Callable[[], None]:
             (resource.RLIMIT_FSIZE, limits.file_bytes),
             (resource.RLIMIT_CORE, 0),
         ):
-            _soft, hard = resource.getrlimit(kind)
-            ceiling = value if hard == resource.RLIM_INFINITY else min(value, hard)
-            resource.setrlimit(kind, (ceiling, ceiling))
+            try:
+                _soft, hard = resource.getrlimit(kind)
+                ceiling = value if hard == resource.RLIM_INFINITY else min(value, hard)
+                resource.setrlimit(kind, (ceiling, ceiling))
+            except (OSError, ValueError):
+                # Some limits, notably RLIMIT_AS on macOS, are unsupported.
+                # Skipping one must not abort a run that is otherwise confined.
+                continue
 
     return apply
 
