@@ -19,6 +19,7 @@
   "cli.unknown_command": "Commande inconnue : {name} (tapez :help)",
   "code.bad_budget": "budget de génération invalide : {value} (au moins 1)",
   "code.bad_diff": "diff illisible : {detail}",
+  "code.bad_depth": "profondeur de recherche invalide : {value} (au moins 1)",
   "code.bad_threshold": "seuil de complexité invalide : {value} (entier positif attendu)",
   "code.cli.finding": "{severity} {position} : {message}  |  {line}",
   "code.cli.no_findings": "Aucun problème détecté.",

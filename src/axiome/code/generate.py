@@ -1,23 +1,29 @@
-"""Bounded, execution-verified repair search (M7.3).
+"""Bounded, execution-verified repair search (M7.3, widened in M7.7).
 
 No pre-trained model: candidates are small, deterministic mutations of the
-target file (literals, boolean constants, comparison and binary operators,
+target files (literals, boolean constants, comparison and binary operators,
 boolean operators, ``not``, and negated conditions). Each candidate runs the
 project's tests in the sandbox, on a temporary copy.
-A patch is accepted only when the tests really pass; otherwise the search
-reports the rejected candidates and their outcome. Nothing is ever presented
-as correct on the strength of its shape (RFC-0002).
+
+``depth`` composes up to that many edits on distinct lines, and ``extra_targets``
+lets a composition span several files; the search is breadth-first and every
+attempt is a complete patch evaluated by the tests. A patch is accepted only
+when the tests really pass; otherwise the search reports the rejected candidates
+and their outcome. Nothing is ever presented as correct on the strength of its
+shape (RFC-0002).
 """
 
 from __future__ import annotations
 
 import ast
 import difflib
+from collections import deque
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 from axiome.code.sandbox import SandboxLimits, run_tests
-from axiome.core.errors import CodeError
+from axiome.core.errors import CodeError, CodeSyntaxError
 
 DEFAULT_BUDGET = 50
 ACCEPTED = "accepted"
@@ -62,9 +68,17 @@ class _Edit:
 
 @dataclass(frozen=True, slots=True)
 class _Candidate:
-    index: int
-    patch: str
+    lineno: int
     text: str
+
+
+@dataclass(frozen=True, slots=True)
+class _State:
+    """A partial patch: file contents, touched lines and its depth."""
+
+    files: Mapping[str, str]
+    edited: frozenset[tuple[str, int]]
+    depth: int
 
 
 def generate(
@@ -76,48 +90,93 @@ def generate(
     seed: int = 0,
     limits: SandboxLimits | None = None,
     isolate_network: bool = True,
+    extra_targets: tuple[str, ...] = (),
+    depth: int = 1,
 ) -> GenerationResult:
-    """Search at most ``budget`` deterministic candidates and keep the first that passes."""
+    """Search at most ``budget`` deterministic patches and keep the first that passes.
+
+    A patch is one edit, or a composition of at most ``depth`` edits on distinct
+    lines, possibly spread over ``extra_targets``. States are visited breadth-first:
+    every single edit is tried before a composition of two, and so on. The budget
+    counts executed attempts at every depth, and the tests alone decide acceptance.
+    """
     if budget < 1:
         raise CodeError("code.bad_budget", value=budget)
+    if depth < 1:
+        raise CodeError("code.bad_depth", value=depth)
     base = Path(root)
-    source = base / target
-    if not source.is_file():
-        raise CodeError("code.unknown_file", path=target)
-    original = source.read_text(encoding="utf-8")
-    candidates = _candidates(target, original, budget, seed)
-    if not candidates:
-        return GenerationResult(NO_CANDIDATES, seed=seed, budget=budget)
+    paths = (target, *(path for path in extra_targets if path != target))
+    originals: dict[str, str] = {}
+    for path in paths:
+        source = base / path
+        if not source.is_file():
+            raise CodeError("code.unknown_file", path=path)
+        originals[path] = source.read_text(encoding="utf-8")
     attempts: list[Attempt] = []
-    for candidate in candidates:
-        result = run_tests(
-            base,
-            tests,
-            limits,
-            isolate_network=isolate_network,
-            overlay={target: candidate.text},
-        )
-        attempt = Attempt(candidate.index, candidate.patch, result.passed, result.report())
-        attempts.append(attempt)
-        if result.passed:
-            return GenerationResult(ACCEPTED, candidate.patch, tuple(attempts), seed, budget)
+    states = deque([_State(originals, frozenset(), 0)])
+    seen = {_key(originals)}
+    while states:
+        state = states.popleft()
+        for child in _children(state, paths, seed, seen):
+            if len(attempts) >= budget:
+                return GenerationResult(BUDGET_EXHAUSTED, "", tuple(attempts), seed, budget)
+            patch = _combined_patch(originals, child.files)
+            outcome = run_tests(
+                base,
+                tests,
+                limits,
+                isolate_network=isolate_network,
+                overlay=dict(child.files),
+            )
+            attempts.append(Attempt(len(attempts), patch, outcome.passed, outcome.report()))
+            if outcome.passed:
+                return GenerationResult(ACCEPTED, patch, tuple(attempts), seed, budget)
+            if child.depth < depth:
+                states.append(child)
+    if not attempts:
+        return GenerationResult(NO_CANDIDATES, seed=seed, budget=budget)
     return GenerationResult(BUDGET_EXHAUSTED, "", tuple(attempts), seed, budget)
 
 
-def _candidates(target: str, text: str, budget: int, seed: int) -> tuple[_Candidate, ...]:
+def _key(files: Mapping[str, str]) -> tuple[tuple[str, str], ...]:
+    return tuple(sorted(files.items()))
+
+
+def _children(
+    state: _State,
+    paths: tuple[str, ...],
+    seed: int,
+    seen: set[tuple[tuple[str, str], ...]],
+) -> Iterator[_State]:
+    """Yield unseen states with one more edit, in a fixed order."""
+    for path in paths:
+        skip = frozenset(lineno for edited, lineno in state.edited if edited == path)
+        for candidate in _candidates(path, state.files[path], seed, skip):
+            files = {**state.files, path: candidate.text}
+            key = _key(files)
+            if key in seen:
+                continue
+            seen.add(key)
+            yield _State(files, state.edited | {(path, candidate.lineno)}, state.depth + 1)
+
+
+def _candidates(
+    target: str, text: str, seed: int, skip: frozenset[int] = frozenset()
+) -> tuple[_Candidate, ...]:
     """Build the canonical candidate list, rotated deterministically by ``seed``."""
     lines = text.splitlines()
     newline = "\n" if text.endswith("\n") else ""
     try:
         tree = ast.parse(text, filename=target)
     except SyntaxError as exc:
-        raise CodeError(
+        raise CodeSyntaxError(
             "code.syntax_error", path=target, line=exc.lineno or 0, detail=exc.msg
         ) from exc
     edits: list[_Edit] = []
     for node in ast.walk(tree):
         edits.extend(_node_edits(lines, node))
     edits.sort(key=lambda edit: (edit.lineno, edit.start, edit.end, edit.replacement))
+    edits = [edit for edit in edits if edit.lineno not in skip]
     seen = {text}
     candidates: list[_Candidate] = []
     for edit in edits:
@@ -125,14 +184,12 @@ def _candidates(target: str, text: str, budget: int, seed: int) -> tuple[_Candid
         if changed in seen:
             continue
         seen.add(changed)
-        patch = _unified(target, text, changed)
-        if patch:
-            candidates.append(_Candidate(len(candidates), patch, changed))
+        if _unified(target, text, changed):
+            candidates.append(_Candidate(edit.lineno, changed))
     if not candidates:
         return ()
     offset = seed % len(candidates)
-    ordered = [*candidates[offset:], *candidates[:offset]]
-    return tuple(ordered[:budget])
+    return (*candidates[offset:], *candidates[:offset])
 
 
 def _node_edits(lines: list[str], node: ast.AST) -> list[_Edit]:
@@ -253,6 +310,14 @@ def _apply(lines: list[str], edit: _Edit, newline: str) -> str:
     changed = f"{line[: edit.start]}{edit.replacement}{line[edit.end :]}"
     out = [*lines[: edit.lineno - 1], changed, *lines[edit.lineno :]]
     return "\n".join(out) + newline
+
+
+def _combined_patch(originals: Mapping[str, str], files: Mapping[str, str]) -> str:
+    return "\n".join(
+        _unified(path, originals[path], files[path]).rstrip("\n")
+        for path in originals
+        if files[path] != originals[path]
+    )
 
 
 def _unified(target: str, before: str, after: str) -> str:

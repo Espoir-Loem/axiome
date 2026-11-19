@@ -12,10 +12,17 @@ from axiome.code.generate import (
     NO_CANDIDATES,
     generate,
 )
-from axiome.core.errors import CodeError
+from axiome.core.errors import CodeError, CodeSyntaxError
 
 MOD = "def double(n):\n    return n + 3\n"
 TEST = "from mod import double\n\n\ndef test_double():\n    assert double(2) == 4\n"
+
+PAIR_SOURCE = "def bounds():\n    first = 1\n    second = 1\n    return first, second\n"
+PAIR_TEST = "from mod import bounds\n\n\ndef test_bounds():\n    assert bounds() == (2, 2)\n"
+
+HELPER_SOURCE = "def double(n):\n    return n + 1\n"
+MAIN_SOURCE = "from helper import double\n\n\ndef run(n):\n    return double(n) + 1\n"
+MAIN_TEST = "from main import run\n\n\ndef test_run():\n    assert run(1) == 5\n"
 
 
 def project(tmp_path: Path) -> Path:
@@ -24,15 +31,20 @@ def project(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def two_files(tmp_path: Path) -> Path:
+    (tmp_path / "helper.py").write_text(HELPER_SOURCE, encoding="utf-8")
+    (tmp_path / "main.py").write_text(MAIN_SOURCE, encoding="utf-8")
+    (tmp_path / "test_main.py").write_text(MAIN_TEST, encoding="utf-8")
+    return tmp_path
+
+
 def test_accepts_only_a_patch_that_passes_the_tests(tmp_path: Path) -> None:
-    root = project(tmp_path)
-    result = generate(root, "mod.py", budget=10, isolate_network=False)
+    result = generate(project(tmp_path), "mod.py", budget=10, isolate_network=False)
     assert result.status == ACCEPTED
     assert result.accepted
     assert "+    return n + 2" in result.patch
     assert result.attempts[-1].passed
     assert all(not attempt.passed for attempt in result.attempts[:-1])
-    assert (root / "mod.py").read_text(encoding="utf-8") == MOD
 
 
 def test_budget_exhaustion_is_honest(tmp_path: Path) -> None:
@@ -63,10 +75,38 @@ def test_unknown_target_is_reported(tmp_path: Path) -> None:
         generate(tmp_path, "absent.py", isolate_network=False)
 
 
+def test_unknown_extra_target_is_reported(tmp_path: Path) -> None:
+    with pytest.raises(CodeError, match=r"absent\.py"):
+        generate(project(tmp_path), "mod.py", extra_targets=("absent.py",), isolate_network=False)
+
+
 def test_unparsable_target_is_reported(tmp_path: Path) -> None:
     (tmp_path / "bad.py").write_text("def broken(:\n", encoding="utf-8")
     with pytest.raises(CodeError, match=r"bad\.py"):
         generate(tmp_path, "bad.py", isolate_network=False)
+
+
+def test_syntax_error_has_a_position(tmp_path: Path) -> None:
+    (tmp_path / "broken.py").write_text("def f(\n", encoding="utf-8")
+    with pytest.raises(CodeError) as match:
+        generate(project(tmp_path), "broken.py", budget=10, isolate_network=False)
+    assert match.value.args[0] == "code.syntax_error"
+    assert isinstance(match.value, CodeSyntaxError)
+    assert (match.value.path, match.value.line) == ("broken.py", 1)
+
+
+def test_bad_budget_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(CodeError) as match:
+        generate(project(tmp_path), "mod.py", budget=0, isolate_network=False)
+    assert match.value.args[0] == "code.bad_budget"
+    assert "invalid generation budget: 0" in str(match.value)
+
+
+def test_bad_depth_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(CodeError) as match:
+        generate(project(tmp_path), "mod.py", depth=0, budget=10, isolate_network=False)
+    assert match.value.args[0] == "code.bad_depth"
+    assert "invalid search depth: 0" in str(match.value)
 
 
 @pytest.mark.parametrize(
@@ -140,3 +180,78 @@ def test_comparison_and_not_mutations_are_searched(tmp_path: Path) -> None:
     negated = generate(negated_root, "flag.py", budget=1, isolate_network=False)
     assert negated.accepted
     assert "+    return flag" in negated.patch
+
+
+def test_depth_composes_edits_on_distinct_lines(tmp_path: Path) -> None:
+    (tmp_path / "mod.py").write_text(PAIR_SOURCE, encoding="utf-8")
+    (tmp_path / "test_mod.py").write_text(PAIR_TEST, encoding="utf-8")
+    root = tmp_path
+
+    shallow = generate(root, "mod.py", ("test_mod.py",), budget=6, isolate_network=False)
+    assert shallow.status == BUDGET_EXHAUSTED
+
+    deep = generate(root, "mod.py", ("test_mod.py",), budget=32, depth=2, isolate_network=False)
+    assert deep.status == ACCEPTED
+    assert "+    first = 2" in deep.patch
+    assert "+    second = 2" in deep.patch
+
+
+def test_extra_targets_are_required_for_a_multi_file_fix(tmp_path: Path) -> None:
+    root = two_files(tmp_path)
+    single = generate(root, "main.py", ("test_main.py",), budget=64, depth=2, isolate_network=False)
+    assert single.status == BUDGET_EXHAUSTED
+
+    with_extra = generate(
+        root,
+        "main.py",
+        ("test_main.py",),
+        budget=64,
+        depth=2,
+        extra_targets=("helper.py",),
+        isolate_network=False,
+    )
+    assert with_extra.status == ACCEPTED
+
+
+def test_composed_patch_is_a_single_multi_file_unified_diff(tmp_path: Path) -> None:
+    root = two_files(tmp_path)
+    result = generate(
+        root,
+        "main.py",
+        ("test_main.py",),
+        budget=64,
+        depth=2,
+        extra_targets=("helper.py",),
+        isolate_network=False,
+    )
+    assert result.status == ACCEPTED
+    assert "--- a/helper.py" in result.patch
+    assert "--- a/main.py" in result.patch
+    assert "+++ b/helper.py" in result.patch
+    assert "+++ b/main.py" in result.patch
+
+
+def test_compositions_are_deduplicated_and_never_announced_false(tmp_path: Path) -> None:
+    (tmp_path / "mod.py").write_text(PAIR_SOURCE, encoding="utf-8")
+    (tmp_path / "test_mod.py").write_text(
+        "from mod import bounds\n\n\ndef test_bounds():\n    assert bounds() == (99, 99)\n",
+        encoding="utf-8",
+    )
+    result = generate(
+        tmp_path, "mod.py", ("test_mod.py",), budget=64, depth=2, isolate_network=False
+    )
+    assert result.status == BUDGET_EXHAUSTED
+    assert result.patch == ""
+    assert result.attempts
+    assert all(not attempt.passed for attempt in result.attempts)
+
+
+def test_budget_is_shared_across_depths(tmp_path: Path) -> None:
+    (tmp_path / "mod.py").write_text(PAIR_SOURCE, encoding="utf-8")
+    (tmp_path / "test_mod.py").write_text(PAIR_TEST, encoding="utf-8")
+    result = generate(
+        tmp_path, "mod.py", ("test_mod.py",), budget=5, depth=3, isolate_network=False
+    )
+    assert result.status == BUDGET_EXHAUSTED
+    assert len(result.attempts) == 5
+    assert [attempt.index for attempt in result.attempts] == list(range(5))

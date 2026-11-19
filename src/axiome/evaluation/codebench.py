@@ -57,6 +57,9 @@ class GenerationCase:
     target: str
     files: Mapping[str, str]
     tests: tuple[str, ...]
+    extra_targets: tuple[str, ...] = ()
+    depth: int = 1
+    budget: int = 12
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,6 +99,9 @@ def load_generation(path: str | Path) -> tuple[GenerationCase, ...]:
             str(row["target"]),
             {str(k): str(v) for k, v in _mapping(row["files"]).items()},
             tuple(str(test) for test in _sequence(row.get("tests", []))),
+            tuple(str(t) for t in _sequence(row.get("extra_targets", []))),
+            int(str(row.get("depth", 1))),
+            int(str(row.get("budget", 12))),
         )
         for row in _lines(Path(path))
     )
@@ -129,7 +135,7 @@ def run_review(cases: Sequence[ReviewCase]) -> ReviewReport:
 
 
 def run_generation(
-    cases: Sequence[GenerationCase], *, budget: int = 12, isolate_network: bool = False
+    cases: Sequence[GenerationCase], *, isolate_network: bool = False
 ) -> GenerationReport:
     accepted = 0
     silent = 0
@@ -144,8 +150,10 @@ def run_generation(
                 root,
                 case.target,
                 case.tests,
-                budget=budget,
+                budget=case.budget,
                 isolate_network=isolate_network,
+                depth=case.depth,
+                extra_targets=case.extra_targets,
             )
         if result.accepted:
             accepted += 1
