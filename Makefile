@@ -8,7 +8,7 @@ help:  ## Affiche cette aide
 venv:  ## Crée l'environnement de développement
 	uv venv .venv && uv pip install --python $(PY) -e '.[dev]'
 
-hooks:  ## Refuse les pushes directs vers main (une fois par clone)
+hooks:  ## Refuse les pushes directs vers main et develop (une fois par clone)
 	git config core.hooksPath .githooks
 
 lint:  ## Analyse statique (ruff)
