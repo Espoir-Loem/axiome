@@ -1,10 +1,13 @@
-# État actuel (au 2026-11-18)
+# État actuel (au 2026-11-19)
 
-Dernier commit sur `origin/main` : `23bcfee` (banc par rejeu, M7.5).
+Dernier commit sur `origin/main` : `26c777a` (corpus par rejeu, M7.6).
 
 **Flux de travail :** aucun commit direct sur `main`. Chaque changement part d'une
 branche (`feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`), puis d'une PR relue et
 fusionnée en squash (voir `CONTRIBUTING.md`).
+
+**En attente de revue :** PR #30 (`feat/m7.7-composed-generation`, commit `12689a5`),
+issue #29. Rien n'a été poussé sur `main` ; la branche de la PR est poussée sur `origin`.
 
 ## Ce qui fonctionne
 
@@ -22,8 +25,8 @@ fusionnée en squash (voir `CONTRIBUTING.md`).
   - **Analyse :** 8 règles nommées, chacune adossée à des faits et à une position ; seuil et règles réglés dans `[tool.axiome.code]`.
   - **Revue :** un diff est appliqué en mémoire, seuls les constats nouveaux sont retenus et passent par le `Reviewer` existant. `axiome --analyze` et `axiome --review`.
   - **Bac à sable :** copie temporaire, délai, limites `resource`, sortie plafonnée, environnement vidé, réseau coupé si `unshare -n` est disponible (sinon signalé comme dégradé). `PYTHONPATH` pointe vers la copie (`src` puis racine) : sans cela, les tests d'un projet importaient le paquet installé en editable et la mesure portait sur le dépôt réel.
-  - **Génération :** recherche bornée de mutations (littéraux, booléens, comparaisons, `not`, opérateurs binaires, `and`/`or`, négation de condition), chaque candidat jugé par les tests du projet ; `pass@1` 14/14 sur le banc, 0 échec silencieux.
-  - **Banc par rejeu :** trois vrais commits (`evals/code/replay/`). L'arbre du commit correctif est extrait, ses fichiers source sont ramenés à leur version parente, ses tests doivent échouer, puis la recherche peut éditer un fichier cible. Le patch attendu n'est jamais lu ; une tâche déjà verte est une erreur d'intégrité. Mesure : **0/3**, dont une tâche multi-fichiers.
+  - **Génération :** recherche bornée de mutations (littéraux, booléens, comparaisons, `not`, opérateurs binaires, `and`/`or`, négation de condition), chaque candidat jugé par les tests du projet ; `pass@1` 16/16 sur le banc, 0 échec silencieux. M7.7 compose jusqu'à `depth` éditions sur des lignes distinctes et ouvre `extra_targets` : un patch multi-fichiers est assemblé puis soumis aux tests, avec un budget partagé et un parcours en largeur déterministe.
+  - **Banc par rejeu :** trois vrais commits (`evals/code/replay/`). L'arbre du commit correctif est extrait, ses fichiers source sont ramenés à leur version parente, ses tests doivent échouer, puis la recherche peut éditer un fichier cible. Le patch attendu n'est jamais lu ; une tâche déjà verte est une erreur d'intégrité. Mesure : **0/3**, dont une tâche multi-fichiers, au budget initial de quatre candidats ; la composition de M7.7 ne l'a pas améliorée à ce budget.
 
 ## Scores
 
@@ -31,8 +34,9 @@ fusionnée en squash (voir `CONTRIBUTING.md`).
 |---|---|---|
 | `evals/suites/` (travail, 138 cas) | 138/138 | Ces cas ont servi à corriger : ce score surestime le niveau réel. |
 | `evals/heldout/` (réservé, 62 cas) | 62/62 | Mesures honnêtes, prises avant correction : 38/42 (90 %), puis 19/20 (95 %) pour les conversations. |
-| `evals/code/replay/` (rejeu de commits réels) | 0/3 | Correctifs réels, dont un multi-fichiers : la recherche mono-fichier ne suffit pas. |
-| Tests | 342 verts, couverture 95,6 % | ruff et mypy strict propres ; couche `code/` de 89 à 100 % |
+| `evals/code/generation.jsonl` (banc de génération) | 16/16 | Dont deux éditions sur un fichier et deux éditions sur deux fichiers ; 0 échec silencieux. |
+| `evals/code/replay/` (rejeu de commits réels) | 0/3 | Correctifs réels, dont un multi-fichiers : toujours 0/3 au budget de quatre candidats. |
+| Tests | 351 verts, couverture 95,66 % | ruff et mypy strict propres ; `make check` vert sur la branche de la PR #30 |
 
 L'historique détaillé des scores est dans `evals/README.md`.
 
@@ -43,7 +47,7 @@ L'historique détaillé des scores est dans `evals/README.md`.
 - **Qualité de Wikidata.** Certaines classes sont surprenantes (« l'étoile est un fuseur »). Ces faits restent PLAUSIBLES.
 - **Article des noms propres non humains.** « le Soleil » doit être revérifié depuis la restriction du nom propre sans article aux personnes.
 - **Suivi du fil limité.** Il couvre les formes de relance prévues. Une tournure inédite peut encore égarer Axiome. Il ne remonte pas au-delà de la dernière question.
-- **Génération de code volontairement étroite.** Elle ne cherche que de petites mutations déterministes sur **un** fichier cible ; sans test exécutable, elle refuse. Sur trois correctifs réels, le banc par rejeu donne 0/3 : un correctif réel demande plusieurs éditions et parfois plusieurs fichiers. Ce n'est pas encore un assistant de programmation généraliste.
+- **Génération de code volontairement étroite.** Elle ne cherche que de petites mutations déterministes, désormais composables sur plusieurs fichiers ; sans test exécutable, elle refuse. Le parcours en largeur dépense d'abord le budget dans les éditions simples : une composition profonde n'est atteinte que s'il reste des tentatives. Sur trois correctifs réels, le banc par rejeu donne toujours 0/3 au budget de quatre candidats. Ce n'est pas encore un assistant de programmation généraliste.
 - **Isolation réseau non portable.** `unshare -n` n'existe pas partout ; sans lui le rapport dit « réseau non isolé » au lieu de prétendre le contraire.
 - **Analyse Python seulement.** Les autres langages demanderont un analyseur externe déclaré (RFC-0002, question ouverte 1).
 - **Faux positifs possibles de `code_mort`/`nom_non_utilise`** sur une API publique sans `__all__` ni import interne ; ce sont des remarques, jamais des blocages.
