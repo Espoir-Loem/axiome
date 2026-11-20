@@ -52,7 +52,11 @@ def test_run_replay_forwards_composition_settings(
         return SimpleNamespace(status="budget_exhausted", attempts=())
 
     monkeypatch.setattr(replay, "generate", fake_generate)
-    monkeypatch.setattr(replay, "run_tests", lambda *a, **k: SimpleNamespace(passed=False))
+    monkeypatch.setattr(
+        replay,
+        "run_tests",
+        lambda *a, **k: SimpleNamespace(passed=False, stdout="FAILED test_wanted", stderr=""),
+    )
     monkeypatch.setattr(replay, "_materialise", lambda *a, **k: None)
 
     case = ReplayCase(
@@ -70,6 +74,7 @@ def test_run_replay_forwards_composition_settings(
     assert captured["budget"] == 7
     assert captured["depth"] == 2
     assert captured["extra_targets"] == ("helper.py",)
+    assert captured["diagnostics"] == "FAILED test_wanted\n"
     assert captured["isolate_network"] is False
     assert report.cases == 1
     assert report.accepted == 0

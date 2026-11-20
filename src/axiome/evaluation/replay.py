@@ -119,6 +119,7 @@ def run_replay(
                 budget=budget,
                 depth=case.depth,
                 extra_targets=case.extra_targets,
+                diagnostics="\n".join((before.stdout, before.stderr)),
                 isolate_network=isolate_network,
             )
         outcomes.append(ReplayOutcome(case, result.status, len(result.attempts)))

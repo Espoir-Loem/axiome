@@ -5,6 +5,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 ## [Non publié]
 ### Ajouté (évaluation, M7.8)
 - Le harnais de rejeu peut lire `depth` et `extra_targets` depuis un manifeste et transmettre ces réglages à la génération. Le corpus livré garde les valeurs par défaut : le score reste **0/3**, y compris avec `depth: 2`, les fichiers `.py` supplémentaires et un budget porté à 16. La composition ne suffit donc pas encore à reproduire de vrais correctifs ; le harnais permet désormais de le mesurer sans présumer du résultat.
+- La recherche utilise les identifiants de l'échec des tests pour ordonner ses candidats : une ligne proche du test qui échoue est essayée en premier. Les mutations disponibles et le jugement par exécution restent inchangés ; le rejeu reste à **0/3** aux budgets 4 et 16, ce qui confirme que l'écart vient de l'absence de synthèse de code, pas de l'ordre des candidats.
 
 ### Ajouté (outils de code, M7.7)
 - **Génération composée (M7.7)** : `depth` compose jusqu'à N éditions sur des lignes distinctes et `extra_targets` étend la recherche à plusieurs fichiers. Chaque composition forme un patch complet soumis aux tests ; la recherche parcourt les états en largeur et partage un seul budget entre les profondeurs.

@@ -255,3 +255,28 @@ def test_budget_is_shared_across_depths(tmp_path: Path) -> None:
     assert result.status == BUDGET_EXHAUSTED
     assert len(result.attempts) == 5
     assert [attempt.index for attempt in result.attempts] == list(range(5))
+
+
+def test_failure_diagnostics_reorder_candidates_without_changing_mutations(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "mod.py").write_text(
+        "def decoy():\n    return 0\n\n\ndef wanted():\n    return 0\n", encoding="utf-8"
+    )
+    (tmp_path / "test_mod.py").write_text(
+        "from mod import wanted\n\n\ndef test_wanted():\n    assert wanted() == 1\n",
+        encoding="utf-8",
+    )
+    plain = generate(tmp_path, "mod.py", budget=2, isolate_network=False)
+    assert plain.status == BUDGET_EXHAUSTED
+
+    guided = generate(
+        tmp_path,
+        "mod.py",
+        budget=2,
+        diagnostics="FAILED test_mod.py::test_wanted - assert wanted() == 1",
+        isolate_network=False,
+    )
+    assert guided.status == ACCEPTED
+    assert "+    return 1" in guided.patch
+    assert "def wanted" in guided.patch
