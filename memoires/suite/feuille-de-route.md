@@ -1,6 +1,6 @@
 # Feuille de route
 
-À mettre à jour à chaque fin de session. État au 2026-11-19.
+À mettre à jour à chaque fin de session. État au 2026-11-20.
 
 ## Prochaine étape conseillée : des connaissances locales
 
@@ -26,7 +26,7 @@ Règles d'import :
 
 - **Contexte.** Il ne couvre que les formes prévues et la seule dernière question. Prochaine étape : une pile de sujets et les références à plus de deux tours.
 - **Nouveau banc réservé**, sur des domaines non couverts : l'actuel a servi aux corrections.
-- **Corpus du banc par rejeu (code).** Le harnais et trois tâches existent (`evals/code/replay/`) : `dc11b2b`, `b2ce7c6`, `1e193e2`, cette dernière multi-fichiers. Chaque nouveau jalon peut en ajouter une (un dossier, un manifeste, les versions parentes, avec `depth` et `extra_targets` en clés facultatives). La mesure avec `depth: 2`, les fichiers `.py` supplémentaires et un budget de 16 donne toujours 0/3 : l'écart ne vient plus seulement du budget ni de l'absence de composition. Prochaine étape, examiner les familles de mutation et la sélection des cibles, sans jamais lire le patch attendu, puis ajouter une tâche quand le score progresse.
+- **Corpus du banc par rejeu (code).** Le harnais et trois tâches existent (`evals/code/replay/`) : `dc11b2b`, `b2ce7c6`, `1e193e2`, cette dernière multi-fichiers. Chaque nouveau jalon peut en ajouter une (un dossier, un manifeste, les versions parentes, avec `depth` et `extra_targets` en clés facultatives). La mesure avec `depth: 2`, les fichiers `.py` supplémentaires et un budget de 16 donne toujours 0/3 ; l'ordre guidé par les identifiants du test qui échoue ne change pas ce score. L'écart ne vient donc ni du budget, ni de l'absence de composition, ni de l'ordre des candidats : les trois cas demandent d'ajouter du code. Prochaine étape, écrire une RFC pour une bibliothèque de squelettes guidée par les échecs (déjà esquissée dans RFC-0002 §4) avant d'ouvrir un module majeur ; ne jamais lire le patch attendu, puis ajouter une tâche quand le score progresse.
 - **Article des noms propres non humains** (« le Soleil ») à revérifier.
 - **Lenteur de Wikidata sans `AXIOME_CONTACT`.** Ajouter un cache local, puis faire basculer le gros de la taxonomie sur YAGO.
 - **M4** : petit modèle de langue maison (NumPy, 20 à 60 M de paramètres, int8). Il reformule et n'invente jamais de fait.
@@ -35,9 +35,10 @@ Règles d'import :
 ## Actions du mainteneur en attente
 
 1. Relire et fusionner dans `develop` les PR #30 (M7.7), #31 (mémoires M7.7), #32 (flux `develop`) et #33 (M7.8, à relire après #30), en squash.
-2. Promouvoir ensuite `develop` vers `main` par une PR, sans push direct.
-3. Accord pour le téléchargement de Wiktionary.
-4. Facultatif : définir `AXIOME_CONTACT` (son choix, ne jamais le faire à sa place).
+2. Relire #34 (mémoires, après #31) et #35 (ordre guidé, après #33), puis les fusionner dans `develop`.
+3. Promouvoir ensuite `develop` vers `main` par une PR, sans push direct.
+4. Accord pour le téléchargement de Wiktionary.
+5. Facultatif : définir `AXIOME_CONTACT` (son choix, ne jamais le faire à sa place).
 
 L'ancienne action « `push --force-with-lease origin main` » a été retirée : `main`
 n'est pas à réécrire, et `develop` est maintenant la branche d'intégration (ADR-0009).
