@@ -10,10 +10,13 @@ reçoit que des PR depuis `develop`. Chaque changement part d'une branche de suj
 (`feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`), puis d'une PR relue et
 fusionnée en squash (voir `CONTRIBUTING.md`).
 
-**En attente de revue :** PR #30 (M7.7), #31 (mémoires M7.7), #32 (flux `develop`),
-#33 (M7.8 rejeu configurable), #34 (mémoires M7.8), #35 (ordre guidé par l'échec) et
-#36 (RFC-0003, en revue), plus l'issue #29. #33 est empilée sur la branche de #30,
-#34 sur celle de #31 et #35 sur celle de #33. Rien n'a été poussé directement sur
+**Intégration :** les PR #30, #31, #32, #33, #34, #35 et #36 ont été relues et
+fusionnées dans `develop` en squash le 2026-11-20, dans l'ordre des empilements
+(#30 → #33 → #35, #31 → #34, puis #32 et #36). Les branches empilées ont été
+rebasées sur `develop` avant fusion pour que chaque PR ne porte que son sujet :
+#33 (`617237f` → `5bdf278`), #35 (`63d079e` → `f38240d`) et #34 (`5fa4678` →
+`da94e0a`). `origin/main` reste à `26c777a` : la promotion de `develop` vers
+`main` attend une PR dédiée. L'issue #29 reste ouverte. Aucun push direct sur
 `main` ni sur `develop`.
 
 ## Ce qui fonctionne
@@ -43,7 +46,7 @@ fusionnée en squash (voir `CONTRIBUTING.md`).
 | `evals/heldout/` (réservé, 62 cas) | 62/62 | Mesures honnêtes, prises avant correction : 38/42 (90 %), puis 19/20 (95 %) pour les conversations. |
 | `evals/code/generation.jsonl` (banc de génération) | 16/16 | Dont deux éditions sur un fichier et deux éditions sur deux fichiers ; 0 échec silencieux. |
 | `evals/code/replay/` (rejeu de commits réels) | 0/3 | Correctifs réels, dont un multi-fichiers : 0/3 aux budgets 4 et 16, avec `depth: 2`, les fichiers supplémentaires et l'ordre guidé par l'échec. |
-| Tests | 354 verts, couverture 95,68 % | ruff et mypy strict propres ; `make check` vert sur la branche de la PR #35 |
+| Tests | 354 verts, couverture 95,68 % | ruff et mypy strict propres ; `make check` vert sur `develop` après intégration (`c98a6c9`) |
 
 L'historique détaillé des scores est dans `evals/README.md`.
 
