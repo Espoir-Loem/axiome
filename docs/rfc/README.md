@@ -6,4 +6,5 @@ Cycle : `Brouillon → En revue → Accepté → Implémenté` (ou `Rejeté`).
 | N° | Titre | Statut |
 |---|---|---|
 | [0001](0001-moteur-logique.md) | Moteur logique et révision des croyances | Implémenté (v0.1.0) |
-| [0002](0002-outils-de-code.md) | Outils de code : analyse, revue, génération vérifiée | Implémenté (M7.0 à M7.6) |
+| [0002](0002-outils-de-code.md) | Outils de code : analyse, revue, génération vérifiée | Implémenté (M7.0 à M7.8) |
+| [0003](0003-bibliotheque-squelettes.md) | Bibliothèque de squelettes guidée par les échecs | En revue |
