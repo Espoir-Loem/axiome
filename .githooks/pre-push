@@ -1,20 +1,21 @@
 #!/bin/sh
-# Refuse direct pushes to main; open a branch and a pull request instead.
+# Refuse direct pushes to main and develop; open a branch and a pull request instead.
 # Enable once per clone with: make hooks
 set -eu
 
-if [ "${AXIOME_ALLOW_MAIN_PUSH:-}" = "1" ]; then
+override=${AXIOME_ALLOW_DIRECT_PUSH:-${AXIOME_ALLOW_MAIN_PUSH:-}}
+if [ "$override" = "1" ]; then
     exit 0
 fi
 
 status=0
 while read -r local_ref local_sha remote_ref remote_sha; do
-    if [ "$remote_ref" != "refs/heads/main" ]; then
+    if [ "$remote_ref" != "refs/heads/main" ] && [ "$remote_ref" != "refs/heads/develop" ]; then
         continue
     fi
-    echo "pre-push: direct pushes to main are refused (CONTRIBUTING.md)." >&2
+    echo "pre-push: direct pushes to main and develop are refused (CONTRIBUTING.md)." >&2
     echo "Create a branch, push it, then open a pull request." >&2
-    echo "Emergency override: AXIOME_ALLOW_MAIN_PUSH=1 git push ..." >&2
+    echo "Emergency override: AXIOME_ALLOW_DIRECT_PUSH=1 git push ..." >&2
     status=1
 done
 

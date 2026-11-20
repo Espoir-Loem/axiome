@@ -2,9 +2,9 @@
 
 ## Flux de travail
 1. **Une issue d'abord.** Tout changement non trivial part d'une issue. Un module majeur part d'une **RFC** (`docs/rfc/`) et une décision structurante d'un **ADR** (`docs/adr/`).
-2. **Une branche par changement** : `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. On ne pousse jamais directement sur `main`. Un garde-fou local est fourni : `make hooks` (une fois par clone) refuse les pushes directs vers `main`.
-3. **Petites PR** : moins de 400 lignes modifiées, hors données et tests, et un seul sujet par PR.
-4. **Revue obligatoire** et CI verte avant toute fusion. On fusionne en *squash merge*.
+2. **Une branche par changement** : `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. On ne pousse jamais directement sur `main` ni sur `develop`. Un garde-fou local est fourni : `make hooks` (une fois par clone) refuse les pushes directs vers ces deux branches.
+3. **Petites PR** : moins de 400 lignes modifiées, hors données et tests, et un seul sujet par PR. Les changements de sujet visent `develop` ; une PR empilée peut viser la branche de sujet parent.
+4. **Revue obligatoire** et CI verte avant toute fusion. On fusionne en *squash merge*. `main` ne reçoit que des PR depuis `develop`, après validation de l'intégration (ADR-0009).
 5. **Mémoires à jour.** En fin de session, on met à jour `memoires/projet/etat-actuel.md` et `memoires/suite/feuille-de-route.md`, et on ajoute une entrée dans `memoires/sessions/` (voir `memoires/README.md`).
 
 ## Commits
