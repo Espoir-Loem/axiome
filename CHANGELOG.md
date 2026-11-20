@@ -3,6 +3,9 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (évaluation, M7.8)
+- Le harnais de rejeu peut lire `depth` et `extra_targets` depuis un manifeste et transmettre ces réglages à la génération. Le corpus livré garde les valeurs par défaut : le score reste **0/3**, y compris avec `depth: 2`, les fichiers `.py` supplémentaires et un budget porté à 16. La composition ne suffit donc pas encore à reproduire de vrais correctifs ; le harnais permet désormais de le mesurer sans présumer du résultat.
+
 ### Ajouté (outils de code, M7.7)
 - **Génération composée (M7.7)** : `depth` compose jusqu'à N éditions sur des lignes distinctes et `extra_targets` étend la recherche à plusieurs fichiers. Chaque composition forme un patch complet soumis aux tests ; la recherche parcourt les états en largeur et partage un seul budget entre les profondeurs.
 - Banc de génération porté à 16 tâches, dont deux éditions sur un fichier et deux éditions réparties sur deux fichiers, avec un budget propre à chaque tâche : `pass@1` 16/16, 0 échec silencieux. Le banc par rejeu reste à 0/3 avec son budget de quatre candidats.

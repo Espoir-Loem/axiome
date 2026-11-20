@@ -1,6 +1,6 @@
 # RFC-0002 : Outils de code (analyse, revue, génération vérifiée)
 
-- **Statut** : Implémenté (M7.0 à M7.6, 2026-11-18)
+- **Statut** : Implémenté (M7.0 à M7.8, 2026-11-19)
 - **Jalon** : M7
 
 ## Objectif
@@ -137,6 +137,7 @@ Une exécution non reproductible (dépendante du temps, du réseau, de l'ordre d
 | Dépassement de délai, de mémoire et de sortie → arrêt propre, rapport explicite | `unit/test_code_sandbox.py` |
 | Génération déterministe : même cible, même graine → même premier patch | `unit/test_code_generate.py` |
 | Un patch n'est déclaré accepté que si les tests passent réellement | `unit/test_code_generate.py` |
+| Le manifeste de rejeu peut régler la profondeur et les fichiers cibles, sans changer les valeurs par défaut du corpus | `unit/test_replay.py` |
 
 Bancs (`evals/code/`, séparés des bancs de conversation) :
 
@@ -149,8 +150,9 @@ Lancement : `python -m pytest tests/integration/test_code_bench.py` (les cas son
 `tests/integration/test_code_replay.py` pour le banc par rejeu hébergé par
 `evals/code/replay/` : l'arbre du commit correctif est extrait, ses fichiers source
 sont ramenés à leur version parente, et le patch attendu n'est jamais lu. Le banc de génération
-compte 14 petites tâches (arithmétique, comparaisons, appartenance, booléens,
-inversion de condition, index, bornes de `range`) ; chacune échoue avant mutation.
+compte 16 petites tâches (arithmétique, comparaisons, appartenance, booléens,
+inversion de condition, index, bornes de `range`, deux éditions sur un fichier et
+deux fichiers nécessaires) ; chacune échoue avant mutation.
 Le banc par rejeu rejoue en plus trois commits réels du dépôt, sans révéler leur
 correctif ; une tâche qui passe déjà est une erreur d'intégrité. Il révèle aussi
 l'infrastructure : c'est lui qui a montré que la copie du bac à sable devait primer
@@ -175,6 +177,8 @@ locale d'un nœud AST ; le verdict vient toujours de l'exécution des tests.
 
 M7.7 compose ces mutations : `depth` autorise jusqu'à N éditions sur des lignes distinctes et `extra_targets` ouvre d'autres fichiers à la recherche. Les états sont visités en largeur (toutes les éditions simples avant les compositions de deux), avec un budget unique comptant les exécutions réelles à toutes les profondeurs. Une composition n'est jugée qu'une fois son patch complet assemblé : deux éditions acceptées séparément ne valent pas une édition composée qui échoue. Le banc passe à 16 tâches, dont une qui exige deux fichiers ; le banc par rejeu reste à 0/3 au budget de quatre candidats.
 
+M7.8 rend cette configuration mesurable par le harnais de rejeu : un manifeste peut déclarer `depth` et `extra_targets`, transmis à la génération, sans modifier les manifestes livrés ni leurs valeurs par défaut. La mesure reste **0/3** aux budgets 4 et 16, avec `depth: 2` et les fichiers `.py` supplémentaires : la composition, même plus large, ne reproduit pas encore un correctif réel. Le harnais ne lit jamais le patch attendu.
+
 Aucun score n'est publié sans la commande et le commit qui l'ont produit (`evals/README.md`).
 
 ## Sécurité
@@ -193,6 +197,7 @@ Voir `SECURITY.md`. Un dépôt analysé est une entrée **non fiable** : l'analy
 | M7.5 | banc tenu à l'écart sur de vrais commits | **fait** : l'arbre d'un commit réel est extrait, seuls ses tests sont révélés, le patch attendu n'est jamais lu ; une tâche déjà verte est rejetée comme erreur d'intégrité. La première mesure (`0/1`) a été invalidée par le défaut de bac à sable corrigé en M7.6. |
 | M7.6 | corpus par rejeu inversé | **fait** : arbre du commit correctif, fichiers source ramenés à leur version parente, tests du commit rejoués ; trois tâches dont une multi-fichiers, `pass@1` 0/3. `PYTHONPATH` du bac à sable pointe vers la copie, plus vers le paquet installé. |
 | M7.7 | compositions d'éditions et fichiers multiples | **fait** : `depth` et `extra_targets`, recherche en largeur à budget partagé, patch multi-fichiers assemblé avant exécution ; banc de 16 tâches, `pass@1` 16/16, 0 échec silencieux ; rejeu toujours 0/3 au budget initial. |
+| M7.8 | mesure de la composition sur le banc par rejeu | **fait** : le manifeste peut régler `depth` et `extra_targets`, le corpus livré garde les valeurs par défaut ; rejeu 0/3 aux budgets 4 et 16 avec `depth: 2` et les fichiers `.py` supplémentaires. |
 
 ## Questions ouvertes
 
