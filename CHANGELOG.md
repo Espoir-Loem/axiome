@@ -3,6 +3,11 @@
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publié]
+### Ajouté (outils de code, M7.7)
+- **Génération composée (M7.7)** : `depth` compose jusqu'à N éditions sur des lignes distinctes et `extra_targets` étend la recherche à plusieurs fichiers. Chaque composition forme un patch complet soumis aux tests ; la recherche parcourt les états en largeur et partage un seul budget entre les profondeurs.
+- Banc de génération porté à 16 tâches, dont deux éditions sur un fichier et deux éditions réparties sur deux fichiers, avec un budget propre à chaque tâche : `pass@1` 16/16, 0 échec silencieux. Le banc par rejeu reste à 0/3 avec son budget de quatre candidats.
+- Une erreur de syntaxe dans un fichier cible lève `CodeSyntaxError`, avec chemin et ligne structurés, comme le reste de la couche `code`.
+
 ### Ajouté (outils de code, M7.1 à M7.3)
 - **Analyse (M7.1)** : huit règles nommées (`import_inutilise`, `nom_non_utilise`, `code_mort`, `appel_inconnu`, `exception_avalee`, `comparaison_a_none`, `complexite_cyclomatique`, `cycle_import`). Chaque constat porte une règle, une position, la ligne citée et les faits qui le soutiennent. Les règles activées et le seuil de complexité se règlent dans `[tool.axiome.code]`.
 - **Revue de diff (M7.1)** : le diff est appliqué en mémoire (le dépôt de l'utilisateur n'est jamais modifié), seuls les diagnostics nouveaux sont retenus, puis passés au `Reviewer` existant via `team.code_review`. Commandes `axiome --analyze CHEMIN` et `axiome --review DIFF`.

@@ -173,6 +173,8 @@ M7.4 étend la recherche à quatre familles de plus : opérateurs binaires (`+`,
 `if`/`elif`/`while` et d'une `if` expression. Chaque famille reste une mutation
 locale d'un nœud AST ; le verdict vient toujours de l'exécution des tests.
 
+M7.7 compose ces mutations : `depth` autorise jusqu'à N éditions sur des lignes distinctes et `extra_targets` ouvre d'autres fichiers à la recherche. Les états sont visités en largeur (toutes les éditions simples avant les compositions de deux), avec un budget unique comptant les exécutions réelles à toutes les profondeurs. Une composition n'est jugée qu'une fois son patch complet assemblé : deux éditions acceptées séparément ne valent pas une édition composée qui échoue. Le banc passe à 16 tâches, dont une qui exige deux fichiers ; le banc par rejeu reste à 0/3 au budget de quatre candidats.
+
 Aucun score n'est publié sans la commande et le commit qui l'ont produit (`evals/README.md`).
 
 ## Sécurité
@@ -190,6 +192,7 @@ Voir `SECURITY.md`. Un dépôt analysé est une entrée **non fiable** : l'analy
 | M7.4 | plus de patrons de mutation et un banc réaliste | **fait** : opérateurs binaires, `and`/`or`, condition et `if` expression négation ; banc de 14 tâches, `pass@1` 14/14, 0 échec silencieux |
 | M7.5 | banc tenu à l'écart sur de vrais commits | **fait** : l'arbre d'un commit réel est extrait, seuls ses tests sont révélés, le patch attendu n'est jamais lu ; une tâche déjà verte est rejetée comme erreur d'intégrité. La première mesure (`0/1`) a été invalidée par le défaut de bac à sable corrigé en M7.6. |
 | M7.6 | corpus par rejeu inversé | **fait** : arbre du commit correctif, fichiers source ramenés à leur version parente, tests du commit rejoués ; trois tâches dont une multi-fichiers, `pass@1` 0/3. `PYTHONPATH` du bac à sable pointe vers la copie, plus vers le paquet installé. |
+| M7.7 | compositions d'éditions et fichiers multiples | **fait** : `depth` et `extra_targets`, recherche en largeur à budget partagé, patch multi-fichiers assemblé avant exécution ; banc de 16 tâches, `pass@1` 16/16, 0 échec silencieux ; rejeu toujours 0/3 au budget initial. |
 
 ## Questions ouvertes
 

@@ -57,7 +57,7 @@ python -m pytest tests/integration/test_code_replay.py
 - `generation.jsonl` : petites tâches avec tests, notées en `pass@1`. Le taux d'échecs *silencieux* (patch annoncé correct alors que les tests échouent) doit rester à zéro ; il l'est par construction, puisque l'acceptation dépend de l'exécution réelle.
 - `replay/` : rejeu de **vrais commits** de ce dépôt, à l'envers. L'arbre du commit correctif est extrait, les fichiers source qu'il a modifiés sont ramenés à leur version parente, puis ses tests sont lancés : ils doivent échouer. La recherche peut alors modifier un fichier cible et est jugée par ces mêmes tests. Le patch attendu n'est jamais lu ; une tâche déjà verte est une erreur d'intégrité, pas un succès gratuit.
 
-Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 14/14, 0 échec silencieux ; rejeu de commits réels **0/3**.
+Mesure actuelle : revue 5/5, précision et rappel 1,0 par règle ; génération 16/16, 0 échec silencieux ; rejeu de commits réels **0/3** au budget de quatre candidats. Les tâches `two-constants` et `two-files` portent `depth` et `extra_targets`, avec un budget propre : elles ne passent qu'avec un patch composé soumis aux tests.
 
 Les trois tâches sont `dc11b2b` (préférence pour la page homonyme), `b2ce7c6` (familles de mutation) et `1e193e2` (entrée incomplète, cinq fichiers). `0/3` ne dit pas que la recherche est mauvaise : il dit qu'elle ne sait pas encore traiter un correctif réel, qui demande plusieurs éditions et parfois plusieurs fichiers. Ajouter une tâche ne demande aucune ligne de code : un dossier dans `evals/code/replay/`, un `manifest.json` (`id`, `commit`, `target`, `tests`, `changed`, `summary`) et les versions parentes des fichiers reversés.
 
@@ -65,6 +65,6 @@ Attention au sens de lecture : ce banc rejoue des commits **du dépôt courant**
 
 ## Limites
 
-Ces bancs mesurent ce qu'Axiome sait déjà faire, dans les domaines de sa base (biologie, structures de données, algorithmes, patrons de conception, grandeurs physiques). Ils ne le comparent pas à un grand modèle de langue. La génération de code est volontairement étroite (petites mutations d'un fichier, Python seulement), et la conversation libre reste limitée aux schémas connus (jalon M4 pour la fluidité).
+Ces bancs mesurent ce qu'Axiome sait déjà faire, dans les domaines de sa base (biologie, structures de données, algorithmes, patrons de conception, grandeurs physiques). Ils ne le comparent pas à un grand modèle de langue. La génération de code est volontairement étroite (petites mutations, désormais composables sur plusieurs fichiers, Python seulement), et la conversation libre reste limitée aux schémas connus (jalon M4 pour la fluidité).
 
 `golden/` contient les sorties de référence attendues (tests de non-régression octet pour octet).
