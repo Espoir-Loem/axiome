@@ -1,6 +1,6 @@
 # RFC-0002 : Outils de code (analyse, revue, génération vérifiée)
 
-- **Statut** : Implémenté (M7.0 à M7.8, 2026-11-19)
+- **Statut** : Implémenté (M7.0 à M7.8, 2026-11-20)
 - **Jalon** : M7
 
 ## Objectif
@@ -138,6 +138,7 @@ Une exécution non reproductible (dépendante du temps, du réseau, de l'ordre d
 | Génération déterministe : même cible, même graine → même premier patch | `unit/test_code_generate.py` |
 | Un patch n'est déclaré accepté que si les tests passent réellement | `unit/test_code_generate.py` |
 | Le manifeste de rejeu peut régler la profondeur et les fichiers cibles, sans changer les valeurs par défaut du corpus | `unit/test_replay.py` |
+| L'échec des tests ordonne les candidats, sans ajouter ni retirer de mutation | `unit/test_code_generate.py`, `unit/test_replay.py` |
 
 Bancs (`evals/code/`, séparés des bancs de conversation) :
 
@@ -179,6 +180,8 @@ M7.7 compose ces mutations : `depth` autorise jusqu'à N éditions sur des ligne
 
 M7.8 rend cette configuration mesurable par le harnais de rejeu : un manifeste peut déclarer `depth` et `extra_targets`, transmis à la génération, sans modifier les manifestes livrés ni leurs valeurs par défaut. La mesure reste **0/3** aux budgets 4 et 16, avec `depth: 2` et les fichiers `.py` supplémentaires : la composition, même plus large, ne reproduit pas encore un correctif réel. Le harnais ne lit jamais le patch attendu.
 
+La recherche ordonne ensuite ses candidats à partir des identifiants vus dans la sortie des tests qui échouent : une ligne proche du test nommé est essayée avant les autres, à budget égal et dans un ordre toujours déterministe. Cela ne crée aucune mutation nouvelle et ne remplace pas le jugement par exécution. Le rejeu reste à **0/3** : les trois correctifs réels demandent d'ajouter du code (familles de mutation, `edit_distance`, bonus de titre), ce que la bibliothèque de mutations locales ne sait pas encore faire.
+
 Aucun score n'est publié sans la commande et le commit qui l'ont produit (`evals/README.md`).
 
 ## Sécurité
@@ -197,7 +200,7 @@ Voir `SECURITY.md`. Un dépôt analysé est une entrée **non fiable** : l'analy
 | M7.5 | banc tenu à l'écart sur de vrais commits | **fait** : l'arbre d'un commit réel est extrait, seuls ses tests sont révélés, le patch attendu n'est jamais lu ; une tâche déjà verte est rejetée comme erreur d'intégrité. La première mesure (`0/1`) a été invalidée par le défaut de bac à sable corrigé en M7.6. |
 | M7.6 | corpus par rejeu inversé | **fait** : arbre du commit correctif, fichiers source ramenés à leur version parente, tests du commit rejoués ; trois tâches dont une multi-fichiers, `pass@1` 0/3. `PYTHONPATH` du bac à sable pointe vers la copie, plus vers le paquet installé. |
 | M7.7 | compositions d'éditions et fichiers multiples | **fait** : `depth` et `extra_targets`, recherche en largeur à budget partagé, patch multi-fichiers assemblé avant exécution ; banc de 16 tâches, `pass@1` 16/16, 0 échec silencieux ; rejeu toujours 0/3 au budget initial. |
-| M7.8 | mesure de la composition sur le banc par rejeu | **fait** : le manifeste peut régler `depth` et `extra_targets`, le corpus livré garde les valeurs par défaut ; rejeu 0/3 aux budgets 4 et 16 avec `depth: 2` et les fichiers `.py` supplémentaires. |
+| M7.8 | mesure de la composition, puis ordre guidé par l'échec | **fait** : le manifeste peut régler `depth` et `extra_targets`, le corpus livré garde les valeurs par défaut ; rejeu 0/3 aux budgets 4 et 16 avec `depth: 2` et les fichiers `.py` supplémentaires, y compris avec l'ordre guidé par les identifiants du test qui échoue. |
 
 ## Questions ouvertes
 

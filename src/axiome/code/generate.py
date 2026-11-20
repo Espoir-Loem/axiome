@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import ast
 import difflib
+import re
 from collections import deque
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
@@ -92,6 +93,7 @@ def generate(
     isolate_network: bool = True,
     extra_targets: tuple[str, ...] = (),
     depth: int = 1,
+    diagnostics: str = "",
 ) -> GenerationResult:
     """Search at most ``budget`` deterministic patches and keep the first that passes.
 
@@ -99,6 +101,10 @@ def generate(
     lines, possibly spread over ``extra_targets``. States are visited breadth-first:
     every single edit is tried before a composition of two, and so on. The budget
     counts executed attempts at every depth, and the tests alone decide acceptance.
+
+    ``diagnostics`` is the failing test output. Its identifiers only reorder the
+    candidates: a line naming the failing test's subject is tried first. It never
+    supplies patch text and never changes which mutations exist.
     """
     if budget < 1:
         raise CodeError("code.bad_budget", value=budget)
@@ -113,11 +119,12 @@ def generate(
             raise CodeError("code.unknown_file", path=path)
         originals[path] = source.read_text(encoding="utf-8")
     attempts: list[Attempt] = []
+    terms = _diagnostic_terms(diagnostics)
     states = deque([_State(originals, frozenset(), 0)])
     seen = {_key(originals)}
     while states:
         state = states.popleft()
-        for child in _children(state, paths, seed, seen):
+        for child in _children(state, paths, seed, seen, terms):
             if len(attempts) >= budget:
                 return GenerationResult(BUDGET_EXHAUSTED, "", tuple(attempts), seed, budget)
             patch = _combined_patch(originals, child.files)
@@ -147,11 +154,12 @@ def _children(
     paths: tuple[str, ...],
     seed: int,
     seen: set[tuple[tuple[str, str], ...]],
+    terms: frozenset[str] = frozenset(),
 ) -> Iterator[_State]:
     """Yield unseen states with one more edit, in a fixed order."""
     for path in paths:
         skip = frozenset(lineno for edited, lineno in state.edited if edited == path)
-        for candidate in _candidates(path, state.files[path], seed, skip):
+        for candidate in _candidates(path, state.files[path], seed, skip, terms):
             files = {**state.files, path: candidate.text}
             key = _key(files)
             if key in seen:
@@ -161,7 +169,11 @@ def _children(
 
 
 def _candidates(
-    target: str, text: str, seed: int, skip: frozenset[int] = frozenset()
+    target: str,
+    text: str,
+    seed: int,
+    skip: frozenset[int] = frozenset(),
+    terms: frozenset[str] = frozenset(),
 ) -> tuple[_Candidate, ...]:
     """Build the canonical candidate list, rotated deterministically by ``seed``."""
     lines = text.splitlines()
@@ -188,8 +200,34 @@ def _candidates(
             candidates.append(_Candidate(edit.lineno, changed))
     if not candidates:
         return ()
+    if terms:
+        source = [line.casefold() for line in lines]
+        ranked = sorted(
+            enumerate(candidates),
+            key=lambda pair: (
+                -sum(
+                    term in " ".join(source[max(0, pair[1].lineno - 3) : pair[1].lineno])
+                    for term in terms
+                ),
+                pair[0],
+            ),
+        )
+        candidates = [candidate for _, candidate in ranked]
     offset = seed % len(candidates)
     return (*candidates[offset:], *candidates[:offset])
+
+
+def _diagnostic_terms(text: str) -> frozenset[str]:
+    """Names from a failing test run, used only to order the candidates."""
+    terms: set[str] = set()
+    for word in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", text):
+        name = word.casefold()
+        if len(name) >= 3 and name not in _DIAGNOSTIC_STOP:
+            terms.add(name)
+        for part in name.split("_"):
+            if len(part) >= 3 and part not in _DIAGNOSTIC_STOP:
+                terms.add(part)
+    return frozenset(terms)
 
 
 def _node_edits(lines: list[str], node: ast.AST) -> list[_Edit]:
@@ -364,3 +402,38 @@ _OPPOSITE_OPERATORS: dict[str, tuple[str, ...]] = {
     "%": ("//",),
 }
 _OPPOSITE_BOOLEANS = {"and": "or", "or": "and"}
+_DIAGNOSTIC_STOP = frozenset(
+    {
+        "actual",
+        "assert",
+        "assertion",
+        "assertionerror",
+        "cannot",
+        "error",
+        "expected",
+        "failed",
+        "failure",
+        "false",
+        "from",
+        "import",
+        "importerror",
+        "info",
+        "line",
+        "lines",
+        "module",
+        "name",
+        "none",
+        "passed",
+        "patch",
+        "result",
+        "return",
+        "self",
+        "short",
+        "summary",
+        "test",
+        "tests",
+        "true",
+        "value",
+        "where",
+    }
+)
