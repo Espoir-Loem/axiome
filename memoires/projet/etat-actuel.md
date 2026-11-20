@@ -11,9 +11,10 @@ reçoit que des PR depuis `develop`. Chaque changement part d'une branche de suj
 fusionnée en squash (voir `CONTRIBUTING.md`).
 
 **En attente de revue :** PR #30 (M7.7), #31 (mémoires M7.7), #32 (flux `develop`),
-#33 (M7.8 rejeu configurable), #34 (mémoires M7.8) et #35 (ordre guidé par l'échec),
-plus l'issue #29. #33 est empilée sur la branche de #30, #34 sur celle de #31 et #35
-sur celle de #33. Rien n'a été poussé directement sur `main` ni sur `develop`.
+#33 (M7.8 rejeu configurable), #34 (mémoires M7.8), #35 (ordre guidé par l'échec) et
+#36 (RFC-0003, en revue), plus l'issue #29. #33 est empilée sur la branche de #30,
+#34 sur celle de #31 et #35 sur celle de #33. Rien n'a été poussé directement sur
+`main` ni sur `develop`.
 
 ## Ce qui fonctionne
 
