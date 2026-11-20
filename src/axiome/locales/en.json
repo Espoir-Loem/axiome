@@ -19,6 +19,7 @@
   "cli.unknown_command": "Unknown command: {name} (type :help)",
   "code.bad_budget": "invalid generation budget: {value} (at least 1)",
   "code.bad_diff": "unreadable diff: {detail}",
+  "code.bad_depth": "invalid search depth: {value} (at least 1)",
   "code.bad_threshold": "invalid complexity threshold: {value} (positive integer expected)",
   "code.cli.finding": "{severity} {position}: {message}  |  {line}",
   "code.cli.no_findings": "No problem found.",

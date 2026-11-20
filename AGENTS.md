@@ -4,11 +4,13 @@ Ce fichier complète [CONTRIBUTING.md](CONTRIBUTING.md), qui fait foi en cas de 
 
 ## Branches et pull requests
 
-- **Jamais de commit direct sur `main`.** Toute modification part d'une branche :
-  `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. Après le clone, activer le
-  garde-fou local avec `make hooks` : il refuse les pushes directs vers `main`.
-- Une branche porte **un seul sujet**, puis une PR vers `main`, fusionnée en
-  *squash merge* après revue et CI verte.
+- **Jamais de commit direct sur `main` ni sur `develop`.** Toute modification part
+  d'une branche : `feat/…`, `fix/…`, `docs/…`, `refactor/…`, `test/…`. Après le clone,
+  activer le garde-fou local avec `make hooks` : il refuse les pushes directs vers
+  `main` et `develop`.
+- Une branche porte **un seul sujet**, puis une PR vers `develop`, fusionnée en
+  *squash merge* après revue et CI verte. Une PR empilée vise la branche de sujet
+  parent ; `main` ne reçoit que des PR depuis `develop` (ADR-0009).
 - Petites PR : moins de 400 lignes modifiées, hors données et tests.
 - Un module majeur part d'une RFC (`docs/rfc/`) ; une décision structurante, d'un ADR
   (`docs/adr/`).

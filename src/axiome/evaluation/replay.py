@@ -4,7 +4,9 @@ Each case replays a real commit of this repository, backwards. The tree of the
 fixing commit is extracted, the source files it touched are restored to their
 parent version, and the commit's tests are run: they must fail. Only then does
 the bounded search get a chance to edit one target file and is it judged by the
-same tests. The expected patch is never read.
+same tests. The expected patch is never read. A manifest may also set ``depth`` and
+``extra_targets`` to measure composed, multi-file searches; the shipped corpus
+uses the defaults.
 
 Two properties keep the measure honest:
 
@@ -25,7 +27,7 @@ import subprocess
 import tarfile
 import tempfile
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from axiome.code.generate import ACCEPTED, generate
@@ -45,7 +47,9 @@ class ReplayCase:
     tests: tuple[str, ...]
     changed: tuple[str, ...]
     summary: str
-    files: Mapping[str, str]
+    depth: int = 1
+    extra_targets: tuple[str, ...] = ()
+    files: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,6 +117,9 @@ def run_replay(
                 case.target,
                 case.tests,
                 budget=budget,
+                depth=case.depth,
+                extra_targets=case.extra_targets,
+                diagnostics="\n".join((before.stdout, before.stderr)),
                 isolate_network=isolate_network,
             )
         outcomes.append(ReplayOutcome(case, result.status, len(result.attempts)))
@@ -135,6 +142,8 @@ def _load_case(folder: Path) -> ReplayCase:
         _strings(manifest["tests"]),
         _strings(manifest["changed"]),
         str(manifest["summary"]),
+        int(str(manifest.get("depth", 1))),
+        _strings(manifest.get("extra_targets", [])),
         files,
     )
 
